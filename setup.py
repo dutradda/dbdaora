@@ -89,7 +89,7 @@ setup(
       'datastore': ['google-cloud-datastore==1.9.0']
     },
     project_urls={
-        'Documentation': 'http://dataclassdb.readthedocs.io',
+        'Documentation': 'https://github.com/dutradda/dataclassdb',
         'Source': 'https://github.com/dutradda/dataclassdb',
     },
 )
