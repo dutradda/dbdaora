@@ -24,14 +24,14 @@ class Person:
     address: Address
 
 
-adressRepository, personRepostiory = RepositoriesFactory.make(
+AdressRepository, PersonRepostiory = RepositoriesFactory.make(
     Address,
     Person,
     engine=EnginesType.SQLALCHEMY,
     engine_params=dict(
         db_url='sqlite://',
         create=True,
-        backref_all=True,
+        all_backref=True,
     )
 )
 
@@ -40,9 +40,9 @@ person = Person(
     age=78,
     address=Address("john's street")
 )
-personRepository.add(person)
+PersonRepository().add(person)
 
-addresses = addressRepository.filter(street="john's street").all()
+addresses = AddressRepository().filter(street="john's street").all()
 
 print(addresses)
 
