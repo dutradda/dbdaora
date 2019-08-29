@@ -1,3 +1,7 @@
+build-virtualenv:
+	@virtualenv venv --python python3.7 --prompt 'dataclassdb-> '
 
 build-docs:
-	@scripts/build-docs.sh
+	@python -m mkdocs build
+	@cp ./docs/index.md ./README.md
+

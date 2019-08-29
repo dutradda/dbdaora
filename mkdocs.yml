@@ -4,8 +4,8 @@ site_description: Generates SQL and NoSQL Database Models from @dataclass
 theme:
     name: 'material'
     palette:
-      primary: 'teal'
-      accent: 'amber'
+      primary: 'deep purple'
+      accent: 'indigo'
     logo: 'img/icon-white.svg'
     favicon: 'img/favicon.png'
 
@@ -19,7 +19,7 @@ google_analytics:
 nav:
     - FastAPI: 'index.md'
     - Features: 'features.md'
-    - \@dataclass intro: 'dataclass.md'
+    - dataclass intro: 'dataclass.md'
     - Tutorial - User Guide:
         - Introduciton: 'tutorial/intro.md'
         - First Steps: 'tutorial/first-steps.md'
