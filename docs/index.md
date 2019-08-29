@@ -1,6 +1,15 @@
 # dataclassdb
 Generates ***SQL*** and ***NoSQL*** Database Models from @dataclass
 
+---
+
+**Documentation**: <a href="https://dutradda.github.io/dataclassdb" target="_blank">https://dutradda.github.io/dataclassdb</a>
+
+**Source Code**: <a href="https://github.com/dutradda/dataclassdb" target="_blank">https://github.com/dutradda/dataclassdb</a>
+
+---
+
+
 ## Instalation
 ```
 $ pip install dataclassdb 
