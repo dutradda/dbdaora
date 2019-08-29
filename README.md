@@ -8,7 +8,7 @@ $ pip install dataclassdb
 
 ## Usage example
 ```python
-from dataclassdb import RepositoriesFactory
+from dataclassdb import RepositoriesFactory, EnginesType
 from dataclasses import dataclass
 
 
@@ -27,7 +27,7 @@ class Person:
 adressRepository, personRepostiory = RepositoriesFactory.make(
     Address,
     Person,
-    engine=sqlalchemy,
+    engine=EnginesType.SQLALCHEMY,
     engine_params=dict(
         db_url='sqlite://',
         create=True,
