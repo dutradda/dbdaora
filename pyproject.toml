@@ -25,12 +25,14 @@ Documentation = 'https://dutradda.github.io/dataclassdb/'
 
 [tool.flit.metadata.requires-extra]
 test = [
-    'pytest>=5.1.1',
-    'pytest-cov',
-    'pytest-mock',
-    'mypy',
     'black',
     'isort',
+    'ipython',
+    'mypy',
+    'pytest-cov',
+    'pytest-mock',
+    'pytest>=5.1.1',
+    'tox'
 ]
 doc = [
     'mkdocs',

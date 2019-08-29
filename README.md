@@ -1,4 +1,5 @@
 # dataclassdb
+
 Generates ***SQL*** and ***NoSQL*** Database Models from @dataclass
 
 ---
@@ -10,12 +11,41 @@ Generates ***SQL*** and ***NoSQL*** Database Models from @dataclass
 ---
 
 
+## Key Features
+
+- Fast start data modeling with persistence
+
+- Supports from simple database schemas to complex one
+
+- Integrate with:
+    + `SQLALchemy`
+    + `aioredis` (*soon*)
+    + `google-datastore` (*soon*)
+    + `mongodb` (*planned*)
+    + `elasticsearch` (*planned*)
+    + `aws-dynamodb` (*planned*)
+
+- Same interface as `SQLAlchemy.Session` for the repositories classes
+
+- Easy integration with other data sources
+
+- Use redis data structure (like hashs, sets, lists, etc) to store objects
+
+
+## Requirements
+
+Python 3.7+
+
+
 ## Instalation
+
 ```
 $ pip install dataclassdb 
 ```
 
+
 ## Usage example
+
 ```python
 from dataclassdb import RepositoriesFactory, DataSourceType
 from dataclasses import dataclass
@@ -49,12 +79,14 @@ person = Person(
     age=78,
     address=Address("john's street")
 )
-PersonRepository().add(person)
+PersonRepository().add(person, commit=True)
 
 addresses = AddressRepository().filter(street="john's street").all()
 
 print(addresses)
+```
 
+```bash
 [
   Address(
     street="john's street",
