@@ -1,6 +1,6 @@
 __title__ = 'dataclassdb'
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 __description__ = 'Generates SQL and NoSQL Database Models from @dataclass'
 

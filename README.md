@@ -1,5 +1,5 @@
 # dataclassdb
-Generates SQL and NoSQL Database Models from @dataclass
+Generates ***SQL*** and ***NoSQL*** Database Models from @dataclass
 
 ## Instalation
 ```
