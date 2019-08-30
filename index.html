@@ -758,13 +758,13 @@
 </ul>
 </li>
 <li>
-<p>Same interface as <code>SQLAlchemy.Session</code> for the repositories classes</p>
+<p>Same interface as <code>sqlalchemy.orm.session.Session</code>(https://docs.sqlalchemy.org/en/13/orm/session_api.html#sqlalchemy.orm.session.Session) for the repository class</p>
 </li>
 <li>
 <p>Easy integration with other data sources</p>
 </li>
 <li>
-<p>Use redis data structure (like hashs, sets, lists, etc) to store objects</p>
+<p>Use redis data structure (like hashs, sets, etc) to store objects</p>
 </li>
 </ul>
 <h2 id="requirements">Requirements</h2>
@@ -775,7 +775,7 @@
 
 
 <h2 id="usage-example">Usage example</h2>
-<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">dataclassdb</span> <span class="kn">import</span> <span class="n">RepositoriesFactory</span><span class="p">,</span> <span class="n">DataSourceType</span>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">dataclassdb</span> <span class="kn">import</span> <span class="n">DataSourceType</span><span class="p">,</span> <span class="n">MainRepository</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 
 
@@ -791,7 +791,7 @@
     <span class="n">address</span><span class="p">:</span> <span class="n">Address</span>
 
 
-<span class="n">AdressRepository</span><span class="p">,</span> <span class="n">PersonRepostiory</span> <span class="o">=</span> <span class="n">RepositoriesFactory</span><span class="o">.</span><span class="n">make</span><span class="p">(</span>
+<span class="n">mainRepository</span> <span class="o">=</span> <span class="n">MainRepository</span><span class="p">(</span>
     <span class="n">Address</span><span class="p">,</span>
     <span class="n">Person</span><span class="p">,</span>
     <span class="n">data_source</span><span class="o">=</span><span class="n">DataSourceType</span><span class="o">.</span><span class="n">RELATIONAL_SQLALCHEMY</span><span class="p">,</span>
@@ -807,9 +807,10 @@
     <span class="n">age</span><span class="o">=</span><span class="mi">78</span><span class="p">,</span>
     <span class="n">address</span><span class="o">=</span><span class="n">Address</span><span class="p">(</span><span class="s2">&quot;john&#39;s street&quot;</span><span class="p">)</span>
 <span class="p">)</span>
-<span class="n">PersonRepository</span><span class="p">()</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">person</span><span class="p">,</span> <span class="n">commit</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">mainRepository</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">person</span><span class="p">,</span> <span class="n">commit</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
-<span class="n">addresses</span> <span class="o">=</span> <span class="n">AddressRepository</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">street</span><span class="o">=</span><span class="s2">&quot;john&#39;s street&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<span class="n">adressRepository</span> <span class="o">=</span> <span class="n">mainRepository</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Address</span><span class="p">)</span>
+<span class="n">addresses</span> <span class="o">=</span> <span class="n">adressRepository</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">street</span><span class="o">=</span><span class="s2">&quot;john&#39;s street&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
 
 <span class="k">print</span><span class="p">(</span><span class="n">addresses</span><span class="p">)</span>
 </pre></div>
