@@ -25,11 +25,11 @@ Generates ***SQL*** and ***NoSQL*** Database Models from @dataclass
     + `elasticsearch` (*planned*)
     + `aws-dynamodb` (*planned*)
 
-- Same interface as `SQLAlchemy.Session` for the repositories classes
+- Same interface as `sqlalchemy.orm.session.Session`(https://docs.sqlalchemy.org/en/13/orm/session_api.html#sqlalchemy.orm.session.Session) for the repository class
 
 - Easy integration with other data sources
 
-- Use redis data structure (like hashs, sets, lists, etc) to store objects
+- Use redis data structure (like hashs, sets, etc) to store objects
 
 
 ## Requirements
@@ -47,7 +47,7 @@ $ pip install dataclassdb
 ## Usage example
 
 ```python
-from dataclassdb import RepositoriesFactory, DataSourceType
+from dataclassdb import DataSourceType, MainRepository
 from dataclasses import dataclass
 
 
@@ -63,7 +63,7 @@ class Person:
     address: Address
 
 
-AdressRepository, PersonRepostiory = RepositoriesFactory.make(
+mainRepository = MainRepository(
     Address,
     Person,
     data_source=DataSourceType.RELATIONAL_SQLALCHEMY,
@@ -79,9 +79,10 @@ person = Person(
     age=78,
     address=Address("john's street")
 )
-PersonRepository().add(person, commit=True)
+mainRepository.add(person, commit=True)
 
-addresses = AddressRepository().filter(street="john's street").all()
+adressRepository = mainRepository.query(Address)
+addresses = adressRepository.filter(street="john's street").all()
 
 print(addresses)
 ```
