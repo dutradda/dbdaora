@@ -6,8 +6,8 @@ theme:
     palette:
       primary: 'deep purple'
       accent: 'indigo'
-    logo: 'img/icon-white.svg'
-    favicon: 'img/favicon.png'
+    logo: 'dataclassdb-white.svg'
+    favicon: 'favicon.png'
 
 repo_name: dutradda/dataclassdb
 repo_url: https://github.com/dutradda/dataclassdb

@@ -1,6 +1,14 @@
 # dataclassdb
 
-Generates ***SQL*** and ***NoSQL*** Database Models from @dataclass
+<p align="center" style="margin: 3em">
+  <a href="https://github.com/dutradda/dataclassdb">
+    <img src="dataclassdb.svg" alt="dataclassdb" width="300"/>
+  </a>
+</p>
+
+<p align="center">
+    <em>Generates <b>SQL</b> and <b>NoSQL</b> database models from @dataclass</em>
+</p>
 
 ---
 
@@ -25,11 +33,11 @@ Generates ***SQL*** and ***NoSQL*** Database Models from @dataclass
     + `elasticsearch` (*planned*)
     + `aws-dynamodb` (*planned*)
 
-- Same interface as `sqlalchemy.orm.session.Session`(https://docs.sqlalchemy.org/en/13/orm/session_api.html#sqlalchemy.orm.session.Session) for the repository class
+- Same interface as [`sqlalchemy.orm.session.Session`](https://docs.sqlalchemy.org/en/13/orm/session_api.html#sqlalchemy.orm.session.Session)
 
 - Easy integration with other data sources
 
-- Use redis data structure (like hashs, sets, etc) to store objects
+- Supports redis data structure (like hashs, sets, etc) to store objects
 
 
 ## Requirements
@@ -44,59 +52,190 @@ $ pip install dataclassdb
 ```
 
 
-## Usage example
+## Basic SQLAlchemy example
 
 ```python
-from dataclassdb import DataSourceType, MainRepository
+import asyncio
+
+from dataclassdb import DataSourceType, SessionFactory
 from dataclasses import dataclass
 
 
 @dataclass
-class Address:
-  street: str
+class Music:
+    name: str
 
 
 @dataclass
 class Person:
     name: str
     age: int
-    address: Address
+    music: Music
 
 
-mainRepository = MainRepository(
-    Address,
+session = SessionFactory.make(
+    Music,
     Person,
     data_source=DataSourceType.RELATIONAL_SQLALCHEMY,
     data_source_args=dict(
         db_url='sqlite://',
-        create=True,
-        all_backref=True,
+        backrefs=True,
+        create_tables=True,
     )
 )
 
 person = Person(
     name='John',
-    age=78,
-    address=Address("john's street")
+    age=40,
+    music=Music('Imagine')
 )
-mainRepository.add(person, commit=True)
+session.add(person)  # commit=True by default
 
-adressRepository = mainRepository.query(Address)
-addresses = adressRepository.filter(street="john's street").all()
+musicQuery = session.query(Address)
+musics = musicQuery.filter(name='Imagine').all()
 
-print(addresses)
+loop = asyncio.get_event_loop()
+print(loop.run_until_complete(musics))
 ```
 
 ```bash
 [
-  Address(
-    street="john's street",
+  Music(
+    name='Imagine',
     _id=1,
     backrefs=Backrefs(
-       person=[Person(age=78, name=John, _id=1)]
+       person=[Person(age=40, name=John, _id=1)]
     )
   )
 ]
 ```
 
-Detailed usage and documantion is in working process.
+
+## Basic aioredis with hash data type example
+
+```python
+import asyncio
+
+from dataclassdb import DataSourceType, SessionFactoryAsync
+from dataclasses import dataclass
+
+
+@dataclass
+class Music:
+    name: str
+
+
+@dataclass
+class Person:
+    name: str
+    age: int
+    music: Music
+
+
+async def get_musics():
+    session = await SessionFactoryAsync.make(
+        Address,
+        Person,
+        data_source=DataSourceType.MEMORY_AIOREDIS,
+        data_source_args=dict(
+            db_url='redis://',
+            backrefs=True,
+        )
+    )
+
+    person = Person(
+        name='John',
+        age=40,
+        music=Music('Imagine')
+    )
+    await session.add(person)
+
+    musicQuery = await session.query(Address)
+    return await musicQuery.filter(name='Imagine').all()
+
+loop = asyncio.get_event_loop()
+print(loop.run_until_complete(musics))
+```
+
+```python
+[
+  Music(
+    name='Imagine',
+    _id=1,
+    backrefs=Backrefs(
+       person=[Person(age=40, name=John, _id=1)]
+    )
+  )
+]
+```
+
+
+## Basic aioredis with sorted set data type example
+
+```python
+from dataclassdb import (
+    DataSourceType,
+    MemorySortedSetRanked,
+    ModelKey,
+    SessionFactoryAsync,
+    SortedValue,
+)
+from dataclasses import dataclass
+
+
+@dataclass
+class Music:
+    id: ModelKey(str)
+    name: str
+
+
+class Playlist(MemorySortedSetRanked):
+    value_type = Music
+
+
+@dataclass
+class Person:
+    name: str
+    age: int
+    playlist: Playlist
+
+
+session = await SessionFactoryAsync.make(
+    Music,
+    Playlist,
+    Person,
+    data_source=DataSourceType.MEMORY_AIOREDIS,
+    data_source_args=dict(
+        db_url='redis://',
+        backrefs=True,
+    )
+)
+
+person = Person(
+    name='John',
+    age=40,
+    playlist=Playlist(
+        Music(id='imagine', name='Imagine'),
+        Music(id='come-together', name='Come Together'),
+    )
+)
+await session.add(person)
+
+playlistQuery = await session.query(Playlist)
+playlist = await playlistQuery.filter(Person.name=='John').one(withrank=True)
+
+print(playlist)
+```
+
+```python
+[
+  SortedValue(
+    rank=1,
+    key='imagine'
+  ),
+  SortedValue(
+    rank=2,
+    key='come-together'
+  )
+]
+```
