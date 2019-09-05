@@ -33,7 +33,7 @@
       
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
-      <link rel="shortcut icon" href="img/favicon.png">
+      <link rel="shortcut icon" href="favicon.png">
       <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.2">
     
     
@@ -123,7 +123,7 @@
       <div class="md-flex__cell md-flex__cell--shrink">
         <a href="." title="dataclassdb" class="md-header-nav__button md-logo">
           
-            <img src="img/icon-white.svg" width="24" height="24">
+            <img src="dataclassdb-white.svg" width="24" height="24">
           
         </a>
       </div>
@@ -208,7 +208,7 @@
   <label class="md-nav__title md-nav__title--site" for="__drawer">
     <a href="." title="dataclassdb" class="md-nav__button md-logo">
       
-        <img src="img/icon-white.svg" width="48" height="48">
+        <img src="dataclassdb-white.svg" width="48" height="48">
       
     </a>
     dataclassdb
@@ -290,8 +290,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#usage-example" class="md-nav__link">
-    Usage example
+  <a href="#basic-sqlalchemy-example" class="md-nav__link">
+    Basic SQLAlchemy example
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-aioredis-with-hash-data-type-example" class="md-nav__link">
+    Basic aioredis with hash data type example
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-aioredis-with-sorted-set-data-type-example" class="md-nav__link">
+    Basic aioredis with sorted set data type example
   </a>
   
 </li>
@@ -709,8 +723,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#usage-example" class="md-nav__link">
-    Usage example
+  <a href="#basic-sqlalchemy-example" class="md-nav__link">
+    Basic SQLAlchemy example
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-aioredis-with-hash-data-type-example" class="md-nav__link">
+    Basic aioredis with hash data type example
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-aioredis-with-sorted-set-data-type-example" class="md-nav__link">
+    Basic aioredis with sorted set data type example
   </a>
   
 </li>
@@ -733,7 +761,16 @@
                 
                 
                 <h1 id="dataclassdb">dataclassdb</h1>
-<p>Generates <strong><em>SQL</em></strong> and <strong><em>NoSQL</em></strong> Database Models from @dataclass</p>
+<p align="center" style="margin: 3em">
+  <a href="https://github.com/dutradda/dataclassdb">
+    <img src="dataclassdb.svg" alt="dataclassdb" width="300"/>
+  </a>
+</p>
+
+<p align="center">
+    <em>Generates <b>SQL</b> and <b>NoSQL</b> database models from @dataclass</em>
+</p>
+
 <hr />
 <p><strong>Documentation</strong>: <a href="https://dutradda.github.io/dataclassdb" target="_blank">https://dutradda.github.io/dataclassdb</a></p>
 <p><strong>Source Code</strong>: <a href="https://github.com/dutradda/dataclassdb" target="_blank">https://github.com/dutradda/dataclassdb</a></p>
@@ -758,13 +795,13 @@
 </ul>
 </li>
 <li>
-<p>Same interface as <a href="https://docs.sqlalchemy.org/en/13/orm/session_api.html#sqlalchemy.orm.session.Session"><code>sqlalchemy.orm.session.Session</code></a> for the repository class</p>
+<p>Same interface as <a href="https://docs.sqlalchemy.org/en/13/orm/session_api.html#sqlalchemy.orm.session.Session"><code>sqlalchemy.orm.session.Session</code></a></p>
 </li>
 <li>
 <p>Easy integration with other data sources</p>
 </li>
 <li>
-<p>Use redis data structure (like hashs, sets, etc) to store objects</p>
+<p>Supports redis data structure (like hashs, sets, etc) to store objects</p>
 </li>
 </ul>
 <h2 id="requirements">Requirements</h2>
@@ -774,61 +811,187 @@
 </pre></div>
 
 
-<h2 id="usage-example">Usage example</h2>
-<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">dataclassdb</span> <span class="kn">import</span> <span class="n">DataSourceType</span><span class="p">,</span> <span class="n">MainRepository</span>
+<h2 id="basic-sqlalchemy-example">Basic SQLAlchemy example</h2>
+<div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+
+<span class="kn">from</span> <span class="nn">dataclassdb</span> <span class="kn">import</span> <span class="n">DataSourceType</span><span class="p">,</span> <span class="n">SessionFactory</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 
 
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">Address</span><span class="p">:</span>
-  <span class="n">street</span><span class="p">:</span> <span class="nb">str</span>
+<span class="k">class</span> <span class="nc">Music</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
 
 
 <span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">age</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">address</span><span class="p">:</span> <span class="n">Address</span>
+    <span class="n">music</span><span class="p">:</span> <span class="n">Music</span>
 
 
-<span class="n">mainRepository</span> <span class="o">=</span> <span class="n">MainRepository</span><span class="p">(</span>
-    <span class="n">Address</span><span class="p">,</span>
+<span class="n">session</span> <span class="o">=</span> <span class="n">SessionFactory</span><span class="o">.</span><span class="n">make</span><span class="p">(</span>
+    <span class="n">Music</span><span class="p">,</span>
     <span class="n">Person</span><span class="p">,</span>
     <span class="n">data_source</span><span class="o">=</span><span class="n">DataSourceType</span><span class="o">.</span><span class="n">RELATIONAL_SQLALCHEMY</span><span class="p">,</span>
     <span class="n">data_source_args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
         <span class="n">db_url</span><span class="o">=</span><span class="s1">&#39;sqlite://&#39;</span><span class="p">,</span>
-        <span class="n">create</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-        <span class="n">all_backref</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">backrefs</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">create_tables</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
     <span class="p">)</span>
 <span class="p">)</span>
 
 <span class="n">person</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;John&#39;</span><span class="p">,</span>
-    <span class="n">age</span><span class="o">=</span><span class="mi">78</span><span class="p">,</span>
-    <span class="n">address</span><span class="o">=</span><span class="n">Address</span><span class="p">(</span><span class="s2">&quot;john&#39;s street&quot;</span><span class="p">)</span>
+    <span class="n">age</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
+    <span class="n">music</span><span class="o">=</span><span class="n">Music</span><span class="p">(</span><span class="s1">&#39;Imagine&#39;</span><span class="p">)</span>
 <span class="p">)</span>
-<span class="n">mainRepository</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">person</span><span class="p">,</span> <span class="n">commit</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">person</span><span class="p">)</span>  <span class="c1"># commit=True by default</span>
 
-<span class="n">adressRepository</span> <span class="o">=</span> <span class="n">mainRepository</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Address</span><span class="p">)</span>
-<span class="n">addresses</span> <span class="o">=</span> <span class="n">adressRepository</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">street</span><span class="o">=</span><span class="s2">&quot;john&#39;s street&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<span class="n">musicQuery</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Address</span><span class="p">)</span>
+<span class="n">musics</span> <span class="o">=</span> <span class="n">musicQuery</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Imagine&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
 
-<span class="k">print</span><span class="p">(</span><span class="n">addresses</span><span class="p">)</span>
+<span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">musics</span><span class="p">))</span>
 </pre></div>
 
 
 <div class="codehilite"><pre><span></span><span class="o">[</span>
-  Address<span class="o">(</span>
-    <span class="nv">street</span><span class="o">=</span><span class="s2">&quot;john&#39;s street&quot;</span>,
+  Music<span class="o">(</span>
+    <span class="nv">name</span><span class="o">=</span><span class="s1">&#39;Imagine&#39;</span>,
     <span class="nv">_id</span><span class="o">=</span><span class="m">1</span>,
     <span class="nv">backrefs</span><span class="o">=</span>Backrefs<span class="o">(</span>
-       <span class="nv">person</span><span class="o">=[</span>Person<span class="o">(</span><span class="nv">age</span><span class="o">=</span><span class="m">78</span>, <span class="nv">name</span><span class="o">=</span>John, <span class="nv">_id</span><span class="o">=</span><span class="m">1</span><span class="o">)]</span>
+       <span class="nv">person</span><span class="o">=[</span>Person<span class="o">(</span><span class="nv">age</span><span class="o">=</span><span class="m">40</span>, <span class="nv">name</span><span class="o">=</span>John, <span class="nv">_id</span><span class="o">=</span><span class="m">1</span><span class="o">)]</span>
     <span class="o">)</span>
   <span class="o">)</span>
 <span class="o">]</span>
 </pre></div>
 
 
-<p>Detailed usage and documantion is in working process.</p>
+<h2 id="basic-aioredis-with-hash-data-type-example">Basic aioredis with hash data type example</h2>
+<div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+
+<span class="kn">from</span> <span class="nn">dataclassdb</span> <span class="kn">import</span> <span class="n">DataSourceType</span><span class="p">,</span> <span class="n">SessionFactoryAsync</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Music</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">age</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">music</span><span class="p">:</span> <span class="n">Music</span>
+
+
+<span class="n">async</span> <span class="k">def</span> <span class="nf">get_musics</span><span class="p">():</span>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">await</span> <span class="n">SessionFactoryAsync</span><span class="o">.</span><span class="n">make</span><span class="p">(</span>
+        <span class="n">Address</span><span class="p">,</span>
+        <span class="n">Person</span><span class="p">,</span>
+        <span class="n">data_source</span><span class="o">=</span><span class="n">DataSourceType</span><span class="o">.</span><span class="n">MEMORY_AIOREDIS</span><span class="p">,</span>
+        <span class="n">data_source_args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+            <span class="n">db_url</span><span class="o">=</span><span class="s1">&#39;redis://&#39;</span><span class="p">,</span>
+            <span class="n">backrefs</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">person</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;John&#39;</span><span class="p">,</span>
+        <span class="n">age</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
+        <span class="n">music</span><span class="o">=</span><span class="n">Music</span><span class="p">(</span><span class="s1">&#39;Imagine&#39;</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">await</span> <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">person</span><span class="p">)</span>
+
+    <span class="n">musicQuery</span> <span class="o">=</span> <span class="n">await</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Address</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">await</span> <span class="n">musicQuery</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Imagine&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+<span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">musics</span><span class="p">))</span>
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span><span class="p">[</span>
+  <span class="n">Music</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Imagine&#39;</span><span class="p">,</span>
+    <span class="n">_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">backrefs</span><span class="o">=</span><span class="n">Backrefs</span><span class="p">(</span>
+       <span class="n">person</span><span class="o">=</span><span class="p">[</span><span class="n">Person</span><span class="p">(</span><span class="n">age</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">John</span><span class="p">,</span> <span class="n">_id</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="p">)</span>
+  <span class="p">)</span>
+<span class="p">]</span>
+</pre></div>
+
+
+<h2 id="basic-aioredis-with-sorted-set-data-type-example">Basic aioredis with sorted set data type example</h2>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">dataclassdb</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DataSourceType</span><span class="p">,</span>
+    <span class="n">MemorySortedSetRanked</span><span class="p">,</span>
+    <span class="n">ModelKey</span><span class="p">,</span>
+    <span class="n">SessionFactoryAsync</span><span class="p">,</span>
+    <span class="n">SortedValue</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Music</span><span class="p">:</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="n">ModelKey</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="k">class</span> <span class="nc">Playlist</span><span class="p">(</span><span class="n">MemorySortedSetRanked</span><span class="p">):</span>
+    <span class="n">value_type</span> <span class="o">=</span> <span class="n">Music</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">age</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">playlist</span><span class="p">:</span> <span class="n">Playlist</span>
+
+
+<span class="n">session</span> <span class="o">=</span> <span class="n">await</span> <span class="n">SessionFactoryAsync</span><span class="o">.</span><span class="n">make</span><span class="p">(</span>
+    <span class="n">Music</span><span class="p">,</span>
+    <span class="n">Playlist</span><span class="p">,</span>
+    <span class="n">Person</span><span class="p">,</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="n">DataSourceType</span><span class="o">.</span><span class="n">MEMORY_AIOREDIS</span><span class="p">,</span>
+    <span class="n">data_source_args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">db_url</span><span class="o">=</span><span class="s1">&#39;redis://&#39;</span><span class="p">,</span>
+        <span class="n">backrefs</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">person</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;John&#39;</span><span class="p">,</span>
+    <span class="n">age</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
+    <span class="n">playlist</span><span class="o">=</span><span class="n">Playlist</span><span class="p">(</span>
+        <span class="n">Music</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;imagine&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Imagine&#39;</span><span class="p">),</span>
+        <span class="n">Music</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;come-together&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Come Together&#39;</span><span class="p">),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">await</span> <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">person</span><span class="p">)</span>
+
+<span class="n">playlistQuery</span> <span class="o">=</span> <span class="n">await</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Playlist</span><span class="p">)</span>
+<span class="n">playlist</span> <span class="o">=</span> <span class="n">await</span> <span class="n">playlistQuery</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Person</span><span class="o">.</span><span class="n">name</span><span class="o">==</span><span class="s1">&#39;John&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">(</span><span class="n">withrank</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">playlist</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span><span class="p">[</span>
+  <span class="n">SortedValue</span><span class="p">(</span>
+    <span class="n">rank</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">key</span><span class="o">=</span><span class="s1">&#39;imagine&#39;</span>
+  <span class="p">),</span>
+  <span class="n">SortedValue</span><span class="p">(</span>
+    <span class="n">rank</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">key</span><span class="o">=</span><span class="s1">&#39;come-together&#39;</span>
+  <span class="p">)</span>
+<span class="p">]</span>
+</pre></div>
                 
                   
                 
