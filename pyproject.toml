@@ -3,10 +3,10 @@ requires = ['flit']
 build-backend = 'flit.buildapi'
 
 [tool.flit.metadata]
-module = 'dataclassdb'
+module = 'dataclassesdb'
 author = 'Diogo Dutra'
 author-email = 'diogodutradamata@gmail.com'
-home-page = 'https://github.com/dutradda/dataclassdb'
+home-page = 'https://github.com/dutradda/dataclassesdb'
 classifiers = [
     'License :: OSI Approved :: MIT License',
     'Development Status :: 1 - Planning',
@@ -21,7 +21,7 @@ description-file = 'README.md'
 requires-python = '>=3.7'
 
 [tool.flit.metadata.urls]
-Documentation = 'https://dutradda.github.io/dataclassdb/'
+Documentation = 'https://dutradda.github.io/dataclassesdb/'
 
 [tool.flit.metadata.requires-extra]
 test = [

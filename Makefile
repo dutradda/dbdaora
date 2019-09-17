@@ -1,5 +1,5 @@
 build-virtualenv:
-	@virtualenv venv --python python3.7 --prompt 'dataclassdb-> '
+	@virtualenv venv --python python3.7 --prompt 'dataclassesdb-> '
 
 build-docs:
 	@python -m mkdocs build
@@ -9,5 +9,10 @@ build-docs:
 deploy-docs: build-docs
 	@python -m mkdocs gh-deploy
 
+serve-docs:
+	@mkdocs serve
+
 release-pypi:
 	@flit publish
+
+deploy: deploy-docs release-pypi

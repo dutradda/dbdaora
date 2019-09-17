@@ -1,8 +1,8 @@
-# dataclassdb
+# dataclassesdb
 
 <p align="center" style="margin: 3em">
-  <a href="https://github.com/dutradda/dataclassdb">
-    <img src="dataclassdb.svg" alt="dataclassdb" width="300"/>
+  <a href="https://github.com/dutradda/dataclassesdb">
+    <img src="dataclassesdb.svg" alt="dataclassesdb" width="300"/>
   </a>
 </p>
 
@@ -12,9 +12,9 @@
 
 ---
 
-**Documentation**: <a href="https://dutradda.github.io/dataclassdb" target="_blank">https://dutradda.github.io/dataclassdb</a>
+**Documentation**: <a href="https://dutradda.github.io/dataclassesdb" target="_blank">https://dutradda.github.io/dataclassesdb</a>
 
-**Source Code**: <a href="https://github.com/dutradda/dataclassdb" target="_blank">https://github.com/dutradda/dataclassdb</a>
+**Source Code**: <a href="https://github.com/dutradda/dataclassesdb" target="_blank">https://github.com/dutradda/dataclassesdb</a>
 
 ---
 
@@ -48,7 +48,7 @@ Python 3.7+
 ## Instalation
 
 ```
-$ pip install dataclassdb 
+$ pip install dataclassesdb 
 ```
 
 
@@ -57,7 +57,7 @@ $ pip install dataclassdb
 ```python
 import asyncio
 
-from dataclassdb import DataSourceType, SessionFactory
+from dataclassesdb import DataSourceType, SessionFactory
 from dataclasses import dataclass
 
 
@@ -116,7 +116,7 @@ print(loop.run_until_complete(musics))
 ```python
 import asyncio
 
-from dataclassdb import DataSourceType, SessionFactoryAsync
+from dataclassesdb import DataSourceType, SessionFactoryAsync
 from dataclasses import dataclass
 
 
@@ -173,7 +173,7 @@ print(loop.run_until_complete(musics))
 ## Basic aioredis with sorted set data type example
 
 ```python
-from dataclassdb import (
+from dataclassesdb import (
     DataSourceType,
     MemorySortedSetRanked,
     ModelKey,

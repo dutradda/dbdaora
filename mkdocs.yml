@@ -1,4 +1,4 @@
-site_name: dataclassdb
+site_name: dataclassesdb
 site_description: Generates SQL and NoSQL Database Models from @dataclass
 
 theme:
@@ -6,18 +6,18 @@ theme:
     palette:
       primary: 'deep purple'
       accent: 'indigo'
-    logo: 'dataclassdb-white.svg'
+    logo: 'dataclassesdb-white.svg'
     favicon: 'favicon.png'
 
-repo_name: dutradda/dataclassdb
-repo_url: https://github.com/dutradda/dataclassdb
+repo_name: dutradda/dataclassesdb
+repo_url: https://github.com/dutradda/dataclassesdb
 edit_uri: ''
 google_analytics:
     - ''
     - 'auto'
 
 nav:
-    - dataclassdb: 'index.md'
+    - dataclassesdb: 'index.md'
     - Features: 'features.md'
     - Python dataclass intro: 'python-dataclass.md'
     - Repository pattern intro: 'repository-pattern.md'
@@ -41,7 +41,7 @@ nav:
     - History, Design and Future: 'history-design-future.md'
     - External Links and Articles: 'external-links.md'
     - Benchmarks: 'benchmarks.md'
-    - Help dataclassdb - Get Help: 'help.md'
+    - Help dataclassesdb - Get Help: 'help.md'
     - Development - Contributing: 'contributing.md'
     - Changelog: changelog.md
 
