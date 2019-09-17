@@ -2,7 +2,7 @@
 
 <p align="center" style="margin: 3em">
   <a href="https://github.com/dutradda/dataclassesdb">
-    <img src="dataclassesdb.svg" alt="dataclassesdb" width="300"/>
+    <img src="https://dutradda.github.io/dataclassesdb/dataclassesdb.svg" alt="dataclassesdb" width="300"/>
   </a>
 </p>
 
