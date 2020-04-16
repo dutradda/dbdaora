@@ -1,16 +1,14 @@
-from abc import ABC, abstractmethod
+from typing import Protocol, Optional
+from ...entity import EntityData
 
 
-class FallbackDataSource(ABC):
-    @abstractmethod
-    async def get(self, key: str) -> None:
+class FallbackDataSource(Protocol):
+    async def get(self, key: str) -> Optional[EntityData]:
         ...
 
-    @abstractmethod
-    async def put(self, key: str) -> None:
+    async def put(self, key: str, data: EntityData) -> None:
         ...
 
-    @abstractmethod
     async def delete(self, key: str) -> None:
         ...
 

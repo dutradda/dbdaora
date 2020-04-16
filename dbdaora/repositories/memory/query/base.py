@@ -1,15 +1,15 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Generic
 
-from ...entity import Entity
+from dbdaora.entity import Entity, EntityData
 
 
 @dataclass(init=False)
-class Query:
-    repository: 'MemoryRepository'
+class Query(Generic[Entity, EntityData]):
+    repository: 'MemoryRepository[Entity, EntityData]'
 
     def __init__(
-        self, repository: 'MemoryRepository', *args: Any, **kwargs: Any
+        self, repository: 'MemoryRepository[Entity, EntityData]', *args: Any, **kwargs: Any
     ):
         self.repository = repository
 
@@ -21,6 +21,8 @@ class Query:
     def key_from_entity(cls, entity: Entity) -> str:
         raise NotImplementedError()
 
+    async def get(self) -> Entity:
+        return await self.repository.get(self)
 
 
 from ..base import MemoryRepository  # noqa isort: skip

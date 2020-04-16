@@ -1,24 +1,25 @@
 from dataclasses import dataclass
-from typing import TypeVar, Generic, Iterable, Any, get_args, Optional, Type
+from typing import TypeVar, Generic, Iterable, Any, get_args, Optional, Type, ClassVar
 
 from circuitbreaker import CircuitBreakerError
 
 from ...data_sources import MemoryDataSource, FallbackDataSource
 from ...exceptions import EntityNotFoundError
-from ..entity import Entity, EntityData
+from ...entity import Entity, EntityData
 
 
 @dataclass
 class MemoryRepository(Generic[Entity, EntityData]):
+    query_cls: ClassVar[Type['Query[Entity, EntityData]']]
     memory_data_source: MemoryDataSource
     fallback_data_source: FallbackDataSource
     expire_time: int
     key_separator: str = ':'
 
-    async def get_memory_data(self, query: 'Query') -> Optional[EntityData]:
+    async def get_memory_data(self, query: 'Query[Entity, EntityData]') -> Optional[EntityData]:
         raise NotImplementedError()
 
-    async def get_fallback_data(self, query: 'Query') -> Optional[EntityData]:
+    async def get_fallback_data(self, query: 'Query[Entity, EntityData]') -> Optional[EntityData]:
         raise NotImplementedError()
 
     def make_data(self, entity: Entity) -> EntityData:
@@ -33,24 +34,27 @@ class MemoryRepository(Generic[Entity, EntityData]):
     def make_entity(self, data: EntityData) -> Entity:
         raise NotImplementedError()
 
-    async def get(self, query: 'Query') -> Entity:
+    async def get(self, query: 'Query[Entity, EntityData]') -> Entity:
         try:
             return await self.get_memory(query)
         except CircuitBreakerError:
             return await self.get_fallback(query)
 
-    async def get_memory(self, query: 'Query') -> Entity:
+    async def get_memory(self, query: 'Query[Entity, EntityData]') -> Entity:
         data = await self.get_memory_data(query)
 
         if data is None and not await self.get_fallback_not_found(query.key):
             data = await self.get_fallback_data(query)
+
+            if data is not None:
+                await self.add_memory_data(query.key, data)
 
         if data is None:
             raise EntityNotFoundError(query)
 
         return self.make_entity(data)
 
-    async def get_fallback(self, query: 'Query') -> Entity:
+    async def get_fallback(self, query: 'Query[Entity, EntityData]') -> Entity:
         data = await self.get_fallback_data(query)
 
         if data is None:
@@ -59,7 +63,7 @@ class MemoryRepository(Generic[Entity, EntityData]):
         return self.make_entity(data)
 
     async def add(self, entity: Entity) -> None:
-        key = self.get_query_cls().key_from_entity(entity)
+        key = self.query_cls.key_from_entity(entity)
 
         try:
             return await self.add_memory(key, entity)
@@ -73,7 +77,7 @@ class MemoryRepository(Generic[Entity, EntityData]):
         await self.add_fallback_data(key, data)
         await self.delete_fallback_not_found(key)
 
-    async def add_fallback(self, key, entity: Entity) -> None:
+    async def add_fallback(self, key: str, entity: Entity) -> None:
         data = self.make_data(entity)
         await self.add_fallback_data(key, data)
 
@@ -98,20 +102,17 @@ class MemoryRepository(Generic[Entity, EntityData]):
     async def set_expire_time(self, key: str) -> None:
         await self.memory_data_source.expire(key, self.expire_time)
 
-    def query(self, *args: Any, **kwargs: Any) -> 'Query':
-        return self.get_query_cls()(self, *args, **kwargs)
+    def query(self, *args: Any, **kwargs: Any) -> 'Query[Entity, EntityData]':
+        return self.query_cls(self, *args, **kwargs)
 
-    def get_query_cls(self) -> Type['Query']:
-        return get_args(type(self).__orig_bases__[0])[1]  # type: ignore
-
-    async def delete(self, query: 'Query') -> None:
+    async def delete(self, query: 'Query[Entity, EntityData]') -> None:
         await self.memory_data_source.delete(query.key)
         await self.fallback_data_source.delete(query.key)
 
     def get_entity_cls(self) -> Type[Entity]:
         return get_args(type(self).__orig_bases__[0])[0]  # type: ignore
 
-    def get_fallback_not_found_key(self, key: str):
+    def get_fallback_not_found_key(self, key: str) -> str:
         return f'{key}{self.key_separator}not-found'
 
 
