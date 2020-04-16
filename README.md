@@ -1,8 +1,8 @@
-# dataclassesdb
+# dbdaora
 
 <p align="center" style="margin: 3em">
-  <a href="https://github.com/dutradda/dataclassesdb">
-    <img src="https://dutradda.github.io/dataclassesdb/dataclassesdb.svg" alt="dataclassesdb" width="300"/>
+  <a href="https://github.com/dutradda/dbdaora">
+    <img src="https://dutradda.github.io/dbdaora/dbdaora.svg" alt="dbdaora" width="300"/>
   </a>
 </p>
 
@@ -12,9 +12,9 @@
 
 ---
 
-**Documentation**: <a href="https://dutradda.github.io/dataclassesdb" target="_blank">https://dutradda.github.io/dataclassesdb</a>
+**Documentation**: <a href="https://dutradda.github.io/dbdaora" target="_blank">https://dutradda.github.io/dbdaora</a>
 
-**Source Code**: <a href="https://github.com/dutradda/dataclassesdb" target="_blank">https://github.com/dutradda/dataclassesdb</a>
+**Source Code**: <a href="https://github.com/dutradda/dbdaora" target="_blank">https://github.com/dutradda/dbdaora</a>
 
 ---
 
@@ -48,7 +48,7 @@ Python 3.7+
 ## Instalation
 
 ```
-$ pip install dataclassesdb 
+$ pip install dbdaora 
 ```
 
 
@@ -57,7 +57,7 @@ $ pip install dataclassesdb
 ```python
 import asyncio
 
-from dataclassesdb import DataSourceType, SessionFactory
+from dbdaora import DataSourceType, SessionFactory
 from dataclasses import dataclass
 
 
@@ -116,7 +116,7 @@ print(loop.run_until_complete(musics))
 ```python
 import asyncio
 
-from dataclassesdb import DataSourceType, SessionFactoryAsync
+from dbdaora import DataSourceType, SessionFactoryAsync
 from dataclasses import dataclass
 
 
@@ -173,7 +173,7 @@ print(loop.run_until_complete(musics))
 ## Basic aioredis with sorted set data type example
 
 ```python
-from dataclassesdb import (
+from dbdaora import (
     DataSourceType,
     MemorySortedSetRanked,
     ModelKey,

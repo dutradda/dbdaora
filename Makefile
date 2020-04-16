@@ -1,5 +1,5 @@
 build-virtualenv:
-	@virtualenv venv --python python3.7 --prompt 'dataclassesdb-> '
+	@virtualenv venv --python python3.7 --prompt 'dbdaora-> '
 
 build-docs:
 	@python -m mkdocs build
