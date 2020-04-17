@@ -78,8 +78,14 @@ class DictMemoryDataSource(MemoryDataSource, Generic[Entity]):
     ) -> None:
         data = [field, value] + list(pairs)
         self.db[key] = {
-            (f.encode() if isinstance(f := data[i - 1], str) else f): (  # noqa
-                v.encode() if isinstance(v := data[i], str) else v  # noqa
+            (
+                f.encode()
+                if isinstance(f := data[i - 1], str)
+                else (f if isinstance(f, bytes) else str(f).encode())  # noqa
+            ): (
+                v.encode()
+                if isinstance(v := data[i], str)
+                else (v if isinstance(v, bytes) else str(v).encode())  # noqa
             )
             for i in range(1, len(data), 2)
         }
@@ -87,15 +93,30 @@ class DictMemoryDataSource(MemoryDataSource, Generic[Entity]):
     async def hmget(
         self, key: str, field: Union[str, bytes], *fields: Union[str, bytes]
     ) -> Sequence[Optional[bytes]]:
-        data: Optional[Dict[bytes, bytes]] = self.db.get(key)
+        data: Optional[Dict[bytes, Any]] = self.db.get(key)
 
         if data is None:
             return [None for i in range(len(fields) + 1)]
 
         return [
-            data.get(f.encode() if isinstance(f, str) else f)
+            None
+            if (d := data.get(f.encode() if isinstance(f, str) else f)) is None
+            else (
+                d
+                if isinstance(d, bytes)
+                else (d.encode() if isinstance(d, str) else str(d).encode())
+            )
             for f in (field,) + fields
         ]
 
     async def hgetall(self, key: str) -> Dict[bytes, bytes]:
-        return self.db.get(key, {})
+        return {
+            f: d.encode()
+            if isinstance(d, str)
+            else (
+                d
+                if isinstance(d, bytes)
+                else (d.encode() if isinstance(d, str) else str(d).encode())
+            )
+            for f, d in self.db.get(key, {}).items()
+        }
