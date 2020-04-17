@@ -3,93 +3,73 @@ from typing import Any, ClassVar, Generic, Iterable, Optional, Type, Union
 
 from circuitbreaker import CircuitBreakerError
 
-from dbdaora.data import FallbackData, MemoryData
 from dbdaora.data_sources import FallbackDataSource, MemoryDataSource
-from dbdaora.entity import Entity
+from dbdaora.entity import Entity, EntityData
 from dbdaora.exceptions import EntityNotFoundError
 from dbdaora.keys import FallbackKey
 
 
 @dataclass
-class MemoryRepository(Generic[Entity, MemoryData, FallbackKey, FallbackData]):
+class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     entity_name: ClassVar[str]
-    query_cls: ClassVar[
-        Type['Query[Entity, MemoryData, FallbackKey, FallbackData]']
-    ]
+    query_cls: ClassVar[Type['Query[Entity, EntityData, FallbackKey]']]
     expire_time: int
     memory_data_source: MemoryDataSource
-    fallback_data_source: FallbackDataSource[FallbackKey, FallbackData]
+    fallback_data_source: FallbackDataSource[FallbackKey, EntityData]
 
     async def get_memory_data(
-        self,
-        key: str,
-        query: 'Query[Entity, MemoryData, FallbackKey, FallbackData]',
-    ) -> Optional[MemoryData]:
+        self, key: str, query: 'Query[Entity, EntityData, FallbackKey]',
+    ) -> Optional[EntityData]:
         raise NotImplementedError()
 
     async def get_fallback_data(
         self,
-        query: Union[
-            'Query[Entity, MemoryData, FallbackKey, FallbackData]', Entity
-        ],
+        query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
         for_memory: bool = False,
-    ) -> Optional[MemoryData]:
+    ) -> Optional[EntityData]:
         raise NotImplementedError()
 
     def response(
         self,
-        query: Union[
-            'Query[Entity, MemoryData, FallbackKey, FallbackData]', Entity
-        ],
-        data: MemoryData,
+        query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
+        data: EntityData,
     ) -> Union[Entity, Iterable[Entity]]:
         raise NotImplementedError()
 
-    async def add_memory_data(self, key: str, data: MemoryData) -> None:
-        raise NotImplementedError()
-
-    def make_memory_data(self, entity: Entity) -> MemoryData:
+    async def add_memory_data(self, key: str, data: EntityData,) -> None:
         raise NotImplementedError()
 
     async def add_memory_data_from_fallback(
         self,
-        query: Union[
-            'Query[Entity, MemoryData, FallbackKey, FallbackData]', Entity
-        ],
-        data: FallbackData,
-        for_memory: bool = False,
-    ) -> MemoryData:
+        key: str,
+        query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
+        data: EntityData,
+    ) -> EntityData:
         raise NotImplementedError()
 
-    def make_fallback_data(self, entity: Entity) -> FallbackData:
+    def make_memory_data(self, entity: Entity) -> EntityData:
+        raise NotImplementedError()
+
+    def make_fallback_data(self, entity: Entity) -> EntityData:
         raise NotImplementedError()
 
     def memory_key(
-        self,
-        query: Union[
-            'Query[Entity, MemoryData, FallbackKey, FallbackData]', Entity
-        ],
+        self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
     ) -> str:
         raise NotImplementedError()
 
     def fallback_key(
-        self,
-        query: Union[
-            'Query[Entity, MemoryData, FallbackKey, FallbackData]', Entity
-        ],
+        self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
     ) -> FallbackKey:
         raise NotImplementedError()
 
     def make_fallback_not_found_key(
-        self,
-        query: Union[
-            'Query[Entity, MemoryData, FallbackKey, FallbackData]', Entity
-        ],
+        self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
     ) -> str:
         raise NotImplementedError()
 
     async def get(
-        self, query: 'Query[Entity, MemoryData, FallbackKey, FallbackData]'
+        self, query: 'Query[Entity, EntityData, FallbackKey]'
     ) -> Union[Entity, Iterable[Entity]]:
         try:
             return await self.get_memory(query)
@@ -97,7 +77,7 @@ class MemoryRepository(Generic[Entity, MemoryData, FallbackKey, FallbackData]):
             return await self.get_fallback(query)
 
     async def get_memory(
-        self, query: 'Query[Entity, MemoryData, FallbackKey, FallbackData]'
+        self, query: 'Query[Entity, EntityData, FallbackKey]'
     ) -> Union[Entity, Iterable[Entity]]:
         memory_key = self.memory_key(query)
         memory_data = await self.get_memory_data(memory_key, query)
@@ -110,8 +90,9 @@ class MemoryRepository(Generic[Entity, MemoryData, FallbackKey, FallbackData]):
             if fallback_data is None:
                 await self.set_fallback_not_found(memory_key, query)
             else:
-                await self.add_memory_data(memory_key, fallback_data)
-                memory_data = await self.get_memory_data(memory_key, query)
+                memory_data = await self.add_memory_data_from_fallback(
+                    memory_key, query, fallback_data
+                )
 
         if memory_data is None:
             raise EntityNotFoundError(query)
@@ -119,10 +100,7 @@ class MemoryRepository(Generic[Entity, MemoryData, FallbackKey, FallbackData]):
         return self.response(query, memory_data)
 
     async def get_fallback(
-        self,
-        query: Union[
-            'Query[Entity, MemoryData, FallbackKey, FallbackData]', Entity
-        ],
+        self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
     ) -> Union[Entity, Iterable[Entity]]:
         data = await self.get_fallback_data(query)
 
@@ -155,11 +133,11 @@ class MemoryRepository(Generic[Entity, MemoryData, FallbackKey, FallbackData]):
 
     def query(
         self, *args: Any, **kwargs: Any
-    ) -> 'Query[Entity, MemoryData, FallbackKey, FallbackData]':
+    ) -> 'Query[Entity, EntityData, FallbackKey]':
         return self.query_cls(self, *args, **kwargs)
 
     async def delete(
-        self, query: 'Query[Entity, MemoryData, FallbackKey, FallbackData]'
+        self, query: 'Query[Entity, EntityData, FallbackKey]'
     ) -> None:
         try:
             await self.memory_data_source.delete(self.memory_key(query))
@@ -169,10 +147,7 @@ class MemoryRepository(Generic[Entity, MemoryData, FallbackKey, FallbackData]):
             await self.fallback_data_source.delete(self.fallback_key(query))
 
     async def already_got_not_found(
-        self,
-        query: Union[
-            'Query[Entity, MemoryData, FallbackKey, FallbackData]', Entity
-        ],
+        self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
     ) -> bool:
         return bool(
             await self.memory_data_source.exists(
@@ -181,10 +156,7 @@ class MemoryRepository(Generic[Entity, MemoryData, FallbackKey, FallbackData]):
         )
 
     async def delete_fallback_not_found(
-        self,
-        query: Union[
-            'Query[Entity, MemoryData, FallbackKey, FallbackData]', Entity
-        ],
+        self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
     ) -> None:
         await self.memory_data_source.delete(
             self.make_fallback_not_found_key(query)
@@ -193,9 +165,7 @@ class MemoryRepository(Generic[Entity, MemoryData, FallbackKey, FallbackData]):
     async def set_fallback_not_found(
         self,
         key: str,
-        query: Union[
-            'Query[Entity, MemoryData, FallbackKey, FallbackData]', Entity
-        ],
+        query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
     ) -> None:
         await self.memory_data_source.set(
             self.make_fallback_not_found_key(query), '1'

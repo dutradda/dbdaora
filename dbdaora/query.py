@@ -1,18 +1,17 @@
 import dataclasses
 from typing import Any, Generic, Iterable, Union
 
-from dbdaora.data import FallbackData, MemoryData
-from dbdaora.entity import Entity
+from dbdaora.entity import Entity, EntityData
 from dbdaora.keys import FallbackKey
 
 
 @dataclasses.dataclass(init=False)
-class Query(Generic[Entity, MemoryData, FallbackKey, FallbackData]):
-    repository: 'MemoryRepository[Entity, MemoryData, FallbackKey, FallbackData]'
+class Query(Generic[Entity, EntityData, FallbackKey]):
+    repository: 'MemoryRepository[Entity, EntityData, FallbackKey]'
 
     def __init__(
         self,
-        repository: 'MemoryRepository[Entity, MemoryData, FallbackKey, FallbackData]',
+        repository: 'MemoryRepository[Entity, EntityData, FallbackKey]',
         *args: Any,
         **kwargs: Any,
     ):

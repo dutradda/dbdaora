@@ -1,13 +1,12 @@
 import dataclasses
 
-from dbdaora.data import FallbackData, MemoryData
-from dbdaora.entity import Entity
+from dbdaora.entity import Entity, EntityData
 from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
 
 
 @dataclasses.dataclass
-class SortedSetQueryBase(Query[Entity, MemoryData, FallbackKey, FallbackData]):
+class SortedSetQueryBase(Query[Entity, EntityData, FallbackKey]):
     entity_id: str
     reverse: bool = False
     withscores: bool = False
@@ -15,7 +14,7 @@ class SortedSetQueryBase(Query[Entity, MemoryData, FallbackKey, FallbackData]):
 
 @dataclasses.dataclass
 class SortedSetByPageQuery(
-    SortedSetQueryBase[Entity, MemoryData, FallbackKey, FallbackData]
+    SortedSetQueryBase[Entity, EntityData, FallbackKey]
 ):
     page: int = 0
     page_size: int = -1
@@ -23,7 +22,7 @@ class SortedSetByPageQuery(
 
 @dataclasses.dataclass
 class SortedSetByScoreQuery(
-    SortedSetQueryBase[Entity, MemoryData, FallbackKey, FallbackData]
+    SortedSetQueryBase[Entity, EntityData, FallbackKey]
 ):
     min: float = float('-inf')
     max: float = float('inf')

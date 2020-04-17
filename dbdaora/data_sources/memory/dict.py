@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, Dict, Generic, Optional, Union
+from typing import Any, Dict, Generic, Optional, Sequence, Union
 
 from dbdaora.entity import Entity
 
@@ -50,11 +50,13 @@ class DictMemoryDataSource(MemoryDataSource, Generic[Entity]):
     async def zrange(
         self, key: str, withscores: bool = False
     ) -> Optional[SortedSetData]:
-        if key not in self.db:
+        data: Optional[SortedSetData] = self.db.get(key)
+
+        if data is None:
             return None
 
         if withscores:
-            return self.db[key]  # type: ignore
+            return data
 
         return [i[0] for i in self.db[key]]
 
@@ -66,3 +68,34 @@ class DictMemoryDataSource(MemoryDataSource, Generic[Entity]):
             [(data[i], data[i - 1]) for i in range(1, len(data), 2)],
             key=lambda d: d[1],
         )
+
+    async def hmset(
+        self,
+        key: str,
+        field: Union[str, bytes],
+        value: Union[str, bytes],
+        *pairs: Union[str, bytes],
+    ) -> None:
+        data = [field, value] + list(pairs)
+        self.db[key] = {
+            (f.encode() if isinstance(f := data[i - 1], str) else f): (  # noqa
+                v.encode() if isinstance(v := data[i], str) else v  # noqa
+            )
+            for i in range(1, len(data), 2)
+        }
+
+    async def hmget(
+        self, key: str, field: Union[str, bytes], *fields: Union[str, bytes]
+    ) -> Sequence[Optional[bytes]]:
+        data: Optional[Dict[bytes, bytes]] = self.db.get(key)
+
+        if data is None:
+            return [None for i in range(len(fields) + 1)]
+
+        return [
+            data.get(f.encode() if isinstance(f, str) else f)
+            for f in (field,) + fields
+        ]
+
+    async def hgetall(self, key: str) -> Dict[bytes, bytes]:
+        return self.db.get(key, {})

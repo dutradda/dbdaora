@@ -1,8 +1,9 @@
-from typing import ClassVar, Optional, Protocol, Sequence, Tuple, Union
+from typing import ClassVar, Dict, Optional, Protocol, Sequence, Tuple, Union
 
 
-SortedSetInput = Sequence[Union[float, str]]
-SortedSetData = Union[Sequence[bytes], Sequence[Tuple[bytes, float]]]
+rangeOutput = Sequence[bytes]
+rangeWithScoresOutput = Sequence[Tuple[bytes, float]]
+SortedSetData = Union[rangeOutput, rangeWithScoresOutput]
 
 
 class MemoryDataSource(Protocol):
@@ -39,4 +40,21 @@ class MemoryDataSource(Protocol):
     async def zadd(
         self, key: str, score: float, member: str, *pairs: Union[float, str]
     ) -> None:
+        ...
+
+    async def hmset(
+        self,
+        key: str,
+        field: Union[str, bytes],
+        value: Union[str, bytes],
+        *pairs: Union[str, bytes],
+    ) -> None:
+        ...
+
+    async def hmget(
+        self, key: str, field: Union[str, bytes], *fields: Union[str, bytes]
+    ) -> Sequence[Optional[bytes]]:
+        ...
+
+    async def hgetall(self, key: str) -> Dict[bytes, bytes]:
         ...
