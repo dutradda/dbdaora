@@ -1,31 +1,23 @@
-import pytest
 import dataclasses
-from typing import Optional, Dict, Any, TypeVar
+from typing import Optional, Dict, Any, ClassVar
 
-from dbdaora.repositories.memory.base import MemoryRepository
-from dbdaora.repositories.memory.base import MemoryRepository
-from dbdaora.repositories.memory.query.base import Query
-from dbdaora.entity import EntityData, Entity
-from dbdaora.exceptions import EntityNotFoundError
-from dbdaora.data_sources.memory import MemoryDataSource
 from dbdaora.data_sources.fallback import FallbackDataSource
-
-
-DBData = TypeVar('DBData')
+from dbdaora.data import FallbackData
 
 
 @dataclasses.dataclass
-class DictFallbackDataSource(FallbackDataSource):
-    db: Dict[str, Any] = dataclasses.field(default_factory=dict)
+class DictFallbackDataSource(FallbackDataSource[str, FallbackData]):
+    db: Dict[str, Optional[FallbackData]] = dataclasses.field(default_factory=dict)
+    key_separator: ClassVar[str] = ':'
 
-    async def get(self, key: str) -> Optional[DBData]:
+    def make_key(self, *key_parts: str) -> str:
+        return self.key_separator.join(key_parts)
+
+    async def get(self, key: str) -> Optional[FallbackData]:
         return self.db.get(key)
 
-    async def put(self, key: str, data: DBData) -> None:
+    async def put(self, key: str, data: FallbackData) -> None:
         self.db[key] = data
 
     async def delete(self, key: str) -> None:
         self.db.pop(key, None)
-
-    async def expire(self, key: str, time: int) -> None:
-        ...
