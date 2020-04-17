@@ -12,3 +12,7 @@ class InvalidQueryError(DBDaoraError):
 
 class InvalidHashAttribute(DBDaoraError):
     ...
+
+
+class InvalidEntityAnnotationError(DBDaoraError):
+    ...

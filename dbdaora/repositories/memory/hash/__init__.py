@@ -12,7 +12,7 @@ from typing import (
 )
 
 from dbdaora.entity import Entity
-from dbdaora.exceptions import InvalidQueryError
+from dbdaora.exceptions import InvalidEntityAnnotationError, InvalidQueryError
 from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
 
@@ -36,7 +36,11 @@ class HashRepository(MemoryRepository[Entity, HashData, FallbackKey]):
                 origin, MemoryRepository
             ):
                 cls.entity_cls = get_args(generic)[0]
-                break
+                return
+
+        raise InvalidEntityAnnotationError(
+            cls, f'Should be: {cls.__name__}[MyEntity]'
+        )
 
     def memory_key(
         self, query: Union[Query[Entity, HashData, FallbackKey], Entity],
