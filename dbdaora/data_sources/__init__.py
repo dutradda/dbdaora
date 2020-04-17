@@ -1,5 +1,9 @@
 from .fallback import FallbackDataSource
-from .memory import MemoryDataSource, SortedSetInput, SortedSetData
+from .memory import MemoryDataSource, SortedSetData, SortedSetInput
 
-
-__all__ = ['FallbackDataSource', 'MemoryDataSource', 'SortedSetInput', 'SortedSetData']
+__all__ = [
+    'FallbackDataSource',
+    'MemoryDataSource',
+    'SortedSetInput',
+    'SortedSetData',
+]

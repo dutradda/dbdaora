@@ -1,13 +1,15 @@
 import dataclasses
-from typing import Optional, Dict, Any, ClassVar
+from typing import Any, ClassVar, Dict, Optional
 
-from dbdaora.data_sources.fallback import FallbackDataSource
 from dbdaora.data import FallbackData
+from dbdaora.data_sources.fallback import FallbackDataSource
 
 
 @dataclasses.dataclass
 class DictFallbackDataSource(FallbackDataSource[str, FallbackData]):
-    db: Dict[str, Optional[FallbackData]] = dataclasses.field(default_factory=dict)
+    db: Dict[str, Optional[FallbackData]] = dataclasses.field(
+        default_factory=dict
+    )
     key_separator: ClassVar[str] = ':'
 
     def make_key(self, *key_parts: str) -> str:

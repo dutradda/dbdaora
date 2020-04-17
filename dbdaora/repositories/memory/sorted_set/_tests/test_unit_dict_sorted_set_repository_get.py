@@ -1,11 +1,15 @@
-import pytest
 import dataclasses
 
 import asynctest
+import pytest
 
-from dbdaora.repositories.memory import SortedSetRepository, SortedSetQueryBase, SortedSetEntity
-from dbdaora.repositories.memory.sorted_set.dict import DictSortedSetRepository
 from dbdaora.exceptions import EntityNotFoundError
+from dbdaora.repositories.memory import (
+    SortedSetEntity,
+    SortedSetQueryBase,
+    SortedSetRepository,
+)
+from dbdaora.repositories.memory.sorted_set.dict import DictSortedSetRepository
 
 
 @dataclasses.dataclass
@@ -17,7 +21,6 @@ class FakeRepository(DictSortedSetRepository):
     @classmethod
     def entity_key(cls, query):
         return query.entity_id
-
 
 
 @pytest.fixture
@@ -56,11 +59,17 @@ async def test_should_raise_not_found_error(repository, fake_entity, mocker):
 
 
 @pytest.mark.asyncio
-async def test_should_raise_not_found_error_when_already_raised_before(repository, mocker):
+async def test_should_raise_not_found_error_when_already_raised_before(
+    repository, mocker
+):
     fake_entity = 'fake'
     expected_query = SortedSetQueryBase(repository, entity_id=fake_entity)
-    repository.memory_data_source.zrange = asynctest.CoroutineMock(side_effect=[None])
-    repository.memory_data_source.exists = asynctest.CoroutineMock(side_effect=[True])
+    repository.memory_data_source.zrange = asynctest.CoroutineMock(
+        side_effect=[None]
+    )
+    repository.memory_data_source.exists = asynctest.CoroutineMock(
+        side_effect=[True]
+    )
     repository.memory_data_source.zadd = asynctest.CoroutineMock()
 
     with pytest.raises(EntityNotFoundError) as exc_info:
@@ -77,11 +86,15 @@ async def test_should_raise_not_found_error_when_already_raised_before(repositor
 
 
 @pytest.mark.asyncio
-async def test_should_get_from_fallback(repository, fake_entity_withscores, fake_entity):
+async def test_should_get_from_fallback(
+    repository, fake_entity_withscores, fake_entity
+):
     repository.memory_data_source.zrange = asynctest.CoroutineMock(
         side_effect=[None, fake_entity.data]
     )
-    repository.fallback_data_source.db['fake:fake'] = fake_entity_withscores.data
+    repository.fallback_data_source.db[
+        'fake:fake'
+    ] = fake_entity_withscores.data
     entity = await repository.query(fake_entity.id).get()
 
     assert repository.memory_data_source.zrange.called
@@ -89,12 +102,16 @@ async def test_should_get_from_fallback(repository, fake_entity_withscores, fake
 
 
 @pytest.mark.asyncio
-async def test_should_set_memory_after_got_fallback(repository, fake_entity_withscores, fake_entity, mocker):
+async def test_should_set_memory_after_got_fallback(
+    repository, fake_entity_withscores, fake_entity, mocker
+):
     repository.memory_data_source.zrange = asynctest.CoroutineMock(
         side_effect=[None, fake_entity.data]
     )
     repository.memory_data_source.zadd = asynctest.CoroutineMock()
-    repository.fallback_data_source.db['fake:fake'] = fake_entity_withscores.data
+    repository.fallback_data_source.db[
+        'fake:fake'
+    ] = fake_entity_withscores.data
     entity = await repository.query(fake_entity.id).get()
 
     assert repository.memory_data_source.zrange.called
@@ -102,4 +119,3 @@ async def test_should_set_memory_after_got_fallback(repository, fake_entity_with
         mocker.call('fake:fake', 1, '2', 0, '1')
     ]
     assert entity == fake_entity
-

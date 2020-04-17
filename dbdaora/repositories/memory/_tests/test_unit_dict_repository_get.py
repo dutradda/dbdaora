@@ -1,11 +1,11 @@
-import pytest
 import dataclasses
 
 import asynctest
+import pytest
 
-from dbdaora.repositories.memory import DictMemoryRepository
 from dbdaora.exceptions import EntityNotFoundError
 from dbdaora.query import Query
+from dbdaora.repositories.memory import DictMemoryRepository
 
 
 @dataclasses.dataclass
@@ -55,11 +55,17 @@ async def test_should_raise_not_found_error(repository):
 
 
 @pytest.mark.asyncio
-async def test_should_raise_not_found_error_when_already_raised_before(repository, mocker):
+async def test_should_raise_not_found_error_when_already_raised_before(
+    repository, mocker
+):
     fake_entity = 'fake'
     expected_query = FakeQuery(repository, entity_id=fake_entity)
-    repository.memory_data_source.get_obj = mocker.MagicMock(side_effect=[None])
-    repository.memory_data_source.exists = asynctest.CoroutineMock(side_effect=[True])
+    repository.memory_data_source.get_obj = mocker.MagicMock(
+        side_effect=[None]
+    )
+    repository.memory_data_source.exists = asynctest.CoroutineMock(
+        side_effect=[True]
+    )
     repository.memory_data_source.set = asynctest.CoroutineMock()
 
     with pytest.raises(EntityNotFoundError) as exc_info:
@@ -88,7 +94,6 @@ async def test_should_get_from_fallback(repository, mocker):
     assert entity == expected_entity
 
 
-
 @pytest.mark.asyncio
 async def test_should_set_memory_after_got_fallback(repository, mocker):
     expected_entity = 'fake'
@@ -104,4 +109,3 @@ async def test_should_set_memory_after_got_fallback(repository, mocker):
         mocker.call('fake:fake', expected_entity)
     ]
     assert entity == expected_entity
-

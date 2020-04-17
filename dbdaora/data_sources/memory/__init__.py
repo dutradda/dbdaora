@@ -1,8 +1,17 @@
-from typing import Optional, Protocol, Union, Dict, List, Generic, ClassVar, Sequence, Tuple
+from typing import (
+    ClassVar,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Protocol,
+    Sequence,
+    Tuple,
+    Union,
+)
 
-from dbdaora.keys import MemoryKey
 from dbdaora.data import MemoryData
-
+from dbdaora.keys import MemoryKey
 
 SortedSetInput = Sequence[Union[float, str]]
 SortedSetData = Union[Sequence[bytes], Sequence[Tuple[bytes, float]]]
@@ -29,10 +38,14 @@ class MemoryDataSource(Protocol):
     async def exists(self, key: str) -> int:
         ...
 
-    async def zrevrange(self, key: str, withscores: bool = False) -> Optional[SortedSetData]:
+    async def zrevrange(
+        self, key: str, withscores: bool = False
+    ) -> Optional[SortedSetData]:
         ...
 
-    async def zrange(self, key: str, withscores: bool = False) -> Optional[SortedSetData]:
+    async def zrange(
+        self, key: str, withscores: bool = False
+    ) -> Optional[SortedSetData]:
         ...
 
     async def zadd(

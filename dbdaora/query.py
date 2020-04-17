@@ -1,9 +1,9 @@
 import dataclasses
-from typing import Generic, Any, Union, Iterable
+from typing import Any, Generic, Iterable, Union
 
+from dbdaora.data import FallbackData, MemoryData
 from dbdaora.entity import Entity
-from dbdaora.keys import MemoryKey, FallbackKey
-from dbdaora.data import MemoryData, FallbackData
+from dbdaora.keys import FallbackKey, MemoryKey
 
 
 @dataclasses.dataclass(init=False)

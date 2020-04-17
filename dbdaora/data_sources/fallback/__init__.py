@@ -1,4 +1,5 @@
-from typing import Generic, Optional, Any
+from typing import Any, Generic, Optional
+
 from dbdaora.data import FallbackData
 from dbdaora.keys import FallbackKey
 

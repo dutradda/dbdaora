@@ -1,8 +1,9 @@
 import dataclasses
-from typing import Optional, Dict, Any, Generic, Iterable, Tuple, Union
+from typing import Any, Dict, Generic, Iterable, Optional, Tuple, Union
+
+from dbdaora.entity import Entity
 
 from . import MemoryDataSource, SortedSetData, SortedSetInput
-from dbdaora.entity import Entity
 
 
 @dataclasses.dataclass
@@ -30,7 +31,9 @@ class DictMemoryDataSource(MemoryDataSource, Generic[Entity]):
     async def exists(self, key: str) -> bool:
         return key in self.db
 
-    async def zrevrange(self, key: str, withscores: bool = False) -> Optional[SortedSetData]:
+    async def zrevrange(
+        self, key: str, withscores: bool = False
+    ) -> Optional[SortedSetData]:
         data: SortedSetData
 
         if key not in self.db:
@@ -44,7 +47,9 @@ class DictMemoryDataSource(MemoryDataSource, Generic[Entity]):
         data.reverse()
         return data
 
-    async def zrange(self, key: str, withscores: bool = False) -> Optional[SortedSetData]:
+    async def zrange(
+        self, key: str, withscores: bool = False
+    ) -> Optional[SortedSetData]:
         if key not in self.db:
             return None
 
@@ -58,6 +63,6 @@ class DictMemoryDataSource(MemoryDataSource, Generic[Entity]):
     ) -> None:
         data = [score, member] + list(pairs)
         self.db[key] = sorted(
-            [(data[i], data[i-1]) for i in range(1, len(data), 2)],
-            key=lambda d: d[1]
+            [(data[i], data[i - 1]) for i in range(1, len(data), 2)],
+            key=lambda d: d[1],
         )
