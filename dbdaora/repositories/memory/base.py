@@ -1,23 +1,12 @@
 from dataclasses import dataclass
-from typing import (
-    Any,
-    ClassVar,
-    Generic,
-    Iterable,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-    get_args,
-)
+from typing import Any, ClassVar, Generic, Iterable, Optional, Type, Union
 
 from circuitbreaker import CircuitBreakerError
 
 from dbdaora.data import FallbackData, MemoryData
 from dbdaora.data_sources import FallbackDataSource, MemoryDataSource
 from dbdaora.entity import Entity
-from dbdaora.exceptions import EntityNotFoundError, QueryClassRequiredError
+from dbdaora.exceptions import EntityNotFoundError
 from dbdaora.keys import FallbackKey
 
 

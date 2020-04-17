@@ -3,7 +3,7 @@ from typing import Any, Generic, Iterable, Union
 
 from dbdaora.data import FallbackData, MemoryData
 from dbdaora.entity import Entity
-from dbdaora.keys import FallbackKey, MemoryKey
+from dbdaora.keys import FallbackKey
 
 
 @dataclasses.dataclass(init=False)

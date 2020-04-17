@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, ClassVar, Dict, Optional
+from typing import ClassVar, Dict, Optional
 
 from dbdaora.data import FallbackData
 from dbdaora.data_sources.fallback import FallbackDataSource

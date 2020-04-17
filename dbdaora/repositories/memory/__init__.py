@@ -7,6 +7,7 @@ from .sorted_set.query import (
     SortedSetQueryBase,
 )
 
+
 __all__ = [
     'DictMemoryRepository',
     'SortedSetRepository',

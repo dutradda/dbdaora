@@ -1,9 +1,9 @@
 import dataclasses
-from typing import Any, Dict, Generic, Iterable, Optional, Tuple, Union
+from typing import Any, Dict, Generic, Optional, Union
 
 from dbdaora.entity import Entity
 
-from . import MemoryDataSource, SortedSetData, SortedSetInput
+from . import MemoryDataSource, SortedSetData
 
 
 @dataclasses.dataclass

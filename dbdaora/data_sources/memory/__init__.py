@@ -1,17 +1,5 @@
-from typing import (
-    ClassVar,
-    Dict,
-    Generic,
-    List,
-    Optional,
-    Protocol,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import ClassVar, Optional, Protocol, Sequence, Tuple, Union
 
-from dbdaora.data import MemoryData
-from dbdaora.keys import MemoryKey
 
 SortedSetInput = Sequence[Union[float, str]]
 SortedSetData = Union[Sequence[bytes], Sequence[Tuple[bytes, float]]]

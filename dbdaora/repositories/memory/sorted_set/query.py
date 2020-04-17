@@ -2,7 +2,7 @@ import dataclasses
 
 from dbdaora.data import FallbackData, MemoryData
 from dbdaora.entity import Entity
-from dbdaora.keys import FallbackKey, MemoryKey
+from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
 
 

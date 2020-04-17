@@ -1,35 +1,14 @@
 import itertools
-from dataclasses import dataclass
-from typing import (
-    Any,
-    ClassVar,
-    Dict,
-    Generic,
-    Iterable,
-    Optional,
-    Type,
-    TypeVar,
-    Union,
-    get_args,
-)
+from typing import ClassVar, Iterable, Optional, Type, Union
 
-from dbdaora.data import FallbackData, MemoryData
-from dbdaora.data_sources import (
-    FallbackDataSource,
-    MemoryDataSource,
-    SortedSetData,
-)
-from dbdaora.exceptions import EntityNotFoundError, InvalidQueryError
-from dbdaora.keys import FallbackKey, MemoryKey
+from dbdaora.data_sources import SortedSetData
+from dbdaora.exceptions import InvalidQueryError
+from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
 
 from ..base import MemoryRepository
 from .entity import SortedSetEntity
-from .query import (
-    SortedSetByPageQuery,
-    SortedSetByScoreQuery,
-    SortedSetQueryBase,
-)
+from .query import SortedSetQueryBase
 
 
 class SortedSetRepository(

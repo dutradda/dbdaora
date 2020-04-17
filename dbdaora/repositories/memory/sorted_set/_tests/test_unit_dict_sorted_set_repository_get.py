@@ -4,11 +4,7 @@ import asynctest
 import pytest
 
 from dbdaora.exceptions import EntityNotFoundError
-from dbdaora.repositories.memory import (
-    SortedSetEntity,
-    SortedSetQueryBase,
-    SortedSetRepository,
-)
+from dbdaora.repositories.memory import SortedSetEntity, SortedSetQueryBase
 from dbdaora.repositories.memory.sorted_set.dict import DictSortedSetRepository
 
 
