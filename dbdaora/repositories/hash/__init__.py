@@ -11,6 +11,8 @@ from typing import (
     get_origin,
 )
 
+from jsondaora import asdataclass
+
 from dbdaora.entity import Entity, EntityData
 from dbdaora.exceptions import InvalidEntityAnnotationError, InvalidQueryError
 from dbdaora.keys import FallbackKey
@@ -26,6 +28,7 @@ HashData = Dict[Union[bytes, str], Union[bytes, str]]
 @dataclasses.dataclass
 class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
     entity_cls: ClassVar[Type[Entity]]
+    fields_types: ClassVar[Dict[str, str]]
     query_cls = HashQuery
 
     def __init_subclass__(cls) -> None:
@@ -57,6 +60,8 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
             if not data:
                 return None
 
+            return data  # type: ignore
+
         data = await self.memory_data_source.hgetall(key)
 
         if not data:
@@ -76,7 +81,7 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
 
         if not for_memory and isinstance(query, HashQuery) and query.fields:
             return {
-                f: v
+                f.encode(): v  # type: ignore
                 for f, v in data.items()
                 if isinstance(query, HashQuery)
                 and query.fields
@@ -90,7 +95,7 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
         query: Union[Query[Entity, HashData, FallbackKey], Entity],
         data: HashData,
     ) -> Union[Entity, Iterable[Entity]]:
-        return self.entity_cls(**serializer.deserialize(data))  # type: ignore
+        return asdataclass(data, self.entity_cls, encode=True)  # type: ignore
 
     async def add_memory_data(
         self, key: str, data: HashData, from_fallback: bool = False
@@ -125,6 +130,8 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
         await self.add_memory_data(key, data)
 
         if isinstance(query, HashQuery) and query.fields:
-            return {f: v for f, v in data.items() if f in query.fields}
+            return {
+                f: v for f, v in data.items() if f.decode() in query.fields  # type: ignore
+            }
 
         return data
