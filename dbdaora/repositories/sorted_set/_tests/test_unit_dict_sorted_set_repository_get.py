@@ -3,42 +3,20 @@ import dataclasses
 import asynctest
 import pytest
 
+from dbdaora import SortedSetEntity, SortedSetQueryBase, SortedSetRepository
 from dbdaora.exceptions import EntityNotFoundError
-from dbdaora.repositories import SortedSetEntity, SortedSetQueryBase
-from dbdaora.repositories.sorted_set.dict import DictSortedSetRepository
-
-
-@dataclasses.dataclass
-class FakeRepository(DictSortedSetRepository[str, str, str]):
-    query_cls = SortedSetQueryBase
-    entity_name = 'fake'
-    expire_time: int = 1
-
-    @classmethod
-    def entity_key(cls, query):
-        return query.entity_id
 
 
 @pytest.fixture
-def repository(mocker):
-    return FakeRepository()
-
-
-@pytest.fixture
-def fake_entity():
-    return SortedSetEntity(id='fake', data=['1', '2'])
-
-
-@pytest.fixture
-def fake_entity_withscores():
-    return SortedSetEntity(id='fake', data=[('1', 0), ('2', 1)])
+def repository(dict_repository):
+    return dict_repository
 
 
 @pytest.mark.asyncio
 async def test_should_get_from_memory(
     repository, fake_entity, fake_entity_withscores
 ):
-    repository.memory_data_source.db['fake:fake'] = fake_entity_withscores.data
+    await repository.memory_data_source.zadd('fake:fake', 0, '1', 2, '2')
     entity = await repository.query(fake_entity.id).get()
 
     assert entity == fake_entity
