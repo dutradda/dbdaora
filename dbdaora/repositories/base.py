@@ -13,9 +13,9 @@ from dbdaora.keys import FallbackKey
 class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     entity_name: ClassVar[str]
     query_cls: ClassVar[Type['Query[Entity, EntityData, FallbackKey]']]
-    expire_time: int
     memory_data_source: MemoryDataSource
     fallback_data_source: FallbackDataSource[FallbackKey, EntityData]
+    expire_time: int
 
     async def get_memory_data(
         self, key: str, query: 'Query[Entity, EntityData, FallbackKey]',

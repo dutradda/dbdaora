@@ -25,10 +25,7 @@ from .query import HashQuery
 HashData = Dict[Union[bytes, str], Union[bytes, str]]
 
 
-@dataclasses.dataclass
 class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
-    entity_cls: ClassVar[Type[Entity]]
-    fields_types: ClassVar[Dict[str, str]]
     query_cls = HashQuery
 
     def __init_subclass__(cls) -> None:

@@ -3,14 +3,17 @@ import dataclasses
 import asynctest
 import pytest
 
-from dbdaora import SortedSetEntity, SortedSetQueryBase, SortedSetRepository
-from dbdaora.data_sources.fallback.dict import DictFallbackDataSource
-from dbdaora.data_sources.memory.dict import DictMemoryDataSource
+from dbdaora import (
+    DictFallbackDataSource,
+    DictMemoryDataSource,
+    SortedSetEntity,
+    SortedSetQuery,
+    SortedSetRepository,
+)
 from dbdaora.exceptions import EntityNotFoundError
 
 
-class FakeRepository(SortedSetRepository[str, str, str]):
-    query_cls = SortedSetQueryBase
+class FakeRepository(SortedSetRepository[str]):
     entity_name = 'fake'
 
 

@@ -20,22 +20,8 @@ from ..base import MemoryRepository
 from .query import EntityBasedQuery
 
 
-@dataclasses.dataclass
 class EntityBasedRepository(MemoryRepository[Entity, EntityData, FallbackKey]):
     entity_cls: ClassVar[Type[Entity]]
-
-    def __init_subclass__(cls) -> None:
-        for generic in cls.__orig_bases__:  # type: ignore
-            origin = get_origin(generic)
-            if isinstance(origin, type) and issubclass(
-                origin, MemoryRepository
-            ):
-                cls.entity_cls = get_args(generic)[0]
-                return
-
-        raise InvalidEntityAnnotationError(
-            cls, f'Should be: {cls.__name__}[MyEntity]'
-        )
 
     def memory_key(
         self, query: Union[Query[Entity, EntityData, FallbackKey], Entity],

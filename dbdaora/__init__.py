@@ -12,11 +12,7 @@ from dbdaora.repositories.hash import HashData, HashRepository
 from dbdaora.repositories.hash.query import HashQuery
 from dbdaora.repositories.sorted_set import SortedSetRepository
 from dbdaora.repositories.sorted_set.entity import SortedSetEntity
-from dbdaora.repositories.sorted_set.query import (
-    SortedSetByPageQuery,
-    SortedSetByScoreQuery,
-    SortedSetQueryBase,
-)
+from dbdaora.repositories.sorted_set.query import SortedSetQuery
 
 
 __all__ = [
@@ -25,9 +21,7 @@ __all__ = [
     'HashQuery',
     'HashData',
     'SortedSetRepository',
-    'SortedSetQueryBase',
-    'SortedSetByPageQuery',
-    'SortedSetByScoreQuery',
+    'SortedSetQuery',
     'SortedSetEntity',
     'DictFallbackDataSource',
 ]

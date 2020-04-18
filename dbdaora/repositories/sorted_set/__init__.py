@@ -9,20 +9,18 @@ from dbdaora.query import Query
 from ..entity_based import EntityBasedRepository
 from ..entity_based.query import EntityBasedQuery
 from .entity import SortedSetEntity
-from .query import SortedSetQueryBase
+from .query import SortedSetQuery
 
 
 class SortedSetRepository(
     EntityBasedRepository[SortedSetEntity, SortedSetData, FallbackKey],
 ):
-    query_cls: ClassVar[
-        Type[EntityBasedQuery[SortedSetEntity, SortedSetData, FallbackKey]]
-    ]
+    query_cls = SortedSetQuery
 
     async def get_memory_data(  # type: ignore
         self,
         key: str,
-        query: SortedSetQueryBase[SortedSetEntity, SortedSetData, FallbackKey],
+        query: SortedSetQuery[SortedSetEntity, SortedSetData, FallbackKey],
     ) -> Optional[SortedSetData]:
         if query.reverse:
             return await self.memory_data_source.zrevrange(key)
@@ -32,7 +30,7 @@ class SortedSetRepository(
     async def get_fallback_data(  # type: ignore
         self,
         query: Union[
-            SortedSetQueryBase[SortedSetEntity, SortedSetData, FallbackKey],
+            SortedSetQuery[SortedSetEntity, SortedSetData, FallbackKey],
             SortedSetEntity,
         ],
         for_memory: bool = False,
@@ -44,7 +42,7 @@ class SortedSetRepository(
 
         if (
             for_memory
-            or isinstance(query, SortedSetQueryBase)
+            or isinstance(query, SortedSetQuery)
             and query.withscores
         ):
             return data
@@ -53,7 +51,7 @@ class SortedSetRepository(
 
     def response(  # type: ignore
         self,
-        query: SortedSetQueryBase[SortedSetEntity, SortedSetData, FallbackKey],
+        query: SortedSetQuery[SortedSetEntity, SortedSetData, FallbackKey],
         data: SortedSetData,
     ) -> Union[SortedSetEntity, Iterable[SortedSetEntity]]:
         return SortedSetEntity(id=query.entity_id, data=data)
@@ -69,11 +67,11 @@ class SortedSetRepository(
     def make_fallback_not_found_key(  # type: ignore
         self,
         query: Union[
-            SortedSetQueryBase[SortedSetEntity, SortedSetData, FallbackKey],
+            SortedSetQuery[SortedSetEntity, SortedSetData, FallbackKey],
             SortedSetEntity,
         ],
     ) -> str:
-        if isinstance(query, SortedSetQueryBase):
+        if isinstance(query, SortedSetQuery):
             return self.memory_data_source.make_key(
                 self.entity_name, 'not-found', query.entity_id
             )
@@ -87,14 +85,14 @@ class SortedSetRepository(
         self,
         key: str,
         query: Union[
-            SortedSetQueryBase[SortedSetEntity, SortedSetData, FallbackKey],
+            SortedSetQuery[SortedSetEntity, SortedSetData, FallbackKey],
             SortedSetEntity,
         ],
         data: SortedSetData,
     ) -> SortedSetData:
         await self.add_memory_data(key, data)
 
-        if isinstance(query, SortedSetQueryBase) and query.withscores:
+        if isinstance(query, SortedSetQuery) and query.withscores:
             return data
 
         return [i[0] for i in data]  # type: ignore

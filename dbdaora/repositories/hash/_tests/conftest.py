@@ -3,7 +3,7 @@ from typing import Optional
 
 import pytest
 
-from dbdaora import HashData, HashRepository
+from dbdaora import HashRepository
 from dbdaora.data_sources.fallback.dict import DictFallbackDataSource
 from dbdaora.data_sources.memory.dict import DictMemoryDataSource
 
@@ -16,7 +16,7 @@ class FakeEntity:
     boolean: Optional[bool] = None
 
 
-class FakeRepository(HashRepository[FakeEntity, HashData, str]):
+class FakeRepository(HashRepository[FakeEntity, str]):
     entity_name = 'fake'
 
 

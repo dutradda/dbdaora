@@ -3,7 +3,7 @@ import dataclasses
 import asynctest
 import pytest
 
-from dbdaora import SortedSetEntity, SortedSetQueryBase, SortedSetRepository
+from dbdaora import SortedSetEntity, SortedSetQuery, SortedSetRepository
 from dbdaora.exceptions import EntityNotFoundError
 
 
@@ -24,7 +24,7 @@ async def test_should_get_from_memory(
 
 @pytest.mark.asyncio
 async def test_should_raise_not_found_error(repository, fake_entity, mocker):
-    fake_query = SortedSetQueryBase(repository, fake_entity.id)
+    fake_query = SortedSetQuery(repository, fake_entity.id)
 
     with pytest.raises(EntityNotFoundError) as exc_info:
         await repository.query(fake_entity.id).get()
@@ -37,7 +37,7 @@ async def test_should_raise_not_found_error_when_already_raised_before(
     repository, mocker
 ):
     fake_entity = 'fake'
-    expected_query = SortedSetQueryBase(repository, entity_id=fake_entity)
+    expected_query = SortedSetQuery(repository, entity_id=fake_entity)
     repository.memory_data_source.zrange = asynctest.CoroutineMock(
         side_effect=[None]
     )
