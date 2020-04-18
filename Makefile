@@ -16,3 +16,17 @@ release-pypi:
 	@flit publish
 
 deploy: deploy-docs release-pypi
+
+integration: isort black mypy tests
+
+isort:
+	isort -y -w 100 -up -tc -rc -lai 2 -ac -w 79 -m 3 dbdaora
+
+black:
+	black -S -t py38 -l 79 dbdaora
+
+mypy:
+	mypy dbdaora --strict
+
+tests:
+	pytest dbdaora -xvv --disable-warnings
