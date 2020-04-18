@@ -4,9 +4,9 @@ import asynctest
 import pytest
 
 from dbdaora.exceptions import EntityNotFoundError
-from dbdaora.repositories.memory.hash import serializer
-from dbdaora.repositories.memory.hash.dict import DictHashRepository
-from dbdaora.repositories.memory.hash.query import HashQuery
+from dbdaora.repositories.hash import serializer
+from dbdaora.repositories.hash.dict import DictHashRepository
+from dbdaora.repositories.hash.query import HashQuery
 
 
 @dataclasses.dataclass

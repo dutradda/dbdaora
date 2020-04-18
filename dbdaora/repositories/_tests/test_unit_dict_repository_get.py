@@ -5,7 +5,7 @@ import pytest
 
 from dbdaora.exceptions import EntityNotFoundError
 from dbdaora.query import Query
-from dbdaora.repositories.memory import DictMemoryRepository
+from dbdaora.repositories import DictMemoryRepository
 
 
 @dataclasses.dataclass

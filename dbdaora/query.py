@@ -21,4 +21,4 @@ class Query(Generic[Entity, EntityData, FallbackKey]):
         return await self.repository.get(self)
 
 
-from .repositories.memory.base import MemoryRepository  # noqa isort:skip
+from .repositories.base import MemoryRepository  # noqa isort:skip
