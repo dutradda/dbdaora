@@ -18,7 +18,7 @@ class FakeEntity:
 
 
 @dataclasses.dataclass
-class FakeRepository(DictHashRepository[FakeEntity, str]):
+class FakeRepository(DictHashRepository[FakeEntity, FakeEntity, str]):
     entity_name = 'fake'
     expire_time: int = 1
 

@@ -3,10 +3,9 @@ from typing import Optional, Sequence
 
 from dbdaora.entity import Entity, EntityData
 from dbdaora.keys import FallbackKey
-
-from ..entity_based.query import EntityBasedQuery
+from dbdaora.query import Query
 
 
 @dataclasses.dataclass
-class HashQuery(EntityBasedQuery[Entity, EntityData, FallbackKey]):
-    fields: Optional[Sequence[str]] = None
+class EntityBasedQuery(Query[Entity, EntityData, FallbackKey]):
+    entity_id: str

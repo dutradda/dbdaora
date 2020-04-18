@@ -1,58 +1,23 @@
 import itertools
-from typing import ClassVar, Iterable, Optional, Type, Union
+from typing import ClassVar, Generic, Iterable, Optional, Type, Union
 
 from dbdaora.data_sources import SortedSetData
 from dbdaora.exceptions import InvalidQueryError
 from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
 
-from ..base import MemoryRepository
+from ..entity_based import EntityBasedRepository
+from ..entity_based.query import EntityBasedQuery
 from .entity import SortedSetEntity
 from .query import SortedSetQueryBase
 
 
 class SortedSetRepository(
-    MemoryRepository[SortedSetEntity, SortedSetData, FallbackKey]
+    EntityBasedRepository[SortedSetEntity, SortedSetData, FallbackKey],
 ):
     query_cls: ClassVar[
-        Type[Query[SortedSetEntity, SortedSetData, FallbackKey]]
+        Type[EntityBasedQuery[SortedSetEntity, SortedSetData, FallbackKey]]
     ]
-
-    def memory_key(
-        self,
-        query: Union[
-            Query[SortedSetEntity, SortedSetData, FallbackKey],
-            SortedSetEntity,
-        ],
-    ) -> str:
-        if isinstance(query, SortedSetQueryBase):
-            return self.memory_data_source.make_key(
-                self.entity_name, query.entity_id
-            )
-
-        if isinstance(query, SortedSetEntity):
-            return self.memory_data_source.make_key(self.entity_name, query.id)
-
-        raise InvalidQueryError(query)
-
-    def fallback_key(
-        self,
-        query: Union[
-            Query[SortedSetEntity, SortedSetData, FallbackKey],
-            SortedSetEntity,
-        ],
-    ) -> FallbackKey:
-        if isinstance(query, SortedSetQueryBase):
-            return self.fallback_data_source.make_key(
-                self.entity_name, query.entity_id
-            )
-
-        if isinstance(query, SortedSetEntity):
-            return self.fallback_data_source.make_key(
-                self.entity_name, query.id
-            )
-
-        raise InvalidQueryError(query)
 
     async def get_memory_data(  # type: ignore
         self,

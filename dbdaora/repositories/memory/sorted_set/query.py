@@ -2,12 +2,12 @@ import dataclasses
 
 from dbdaora.entity import Entity, EntityData
 from dbdaora.keys import FallbackKey
-from dbdaora.query import Query
+
+from ..entity_based.query import EntityBasedQuery
 
 
 @dataclasses.dataclass
-class SortedSetQueryBase(Query[Entity, EntityData, FallbackKey]):
-    entity_id: str
+class SortedSetQueryBase(EntityBasedQuery[Entity, EntityData, FallbackKey]):
     reverse: bool = False
     withscores: bool = False
 

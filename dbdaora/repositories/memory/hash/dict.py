@@ -1,4 +1,5 @@
 import dataclasses
+from typing import Generic
 
 from dbdaora.data_sources.fallback.dict import DictFallbackDataSource
 from dbdaora.data_sources.memory.dict import DictMemoryDataSource
@@ -8,7 +9,7 @@ from . import HashData, HashRepository
 
 
 @dataclasses.dataclass
-class DictHashRepository(HashRepository[Entity, str]):
+class DictHashRepository(HashRepository[Entity, HashData, str]):  # type: ignore
     memory_data_source: DictMemoryDataSource[Entity] = dataclasses.field(
         default_factory=DictMemoryDataSource
     )

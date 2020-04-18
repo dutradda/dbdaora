@@ -9,7 +9,7 @@ from dbdaora.repositories.memory.sorted_set.dict import DictSortedSetRepository
 
 
 @dataclasses.dataclass
-class FakeRepository(DictSortedSetRepository):
+class FakeRepository(DictSortedSetRepository[str, str, str]):
     query_cls = SortedSetQueryBase
     entity_name = 'fake'
     expire_time: int = 1
