@@ -3,9 +3,11 @@ from typing import Optional
 
 import pytest
 
-from dbdaora import HashRepository
-from dbdaora.data_sources.fallback.dict import DictFallbackDataSource
-from dbdaora.data_sources.memory.dict import DictMemoryDataSource
+from dbdaora import (
+    DictFallbackDataSource,
+    DictMemoryDataSource,
+    HashRepository,
+)
 
 
 @dataclasses.dataclass

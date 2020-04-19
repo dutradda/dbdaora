@@ -13,6 +13,7 @@ from dbdaora.repositories.hash.query import HashQuery
 from dbdaora.repositories.sorted_set import SortedSetRepository
 from dbdaora.repositories.sorted_set.entity import SortedSetEntity
 from dbdaora.repositories.sorted_set.query import SortedSetQuery
+from dbdaora.services.hash import HashService
 
 
 __all__ = [
@@ -24,6 +25,8 @@ __all__ = [
     'SortedSetQuery',
     'SortedSetEntity',
     'DictFallbackDataSource',
+    'AioRedisDataSource',
+    'HashService',
 ]
 
 if DictMemoryDataSource:
