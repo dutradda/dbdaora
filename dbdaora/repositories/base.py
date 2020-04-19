@@ -173,9 +173,9 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         await self.memory_data_source.expire(key, self.expire_time)
 
     def query(
-        self, *args: Any, **kwargs: Any
+        self, *args: Any, memory: bool = True, **kwargs: Any
     ) -> 'Query[Entity, EntityData, FallbackKey]':
-        return self.query_cls(self, *args, **kwargs)
+        return self.query_cls(self, memory, *args, **kwargs)  # type: ignore
 
     async def delete(
         self,

@@ -5,25 +5,18 @@ from dbdaora.entity import Entity, EntityData
 from dbdaora.keys import FallbackKey
 
 
-@dataclasses.dataclass(init=False)
+@dataclasses.dataclass
 class Query(Generic[Entity, EntityData, FallbackKey]):
     repository: 'MemoryRepository[Entity, EntityData, FallbackKey]'
-
-    def __init__(
-        self,
-        repository: 'MemoryRepository[Entity, EntityData, FallbackKey]',
-        *args: Any,
-        **kwargs: Any,
-    ):
-        self.repository = repository
+    memory: bool
 
     @property
     async def entities(self) -> List[Entity]:
-        return await self.repository.entities(self)
+        return await self.repository.entities(self, memory=self.memory)
 
     @property
     async def entity(self) -> Entity:
-        return await self.repository.entity(self)
+        return await self.repository.entity(self, memory=self.memory)
 
 
 from .repositories.base import MemoryRepository  # noqa isort:skip

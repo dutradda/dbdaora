@@ -4,6 +4,7 @@
 __version__ = '0.0.11'
 
 
+from dbdaora.circuitbreaker import AsyncCircuitBreaker
 from dbdaora.data_sources.fallback.dict import DictFallbackDataSource
 from dbdaora.data_sources.memory.aioredis import AioRedisDataSource
 from dbdaora.data_sources.memory.dict import DictMemoryDataSource
@@ -27,6 +28,7 @@ __all__ = [
     'DictFallbackDataSource',
     'AioRedisDataSource',
     'HashService',
+    'AsyncCircuitBreaker',
 ]
 
 if DictMemoryDataSource:
