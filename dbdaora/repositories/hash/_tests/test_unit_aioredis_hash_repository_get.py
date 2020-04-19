@@ -19,7 +19,7 @@ async def test_should_get_from_memory(
     await repository.memory_data_source.hmset(
         'fake:fake', *itertools.chain(*serialized_fake_entity.items())
     )
-    entity = await repository.query('fake').get()
+    entity = await repository.query('fake').entity
 
     assert entity == fake_entity
 
@@ -30,7 +30,7 @@ async def test_should_raise_not_found_error(repository, fake_entity, mocker):
     fake_query = HashQuery(repository, fake_entity.id)
 
     with pytest.raises(EntityNotFoundError) as exc_info:
-        await repository.query(fake_entity.id).get()
+        await repository.query(fake_entity.id).entity
 
     assert exc_info.value.args == (fake_query,)
 
@@ -50,7 +50,7 @@ async def test_should_raise_not_found_error_when_already_raised_before(
     repository.memory_data_source.hmset = asynctest.CoroutineMock()
 
     with pytest.raises(EntityNotFoundError) as exc_info:
-        await repository.query(fake_entity).get()
+        await repository.query(fake_entity).entity
 
     assert exc_info.value.args == (expected_query,)
     assert repository.memory_data_source.hgetall.call_args_list == [
@@ -69,7 +69,7 @@ async def test_should_get_from_fallback(
     await repository.memory_data_source.delete('fake:fake')
     await repository.memory_data_source.delete('fake:not-found:fake')
     repository.fallback_data_source.db['fake:fake'] = serialized_fake_entity
-    entity = await repository.query(fake_entity.id).get()
+    entity = await repository.query(fake_entity.id).entity
 
     assert entity == fake_entity
 
@@ -83,7 +83,7 @@ async def test_should_set_memory_after_got_fallback(
     )
     repository.memory_data_source.hmset = asynctest.CoroutineMock()
     repository.fallback_data_source.db['fake:fake'] = serialized_fake_entity
-    entity = await repository.query(fake_entity.id).get()
+    entity = await repository.query(fake_entity.id).entity
 
     assert repository.memory_data_source.hgetall.called
     assert repository.memory_data_source.hmset.call_args_list == [

@@ -69,7 +69,9 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
     async def get_fallback_data(
         self,
         query: Union[Query[Entity, HashData, FallbackKey], Entity],
+        *,
         for_memory: bool = False,
+        many: bool = False,
     ) -> Optional[Union[HashData]]:
         data = await self.fallback_data_source.get(self.fallback_key(query))
 
@@ -87,11 +89,11 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
 
         return data
 
-    def response(
+    def make_entity(
         self,
         query: Union[Query[Entity, HashData, FallbackKey], Entity],
         data: HashData,
-    ) -> Union[Entity, Iterable[Entity]]:
+    ) -> Entity:
         return asdataclass(data, self.entity_cls, encode=True)  # type: ignore
 
     async def add_memory_data(
@@ -100,7 +102,7 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
         input_data = itertools.chain(*data.items())
         await self.memory_data_source.hmset(key, *input_data)  # type: ignore
 
-    async def add_fallback(self, entity: Entity) -> None:
+    async def add_fallback(self, entity: Entity, *entities: Entity) -> None:
         raise NotImplementedError()
 
     def make_fallback_not_found_key(

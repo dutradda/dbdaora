@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, Generic, Iterable, Union
+from typing import Any, Generic, List, Union
 
 from dbdaora.entity import Entity, EntityData
 from dbdaora.keys import FallbackKey
@@ -17,8 +17,13 @@ class Query(Generic[Entity, EntityData, FallbackKey]):
     ):
         self.repository = repository
 
-    async def get(self) -> Union[Iterable[Entity], Entity]:
-        return await self.repository.get(self)
+    @property
+    async def entities(self) -> List[Entity]:
+        return await self.repository.entities(self)
+
+    @property
+    async def entity(self) -> Entity:
+        return await self.repository.entity(self)
 
 
 from .repositories.base import MemoryRepository  # noqa isort:skip

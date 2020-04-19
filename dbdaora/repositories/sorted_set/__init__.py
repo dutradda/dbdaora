@@ -49,7 +49,7 @@ class SortedSetRepository(
 
         return [i[0] for i in data]  # type: ignore
 
-    def response(  # type: ignore
+    def make_entity(  # type: ignore
         self,
         query: SortedSetQuery[SortedSetEntity, SortedSetData, FallbackKey],
         data: SortedSetData,
@@ -61,8 +61,12 @@ class SortedSetRepository(
         input_data.reverse()
         await self.memory_data_source.zadd(key, *input_data)
 
-    async def add_fallback(self, entity: SortedSetEntity) -> None:
-        raise NotImplementedError()
+    async def add_fallback(
+        self, entity: SortedSetEntity, *entities: SortedSetEntity
+    ) -> None:
+        await self.fallback_data_source.put(
+            self.fallback_key(entity), self.make_fallback_data(entity)
+        )
 
     def make_fallback_not_found_key(  # type: ignore
         self,
