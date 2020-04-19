@@ -4,6 +4,7 @@ from typing import Generic, Iterable, List, Optional
 
 from cachetools import Cache
 from circuitbreaker import CircuitBreaker, CircuitBreakerError
+from jsondaora import dataclasses
 
 from ..entity import Entity
 from ..keys import FallbackKey
@@ -29,6 +30,8 @@ class HashService(Generic[Entity, FallbackKey]):
         self.cache = cache
         self.entity_circuit = self.circuit_breaker(self.repository.entity)
         self.entities_circuit = self.circuit_breaker(self.repository.entities)
+        self.add_circuit = self.circuit_breaker(self.repository.add)
+        self.delete_circuit = self.circuit_breaker(self.repository.delete)
         self.logger = logger
 
     async def get_all(
@@ -39,8 +42,8 @@ class HashService(Generic[Entity, FallbackKey]):
                 self.repository.query(all=True, fields=fields)
             )
         except CircuitBreakerError:
-            self.logger.exception(
-                f'circuit-breaker={self.circuit_breaker.name}'
+            self.logger.warning(
+                f'circuit-breaker={self.circuit_breaker.name}; method=get_all'
             )
             return await self.repository.query(
                 all=True, fields=fields, memory=False
@@ -58,8 +61,8 @@ class HashService(Generic[Entity, FallbackKey]):
             return await self.get_many_cached(ids, self.cache, fields=fields)
 
         except CircuitBreakerError:
-            self.logger.exception(
-                f'circuit-breaker={self.circuit_breaker.name}'
+            self.logger.warning(
+                f'circuit-breaker={self.circuit_breaker.name}; method=get_many'
             )
             if self.cache:
                 return await self.get_many_cached(
@@ -117,7 +120,9 @@ class HashService(Generic[Entity, FallbackKey]):
             return await self.get_one_cached(id, self.cache, fields=fields)
 
         except CircuitBreakerError:
-            self.logger.warning(f'circuit-breaker={self.circuit_breaker.name}')
+            self.logger.warning(
+                f'circuit-breaker={self.circuit_breaker.name}; method=get_one'
+            )
             if self.cache:
                 return await self.get_one_cached(
                     id, self.cache, fields=fields, memory=False
@@ -149,3 +154,23 @@ class HashService(Generic[Entity, FallbackKey]):
             cache[(id, fields)] = entity
 
         return entity
+
+    async def add(self, entity: Entity, *entities: Entity) -> None:
+        try:
+            await self.add_circuit(entity, *entities)
+
+        except CircuitBreakerError:
+            self.logger.warning(
+                f'circuit-breaker={self.circuit_breaker.name}; method=add'
+            )
+            await self.repository.add(entity, *entities, memory=False)
+
+    async def delete(self, entity_id: str) -> None:
+        try:
+            await self.delete_circuit(self.repository.query(entity_id))
+
+        except CircuitBreakerError:
+            self.logger.warning(
+                f'circuit-breaker={self.circuit_breaker.name}; method=delete'
+            )
+            await self.repository.query(entity_id, memory=False).delete

@@ -11,9 +11,9 @@ from typing import (
     get_origin,
 )
 
-from jsondaora import asdataclass
+from jsondaora import dataclasses as jdataclasses
 
-from dbdaora.entity import Entity, EntityData
+from dbdaora.entity import Entity
 from dbdaora.exceptions import InvalidEntityAnnotationError, InvalidQueryError
 from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
@@ -93,8 +93,11 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
         self,
         query: Union[Query[Entity, HashData, FallbackKey], Entity],
         data: HashData,
+        from_fallback: bool = False,
     ) -> Entity:
-        return asdataclass(data, self.entity_cls, encode=True)  # type: ignore
+        return jdataclasses.asdataclass(  # type: ignore
+            data, self.entity_cls, encode=not from_fallback  # type: ignore
+        )
 
     async def add_memory_data(
         self, key: str, data: HashData, from_fallback: bool = False
@@ -102,8 +105,8 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
         input_data = itertools.chain(*data.items())
         await self.memory_data_source.hmset(key, *input_data)  # type: ignore
 
-    async def add_fallback(self, entity: Entity, *entities: Entity) -> None:
-        raise NotImplementedError()
+    def make_fallback_data(self, entity: Entity) -> HashData:
+        return jdataclasses.asdict(entity)  # type: ignore
 
     def make_fallback_not_found_key(
         self, query: Union[Query[Entity, HashData, FallbackKey], Entity],
@@ -134,3 +137,9 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
             }
 
         return data
+
+    def make_memory_data(self, entity: Entity) -> HashData:
+        return {
+            k: '1' if v is True else '0' if v is False else v
+            for k, v in dataclasses.asdict(entity).items()
+        }

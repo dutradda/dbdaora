@@ -53,7 +53,8 @@ class SortedSetRepository(
         self,
         query: SortedSetQuery[SortedSetEntity, SortedSetData, FallbackKey],
         data: SortedSetData,
-    ) -> Union[SortedSetEntity, Iterable[SortedSetEntity]]:
+        from_fallback: bool = False,
+    ) -> SortedSetEntity:
         return SortedSetEntity(id=query.entity_id, data=data)
 
     async def add_memory_data(self, key: str, data: SortedSetData) -> None:

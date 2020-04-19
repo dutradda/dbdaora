@@ -46,6 +46,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         self,
         query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
         data: EntityData,
+        from_fallback: bool = False,
     ) -> Entity:
         raise NotImplementedError()
 
@@ -82,23 +83,17 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         raise NotImplementedError()
 
     async def entity(
-        self,
-        query: 'Query[Entity, EntityData, FallbackKey]',
-        *,
-        memory: bool = True,
+        self, query: 'Query[Entity, EntityData, FallbackKey]',
     ) -> Entity:
-        if memory:
+        if query.memory:
             return await self.get_memory(query)  # type: ignore
         else:
             return await self.get_fallback(query)  # type: ignore
 
     async def entities(
-        self,
-        query: 'Query[Entity, EntityData, FallbackKey]',
-        *,
-        memory: bool = True,
+        self, query: 'Query[Entity, EntityData, FallbackKey]',
     ) -> List[Entity]:
-        if memory:
+        if query.memory:
             return await self.get_memory(query, many=True)  # type: ignore
         else:
             return await self.get_fallback(query, many=True)  # type: ignore
@@ -146,15 +141,18 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         if data is None:
             raise EntityNotFoundError(query)
 
-        return self.make_entity(query, data)
+        return self.make_entity(query, data, from_fallback=True)
 
     async def add(
-        self, entity: Entity, *entities: Entity, memory: bool = True
+        self,
+        *entities: Entity,
+        memory: bool = True,
+        query: Optional['Query[Entity, EntityData, FallbackKey]'] = None,
     ) -> None:
         if memory:
-            return await self.add_memory(entity, *entities)
+            return await self.add_memory(*entities)
         else:
-            return await self.add_fallback(entity, *entities)
+            return await self.add_fallback(*entities)
 
     async def add_memory(self, entity: Entity, *entities: Entity) -> None:
         memory_key = self.memory_key(entity)
@@ -178,12 +176,9 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         return self.query_cls(self, memory, *args, **kwargs)  # type: ignore
 
     async def delete(
-        self,
-        query: 'Query[Entity, EntityData, FallbackKey]',
-        *,
-        memory: bool = True,
+        self, query: 'Query[Entity, EntityData, FallbackKey]',
     ) -> None:
-        if memory:
+        if query.memory:
             await self.memory_data_source.delete(self.memory_key(query))
 
         await self.fallback_data_source.delete(self.fallback_key(query))

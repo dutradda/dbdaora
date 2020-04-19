@@ -3,6 +3,7 @@ import itertools
 import asynctest
 import pytest
 from aioredis import RedisError
+from jsondaora import dataclasses
 
 
 @pytest.mark.asyncio
@@ -40,11 +41,11 @@ async def test_should_get_one_from_fallback_after_open_circuit_breaker(
     )
     fake_service.repository.fallback_data_source.db[
         'fake:fake'
-    ] = serialized_fake_entity
+    ] = dataclasses.asdict(fake_entity)
 
     entity = await fake_service.get_one('fake')
 
     assert entity == fake_entity
     assert fake_service.logger.warning.call_args_list == [
-        mocker.call('circuit-breaker=fake')
+        mocker.call('circuit-breaker=fake; method=get_one')
     ]

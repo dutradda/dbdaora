@@ -12,11 +12,19 @@ class Query(Generic[Entity, EntityData, FallbackKey]):
 
     @property
     async def entities(self) -> List[Entity]:
-        return await self.repository.entities(self, memory=self.memory)
+        return await self.repository.entities(self)
 
     @property
     async def entity(self) -> Entity:
-        return await self.repository.entity(self, memory=self.memory)
+        return await self.repository.entity(self)
+
+    @property
+    async def delete(self) -> None:
+        await self.repository.delete(self)
+
+    @property
+    async def add(self) -> None:
+        await self.repository.add(query=self)
 
 
 from .repositories.base import MemoryRepository  # noqa isort:skip
