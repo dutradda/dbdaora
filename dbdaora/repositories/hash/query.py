@@ -1,7 +1,7 @@
 import dataclasses
 from typing import List, Optional, Sequence
 
-from dbdaora.entity import Entity, EntityData
+from dbdaora.entity import Entity
 from dbdaora.keys import FallbackKey
 
 from ..entity_based.query import EntityBasedQuery

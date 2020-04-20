@@ -17,13 +17,16 @@ release-pypi:
 
 deploy: deploy-docs release-pypi
 
-integration: isort black mypy tests
+integration: isort black flake8 mypy tests
 
 isort:
 	isort -y -w 100 -up -tc -rc -lai 2 -ac -w 79 -m 3 dbdaora
 
 black:
 	black -S -t py38 -l 79 dbdaora
+
+flake8:
+	flake8 --max-line-length 100 dbdaora
 
 mypy:
 	mypy dbdaora --strict

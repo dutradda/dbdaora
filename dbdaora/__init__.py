@@ -6,8 +6,15 @@ __version__ = '0.0.11'
 
 from dbdaora.circuitbreaker import AsyncCircuitBreaker
 from dbdaora.data_sources.fallback.dict import DictFallbackDataSource
-from dbdaora.data_sources.memory.aioredis import AioRedisDataSource
+from dbdaora.data_sources.memory.aioredis import (
+    AioRedisDataSource,
+    ShardsAioRedisDataSource,
+)
+from dbdaora.data_sources.memory.aioredis import (
+    make as make_aioredis_data_source,
+)
 from dbdaora.data_sources.memory.dict import DictMemoryDataSource
+from dbdaora.hashring import HashRing
 from dbdaora.repositories.base import MemoryRepository
 from dbdaora.repositories.hash import HashData, HashRepository
 from dbdaora.repositories.hash.query import HashQuery
@@ -29,6 +36,9 @@ __all__ = [
     'AioRedisDataSource',
     'HashService',
     'AsyncCircuitBreaker',
+    'make_aioredis_data_source',
+    'ShardsAioRedisDataSource',
+    'HashRing',
 ]
 
 if DictMemoryDataSource:

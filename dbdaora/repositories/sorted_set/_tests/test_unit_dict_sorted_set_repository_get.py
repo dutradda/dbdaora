@@ -1,9 +1,7 @@
-import dataclasses
-
 import asynctest
 import pytest
 
-from dbdaora import SortedSetEntity, SortedSetQuery, SortedSetRepository
+from dbdaora import SortedSetQuery
 from dbdaora.exceptions import EntityNotFoundError
 
 

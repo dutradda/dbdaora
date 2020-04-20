@@ -2,13 +2,12 @@ import dataclasses
 from typing import Optional
 
 import pytest
-from aioredis import create_redis_pool
 
 from dbdaora import (
-    AioRedisDataSource,
     DictFallbackDataSource,
     DictMemoryDataSource,
     HashRepository,
+    make_aioredis_data_source,
 )
 
 
@@ -62,8 +61,8 @@ async def dict_repository(fake_repository_cls, mocker):
 @pytest.mark.asyncio
 @pytest.fixture
 async def aioredis_repository(fake_repository_cls, mocker):
-    memory_data_source = await create_redis_pool(
-        commands_factory=AioRedisDataSource, address='redis://',
+    memory_data_source = await make_aioredis_data_source(
+        'redis://', 'redis://localhost/1', 'redis://localhost/2'
     )
     yield fake_repository_cls(
         memory_data_source=memory_data_source,

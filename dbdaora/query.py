@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, Generic, List, Union
+from typing import Generic
 
 from dbdaora.entity import Entity, EntityData
 from dbdaora.keys import FallbackKey

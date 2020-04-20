@@ -4,11 +4,12 @@ from typing import (
     Dict,
     List,
     Optional,
-    Protocol,
     Sequence,
     Tuple,
     Union,
+    Type,
 )
+from aioredis.commands import Pipeline
 
 
 rangeOutput = Sequence[bytes]
@@ -16,7 +17,7 @@ rangeWithScoresOutput = Sequence[Tuple[bytes, float]]
 SortedSetData = Union[rangeOutput, rangeWithScoresOutput]
 
 
-class MemoryDataSource(Protocol):
+class Redis:
     key_separator: ClassVar[str] = ':'
 
     def make_key(self, *key_parts: str) -> str:
@@ -69,24 +70,10 @@ class MemoryDataSource(Protocol):
     async def hgetall(self, key: str) -> Dict[bytes, bytes]:
         ...
 
-    def pipeline(self) -> 'Pipeline':
-        ...
-
-    def close(self) -> None:
-        ...
-
-    async def wait_closed(self) -> None:
+    def pipeline(self) -> Any:
         ...
 
 
-class Pipeline(Protocol):
-    async def execute(self, *, return_exceptions: bool = False) -> List[Any]:
-        ...
-
-    def hmget(
-        self, key: str, field: Union[str, bytes], *fields: Union[str, bytes]
-    ) -> None:
-        ...
-
-    def hgetall(self, key: str) -> None:
-        ...
+async def create_redis_pool(
+    address: str, *, commands_factory: Optional[Type[Redis]] = None
+) -> Redis: ...

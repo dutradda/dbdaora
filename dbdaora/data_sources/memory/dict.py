@@ -79,12 +79,10 @@ class DictMemoryDataSource(MemoryDataSource, Generic[Entity]):
         data = [field, value] + list(pairs)
         self.db[key] = {
             f.encode()
-            if isinstance(f := data[i - 1], str)
-            else (
-                f if isinstance(f, bytes) else str(f).encode()
-            ): v.encode()  # noqa
-            if isinstance(v := data[i], str)
-            else (v if isinstance(v, bytes) else str(v).encode())  # noqa
+            if isinstance(f := data[i - 1], str)  # noqa
+            else (f if isinstance(f, bytes) else str(f).encode()): v.encode()
+            if isinstance(v := data[i], str)  # noqa
+            else (v if isinstance(v, bytes) else str(v).encode())
             for i in range(1, len(data), 2)
         }
 
@@ -98,7 +96,8 @@ class DictMemoryDataSource(MemoryDataSource, Generic[Entity]):
 
         return [
             None
-            if (d := data.get(f.encode() if isinstance(f, str) else f)) is None
+            if (d := data.get(f.encode() if isinstance(f, str) else f))  # noqa
+            is None
             else (
                 d
                 if isinstance(d, bytes)

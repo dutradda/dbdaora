@@ -1,5 +1,3 @@
-import itertools
-
 import asynctest
 import pytest
 from aioredis import RedisError

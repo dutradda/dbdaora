@@ -59,8 +59,9 @@ async def test_should_get_many_from_cache(
 async def test_should_get_many_from_fallback_after_open_circuit_breaker(
     fake_service, fake_entity, fake_entity2, mocker
 ):
-    fake_service.repository.memory_data_source.pipeline = mocker.MagicMock()
-    fake_service.repository.memory_data_source.pipeline.return_value.execute = asynctest.CoroutineMock(
+    fake_pipeline = mocker.MagicMock()
+    fake_service.repository.memory_data_source.pipeline = fake_pipeline
+    fake_pipeline.return_value.execute = asynctest.CoroutineMock(
         side_effect=RedisError
     )
     fake_service.repository.fallback_data_source.db[
@@ -128,8 +129,9 @@ async def test_should_get_many_from_cache_with_fields(
 async def test_should_get_many_from_fallback_after_open_circuit_breaker_with_fields(
     fake_service, fake_entity, fake_entity2, mocker
 ):
-    fake_service.repository.memory_data_source.pipeline = mocker.MagicMock()
-    fake_service.repository.memory_data_source.pipeline.return_value.execute = asynctest.CoroutineMock(
+    fake_pipeline = mocker.MagicMock()
+    fake_service.repository.memory_data_source.pipeline = fake_pipeline
+    fake_pipeline.return_value.execute = asynctest.CoroutineMock(
         side_effect=RedisError
     )
     fake_service.repository.fallback_data_source.db[

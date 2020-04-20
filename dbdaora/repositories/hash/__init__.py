@@ -1,17 +1,6 @@
 import dataclasses
 import itertools
-from typing import (
-    ClassVar,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Type,
-    Union,
-    get_args,
-    get_origin,
-)
+from typing import Dict, List, Optional, Sequence, Union, get_args, get_origin
 
 from jsondaora import dataclasses as jdataclasses
 

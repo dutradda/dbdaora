@@ -1,10 +1,9 @@
 from dataclasses import dataclass
 from logging import Logger, getLogger
-from typing import Generic, Iterable, List, Optional
+from typing import Generic, Iterable, Optional
 
 from cachetools import Cache
 from circuitbreaker import CircuitBreaker, CircuitBreakerError
-from jsondaora import dataclasses
 
 from ..entity import Entity
 from ..keys import FallbackKey
@@ -91,7 +90,11 @@ class HashService(Generic[Entity, FallbackKey]):
         missed_ids = []
         entities = [
             missed_ids.append(id_)  # type: ignore
-            if (entity := cache.get((id_, ''.join(fields)) if fields else id_))
+            if (
+                entity := cache.get(  # noqa
+                    (id_, ''.join(fields)) if fields else id_
+                )
+            )
             is None
             else entity
             for id_ in ids

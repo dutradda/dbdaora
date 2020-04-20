@@ -1,14 +1,5 @@
 from dataclasses import dataclass
-from typing import (
-    Any,
-    ClassVar,
-    Generic,
-    Iterable,
-    List,
-    Optional,
-    Type,
-    Union,
-)
+from typing import Any, ClassVar, Generic, Iterable, Optional, Type, Union
 
 from dbdaora.data_sources import FallbackDataSource, MemoryDataSource
 from dbdaora.entity import Entity, EntityData

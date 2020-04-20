@@ -1,13 +1,10 @@
 import itertools
-from typing import ClassVar, Generic, Iterable, Optional, Type, Union
+from typing import Optional, Union
 
 from dbdaora.data_sources import SortedSetData
-from dbdaora.exceptions import InvalidQueryError
 from dbdaora.keys import FallbackKey
-from dbdaora.query import Query
 
 from ..entity_based import EntityBasedRepository
-from ..entity_based.query import EntityBasedQuery
 from .entity import SortedSetEntity
 from .query import SortedSetQuery
 

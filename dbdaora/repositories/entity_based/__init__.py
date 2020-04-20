@@ -1,19 +1,7 @@
-import dataclasses
-import itertools
-from typing import (
-    Any,
-    ClassVar,
-    Dict,
-    Iterable,
-    Optional,
-    Type,
-    Union,
-    get_args,
-    get_origin,
-)
+from typing import Any, ClassVar, Optional, Type, Union
 
 from dbdaora.entity import Entity, EntityData
-from dbdaora.exceptions import InvalidEntityAnnotationError, InvalidQueryError
+from dbdaora.exceptions import InvalidQueryError
 from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
 
