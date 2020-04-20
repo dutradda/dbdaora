@@ -77,8 +77,10 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     ) -> FallbackKey:
         raise NotImplementedError()
 
-    def make_fallback_not_found_key(
-        self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
+    def fallback_not_found_key(
+        self,
+        query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
+        **kwargs: Any,
     ) -> str:
         raise NotImplementedError()
 
@@ -89,14 +91,6 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
             return await self.get_memory(query)  # type: ignore
         else:
             return await self.get_fallback(query)  # type: ignore
-
-    async def entities(
-        self, query: 'Query[Entity, EntityData, FallbackKey]',
-    ) -> List[Entity]:
-        if query.memory:
-            return await self.get_memory(query, many=True)  # type: ignore
-        else:
-            return await self.get_fallback(query, many=True)  # type: ignore
 
     async def get_memory(
         self,
@@ -113,7 +107,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
             )
 
             if fallback_data is None:
-                await self.set_fallback_not_found(memory_key, query)
+                await self.set_fallback_not_found(query)
             else:
                 memory_data = await self.add_memory_data_from_fallback(
                     memory_key, query, fallback_data
@@ -184,29 +178,32 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         await self.fallback_data_source.delete(self.fallback_key(query))
 
     async def already_got_not_found(
-        self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
+        self,
+        query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
+        **kwargs: Any,
     ) -> bool:
         return bool(
             await self.memory_data_source.exists(
-                self.make_fallback_not_found_key(query)
+                self.fallback_not_found_key(query, **kwargs)
             )
         )
 
     async def delete_fallback_not_found(
-        self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
+        self,
+        query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
+        **kwargs: Any,
     ) -> None:
         await self.memory_data_source.delete(
-            self.make_fallback_not_found_key(query)
+            self.fallback_not_found_key(query, **kwargs)
         )
 
     async def set_fallback_not_found(
         self,
-        key: str,
         query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
+        **kwargs: Any,
     ) -> None:
-        await self.memory_data_source.set(
-            self.make_fallback_not_found_key(query), '1'
-        )
+        key = self.fallback_not_found_key(query, **kwargs)
+        await self.memory_data_source.set(key, '1')
         await self.set_expire_time(key)
 
 

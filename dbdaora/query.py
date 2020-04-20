@@ -11,10 +11,6 @@ class Query(Generic[Entity, EntityData, FallbackKey]):
     memory: bool
 
     @property
-    async def entities(self) -> List[Entity]:
-        return await self.repository.entities(self)
-
-    @property
     async def entity(self) -> Entity:
         return await self.repository.entity(self)
 

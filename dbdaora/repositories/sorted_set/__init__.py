@@ -69,7 +69,7 @@ class SortedSetRepository(
             self.fallback_key(entity), self.make_fallback_data(entity)
         )
 
-    def make_fallback_not_found_key(  # type: ignore
+    def fallback_not_found_key(  # type: ignore
         self,
         query: Union[
             SortedSetQuery[SortedSetEntity, SortedSetData, FallbackKey],

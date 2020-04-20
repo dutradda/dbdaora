@@ -38,25 +38,29 @@ class HashService(Generic[Entity, FallbackKey]):
         self, fields: Optional[Iterable[str]] = None
     ) -> Iterable[Entity]:
         try:
-            return await self.entities_circuit(
+            return await self.entities_circuit(  # type: ignore
                 self.repository.query(all=True, fields=fields)
             )
         except CircuitBreakerError:
             self.logger.warning(
                 f'circuit-breaker={self.circuit_breaker.name}; method=get_all'
             )
-            return await self.repository.query(
+            return await self.repository.query(  # type: ignore
                 all=True, fields=fields, memory=False
             ).entities
 
     async def get_many(
-        self, ids: Iterable[str], fields: Optional[Iterable[str]] = None
+        self, *ids: str, fields: Optional[Iterable[str]] = None
     ) -> Iterable[Entity]:
         try:
             if self.cache is None:
-                return await self.entities_circuit(
-                    self.repository.query(entities_ids=ids, fields=fields)
-                )
+                return [
+                    entity
+                    for entity in await self.entities_circuit(
+                        self.repository.query(entities_ids=ids, fields=fields)
+                    )
+                    if entity is not None
+                ]
 
             return await self.get_many_cached(ids, self.cache, fields=fields)
 
@@ -69,9 +73,13 @@ class HashService(Generic[Entity, FallbackKey]):
                     ids, self.cache, fields=fields, memory=False
                 )
 
-            return await self.repository.query(
-                entities_ids=ids, fields=fields, memory=False
-            ).entities
+            return [
+                entity
+                for entity in await self.repository.query(  # type: ignore
+                    entities_ids=ids, fields=fields, memory=False
+                ).entities
+                if entity is not None
+            ]
 
     async def get_many_cached(
         self,
@@ -92,11 +100,11 @@ class HashService(Generic[Entity, FallbackKey]):
             if memory:
                 missed_entities = await self.entities_circuit(
                     self.repository.query(
-                        entities_ids=missed_ids, fields=fields, memory=memory
+                        entities_ids=missed_ids, fields=fields
                     )
                 )
             else:
-                missed_entities = await self.repository.query(
+                missed_entities = await self.repository.query(  # type: ignore
                     entities_ids=missed_ids, fields=fields, memory=False
                 ).entities
             missed_index = 0
@@ -106,7 +114,7 @@ class HashService(Generic[Entity, FallbackKey]):
                     entities[i] = missed_entities[missed_index]
                     missed_index += 1
 
-        return entities
+        return [entity for entity in entities if entity is not None]
 
     async def get_one(
         self, id: str, fields: Optional[Iterable[str]] = None

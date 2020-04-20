@@ -34,7 +34,7 @@ async def test_should_get_one_from_cache(
 
 @pytest.mark.asyncio
 async def test_should_get_one_from_fallback_after_open_circuit_breaker(
-    fake_service, serialized_fake_entity, fake_entity, mocker
+    fake_service, fake_entity, mocker
 ):
     fake_service.repository.memory_data_source.hgetall = asynctest.CoroutineMock(
         side_effect=RedisError

@@ -1,4 +1,14 @@
-from typing import ClassVar, Dict, Optional, Protocol, Sequence, Tuple, Union
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    List,
+    Optional,
+    Protocol,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 
 rangeOutput = Sequence[bytes]
@@ -57,4 +67,20 @@ class MemoryDataSource(Protocol):
         ...
 
     async def hgetall(self, key: str) -> Dict[bytes, bytes]:
+        ...
+
+    def pipeline(self) -> 'Pipeline':
+        ...
+
+
+class Pipeline(Protocol):
+    async def execute(self, *, return_exceptions: bool = False) -> List[Any]:
+        ...
+
+    def hmget(
+        self, key: str, field: Union[str, bytes], *fields: Union[str, bytes]
+    ) -> Sequence[Optional[bytes]]:
+        ...
+
+    def hgetall(self, key: str) -> Dict[bytes, bytes]:
         ...

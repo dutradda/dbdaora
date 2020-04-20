@@ -1,4 +1,4 @@
-from typing import Any, Generic, Optional
+from typing import Any, Generic, Iterable, Optional
 
 from dbdaora.data import FallbackData
 from dbdaora.keys import FallbackKey
@@ -9,6 +9,11 @@ class FallbackDataSource(Generic[FallbackKey, FallbackData]):
         raise NotImplementedError()
 
     async def get(self, key: FallbackKey) -> Optional[FallbackData]:
+        raise NotImplementedError()
+
+    async def get_many(
+        self, keys: Iterable[FallbackKey]
+    ) -> Iterable[Optional[FallbackData]]:
         raise NotImplementedError()
 
     async def put(self, key: FallbackKey, data: FallbackData) -> None:
