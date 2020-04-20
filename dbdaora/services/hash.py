@@ -91,7 +91,8 @@ class HashService(Generic[Entity, FallbackKey]):
         missed_ids = []
         entities = [
             missed_ids.append(id_)  # type: ignore
-            if (entity := cache.get((id_, fields) if fields else id_)) is None
+            if (entity := cache.get((id_, ''.join(fields)) if fields else id_))
+            is None
             else entity
             for id_ in ids
         ]

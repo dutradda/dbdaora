@@ -85,15 +85,23 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
             return None
 
         if not for_memory and isinstance(query, HashQuery) and query.fields:
-            return {
-                f.encode(): v  # type: ignore
-                for f, v in data.items()
-                if isinstance(query, HashQuery)
-                and query.fields
-                and f in query.fields
-            }
+            return self.make_fallback_data_fields(query, data)
 
         return data
+
+    def make_fallback_data_fields(
+        self,
+        query: Union[Query[Entity, HashData, FallbackKey], Entity],
+        data: HashData,
+        encode: bool = True,
+    ) -> HashData:
+        return {
+            f.encode() if encode else f: v  # type: ignore
+            for f, v in data.items()
+            if isinstance(query, HashQuery)
+            and query.fields
+            and f in query.fields
+        }
 
     def make_entity(
         self,
@@ -225,10 +233,24 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
         if not any(data):
             raise EntityNotFoundError(query)
 
+        if query.fields:
+            return [
+                None
+                if entity_data is None
+                else self.make_entity(
+                    query,
+                    self.make_fallback_data_fields(
+                        query, entity_data, encode=False
+                    ),
+                    from_fallback=True,
+                )
+                for entity_data in data
+            ]
+
         return [
             None
             if entity_data is None
-            else self.make_entity(query, entity_data, from_fallback=True)
+            else self.make_entity(query, entity_data, from_fallback=True,)
             for entity_data in data
         ]
 
