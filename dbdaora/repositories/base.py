@@ -26,7 +26,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
 
     async def get_memory_many(
         self, query: 'Query[Entity, EntityData, FallbackKey]',
-    ) -> List[Optional[Entity]]:
+    ) -> List[Entity]:
         raise NotImplementedError()
 
     async def get_fallback_data(
@@ -40,7 +40,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
 
     async def get_fallback_many(
         self, query: 'Query[Entity, EntityData, FallbackKey]',
-    ) -> List[Optional[Entity]]:
+    ) -> List[Entity]:
         raise NotImplementedError()
 
     def make_entity(
@@ -101,7 +101,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
 
     async def entities(
         self, query: 'Query[Entity, EntityData, FallbackKey]',
-    ) -> List[Optional[Entity]]:
+    ) -> List[Entity]:
         if query.memory:
             return await self.get_memory_many(query)
         else:

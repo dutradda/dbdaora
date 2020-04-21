@@ -37,7 +37,7 @@ class HashService(Generic[FallbackKey]):
         self, fields: Optional[Iterable[str]] = None
     ) -> Iterable[Entity]:
         try:
-            return await self.entities_circuit(  # type: ignore
+            return await self.entities_circuit(
                 self.repository.query(all=True, fields=fields)
             )
         except CircuitBreakerError:
@@ -88,8 +88,8 @@ class HashService(Generic[FallbackKey]):
         memory: bool = True,
     ) -> Iterable[Entity]:
         missed_ids = []
-        entities = [
-            missed_ids.append(id_)  # type: ignore
+        entities = {
+            id_: missed_ids.append(id_)  # type: ignore
             if (
                 entity := cache.get(  # noqa
                     (id_, ''.join(fields)) if fields else id_
@@ -98,7 +98,7 @@ class HashService(Generic[FallbackKey]):
             is None
             else entity
             for id_ in ids
-        ]
+        }
 
         if missed_ids:
             if memory:
@@ -111,14 +111,16 @@ class HashService(Generic[FallbackKey]):
                 missed_entities = await self.repository.query(  # type: ignore
                     entities_ids=missed_ids, fields=fields, memory=False
                 ).entities
-            missed_index = 0
 
-            for i, entity in enumerate(entities):
+            missed_entities_map = {
+                entity.id: entity for entity in missed_entities
+            }
+
+            for id_, entity in entities.items():
                 if entity is None:
-                    entities[i] = missed_entities[missed_index]
-                    missed_index += 1
+                    entities[id_] = missed_entities_map.get(id_)
 
-        return [entity for entity in entities if entity is not None]
+        return [entity for entity in entities.values() if entity is not None]
 
     async def get_one(
         self, id: str, fields: Optional[Iterable[str]] = None

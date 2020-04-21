@@ -1,7 +1,7 @@
 import itertools
 from typing import Optional, Sequence, Tuple, TypedDict, Union
 
-from dbdaora.data_sources.memory import SortedSetData
+from dbdaora.data_sources.memory import RangeWithScoresOutput, SortedSetData
 from dbdaora.keys import FallbackKey
 
 from ..entity_based import EntityBasedRepository
@@ -87,11 +87,11 @@ class SortedSetRepository(EntityBasedRepository[SortedSetData, FallbackKey]):
         self,
         key: str,
         query: Union[SortedSetQuery[FallbackKey], SortedSetEntity],
-        data: SortedSetData,
+        data: RangeWithScoresOutput,
     ) -> SortedSetData:
         await self.add_memory_data(key, data)
 
         if isinstance(query, SortedSetQuery) and query.withscores:
             return data
 
-        return [i[0] for i in data]  # type: ignore
+        return [i[0] for i in data]

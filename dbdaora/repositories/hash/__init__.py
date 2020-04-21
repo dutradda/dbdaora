@@ -1,6 +1,6 @@
 import dataclasses
 import itertools
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, ClassVar, Dict, List, Optional, Sequence, Type, Union
 
 from jsondaora import dataclasses as jdataclasses
 
@@ -16,6 +16,8 @@ HashData = Dict[str, Any]
 
 
 class HashRepository(EntityBasedRepository[HashData, FallbackKey]):
+    query_cls: ClassVar[Type['HashQuery[FallbackKey]']]
+
     async def get_memory_data(  # type: ignore
         self, key: str, query: 'HashQuery[FallbackKey]',
     ) -> Optional[Union[HashData, Dict[bytes, Any]]]:
@@ -126,7 +128,7 @@ class HashRepository(EntityBasedRepository[HashData, FallbackKey]):
 
     async def get_memory_many(  # type: ignore
         self, query: 'HashQuery[FallbackKey]',
-    ) -> List[Optional[Entity]]:
+    ) -> List[Entity]:
         memory_data: Sequence[Union[HashData, Dict[bytes, Any]]]
 
         if query.entities_ids is None:
@@ -186,10 +188,9 @@ class HashRepository(EntityBasedRepository[HashData, FallbackKey]):
             raise EntityNotFoundError(query)
 
         return [
-            None
-            if entity_data is None
-            else self.make_entity(query, entity_data)
+            self.make_entity(query, entity_data)
             for entity_data in memory_data
+            if entity_data is not None
         ]
 
     async def get_fallback_many(  # type: ignore
@@ -210,18 +211,14 @@ class HashRepository(EntityBasedRepository[HashData, FallbackKey]):
 
         if query.fields:
             return [
-                None
-                if entity_data is None
-                else self.make_entity_from_fallback(
+                self.make_entity_from_fallback(
                     query, self.make_fallback_data_fields(query, entity_data),
                 )
                 for entity_data in data
             ]
 
         return [
-            None
-            if entity_data is None
-            else self.make_entity_from_fallback(query, entity_data)
+            self.make_entity_from_fallback(query, entity_data)
             for entity_data in data
         ]
 

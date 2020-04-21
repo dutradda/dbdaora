@@ -6,9 +6,7 @@ from dbdaora.data_sources.fallback import FallbackDataSource
 
 @dataclasses.dataclass
 class DictFallbackDataSource(FallbackDataSource[str]):
-    db: Dict[str, Optional[Dict[str, Any]]] = dataclasses.field(
-        default_factory=dict
-    )
+    db: Dict[str, Dict[str, Any]] = dataclasses.field(default_factory=dict)
     key_separator: ClassVar[str] = ':'
 
     def make_key(self, *key_parts: str) -> str:
@@ -23,7 +21,5 @@ class DictFallbackDataSource(FallbackDataSource[str]):
     async def delete(self, key: str) -> None:
         self.db.pop(key, None)
 
-    async def get_many(
-        self, keys: Iterable[str]
-    ) -> Iterable[Optional[Dict[str, Any]]]:
-        return [self.db.get(key) for key in keys]
+    async def get_many(self, keys: Iterable[str]) -> Iterable[Dict[str, Any]]:
+        return [self.db[key] for key in keys if key in self.db]

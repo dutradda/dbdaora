@@ -15,7 +15,7 @@ class HashQuery(EntityBasedQuery['HashData', FallbackKey]):
     fields: Optional[Sequence[str]] = None
 
     @property
-    async def entities(self) -> List[Optional[Entity]]:
+    async def entities(self) -> List[Entity]:
         return await self.repository.entities(self)
 
 

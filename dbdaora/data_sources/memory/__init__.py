@@ -11,9 +11,9 @@ from typing import (
 )
 
 
-rangeOutput = Sequence[Union[bytes, str]]
-rangeWithScoresOutput = Sequence[Tuple[Union[bytes, str], float]]
-SortedSetData = Union[rangeOutput, rangeWithScoresOutput]
+RangeOutput = Sequence[Union[bytes, str]]
+RangeWithScoresOutput = Sequence[Union[Tuple[str, float], Tuple[bytes, float]]]
+SortedSetData = Union[RangeOutput, RangeWithScoresOutput]
 
 
 class MemoryDataSource(Protocol):
