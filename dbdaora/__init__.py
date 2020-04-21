@@ -4,6 +4,7 @@
 __version__ = '0.0.11'
 
 
+from dbdaora.cache import CacheType
 from dbdaora.circuitbreaker import AsyncCircuitBreaker
 from dbdaora.data_sources.fallback import FallbackDataSource
 from dbdaora.data_sources.fallback.dict import DictFallbackDataSource
@@ -14,6 +15,8 @@ from dbdaora.hash.repositories import HashData, HashRepository
 from dbdaora.hash.service import HashService
 from dbdaora.hashring import HashRing
 from dbdaora.repository import MemoryRepository
+from dbdaora.service import Service
+from dbdaora.service.builder import build as build_service
 from dbdaora.sorted_set.entity import SortedSetEntity
 from dbdaora.sorted_set.query import SortedSetQuery
 from dbdaora.sorted_set.repository import SortedSetRepository
@@ -53,6 +56,9 @@ __all__ = [
     'FallbackDataSource',
     'MemoryDataSource',
     'DictMemoryDataSource',
+    'build_service',
+    'CacheType',
+    'Service',
 ]
 
 if AioRedisDataSource:

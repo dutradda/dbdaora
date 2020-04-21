@@ -1,33 +1,59 @@
 import dataclasses
+from functools import partial
 from typing import List, Optional
 
 import pytest
 from aioredis import RedisError
-from cachetools import TTLCache
 
 from dbdaora import (
-    AsyncCircuitBreaker,
-    DatastoreDataSource,
+    CacheType,
     DatastoreHashRepository,
     DictFallbackDataSource,
     HashRepository,
     HashService,
+    build_service,
     make_aioredis_data_source,
 )
 
 
+@pytest.mark.asyncio
 @pytest.fixture
-def fake_service(aioredis_repository, mocker):
-    circuit_breaker = AsyncCircuitBreaker(
-        failure_threshold=0,
-        recovery_timeout=10,
-        expected_exception=RedisError,
-        name='fake',
+async def fake_service(mocker, fallback_data_source):
+    memory_data_source_factory = partial(
+        make_aioredis_data_source,
+        'redis://',
+        'redis://localhost/1',
+        'redis://localhost/2',
     )
-    cache = TTLCache(maxsize=1, ttl=1)
-    return HashService(
-        aioredis_repository, circuit_breaker, cache, logger=mocker.MagicMock(),
+
+    async def fallback_data_source_factory():
+        return fallback_data_source
+
+    service = await build_service(
+        HashService,
+        FakeDatastoreHashRepository,
+        memory_data_source_factory,
+        fallback_data_source_factory,
+        repository_expire_time=1,
+        cache_type=CacheType.TTL,
+        cache_ttl=1,
+        cache_max_size=1,
+        cb_failure_threshold=0,
+        cb_recovery_timeout=10,
+        cb_expected_exception=RedisError,
+        logger=mocker.MagicMock(),
+        singleton=False,
     )
+
+    yield service
+
+    service.repository.memory_data_source.close()
+    await service.repository.memory_data_source.wait_closed()
+
+
+@pytest.fixture
+def fallback_data_source():
+    return DictFallbackDataSource()
 
 
 @dataclasses.dataclass
@@ -110,28 +136,13 @@ def serialized_fake_entity2():
 
 @pytest.mark.asyncio
 @pytest.fixture
-async def aioredis_repository(mocker):
+async def repository(mocker):
     memory_data_source = await make_aioredis_data_source(
         'redis://', 'redis://localhost/1', 'redis://localhost/2'
     )
     yield FakeHashRepository(
         memory_data_source=memory_data_source,
         fallback_data_source=DictFallbackDataSource(),
-        expire_time=1,
-    )
-    memory_data_source.close()
-    await memory_data_source.wait_closed()
-
-
-@pytest.mark.asyncio
-@pytest.fixture
-async def aioredis_datastore_repository(mocker):
-    memory_data_source = await make_aioredis_data_source(
-        'redis://', 'redis://localhost/1', 'redis://localhost/2'
-    )
-    yield FakeDatastoreHashRepository(
-        memory_data_source=memory_data_source,
-        fallback_data_source=DatastoreDataSource(),
         expire_time=1,
     )
     memory_data_source.close()

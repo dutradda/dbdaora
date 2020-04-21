@@ -3,8 +3,9 @@ from logging import Logger, getLogger
 from typing import Generic, Iterable, Optional
 
 from cachetools import Cache
-from circuitbreaker import CircuitBreaker, CircuitBreakerError
+from circuitbreaker import CircuitBreakerError
 
+from ..circuitbreaker import AsyncCircuitBreaker
 from ..entity_based.entity import Entity
 from ..keys import FallbackKey
 from .repositories import HashRepository
@@ -13,14 +14,14 @@ from .repositories import HashRepository
 @dataclass(init=False)
 class HashService(Generic[FallbackKey]):
     repository: HashRepository[FallbackKey]
-    circuit_breaker: CircuitBreaker
+    circuit_breaker: AsyncCircuitBreaker
     cache: Optional[Cache]
     logger: Logger
 
     def __init__(
         self,
         repository: HashRepository[FallbackKey],
-        circuit_breaker: CircuitBreaker,
+        circuit_breaker: AsyncCircuitBreaker,
         cache: Optional[Cache] = None,
         logger: Logger = getLogger(__name__),
     ):

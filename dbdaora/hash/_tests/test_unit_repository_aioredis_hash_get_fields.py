@@ -8,11 +8,6 @@ from dbdaora import HashQuery
 from dbdaora.exceptions import EntityNotFoundError
 
 
-@pytest.fixture
-def repository(aioredis_repository):
-    return aioredis_repository
-
-
 @pytest.mark.asyncio
 async def test_should_get_from_memory(
     repository, serialized_fake_entity, fake_entity

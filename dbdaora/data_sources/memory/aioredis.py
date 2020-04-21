@@ -112,8 +112,8 @@ class ShardsPipeline(Pipeline):
 
 async def make(
     *uris: str,
-    hash_ring_cls: Type[HashRing[AioRedisDataSource]] = HashRing,
-    hash_ring_nodes_size: Optional[int] = None,
+    hashring_cls: Type[HashRing[AioRedisDataSource]] = HashRing,
+    hashring_nodes_size: Optional[int] = None,
     commands_factory: Type[AioRedisDataSource] = AioRedisDataSource,
 ) -> Union[Redis, ShardsAioRedisDataSource]:
     if len(uris) == 0:
@@ -126,7 +126,7 @@ async def make(
             )
             for uri in uris
         ]
-        hashring = hash_ring_cls(clients, hash_ring_nodes_size)
+        hashring = hashring_cls(clients, hashring_nodes_size)
         return ShardsAioRedisDataSource(hashring)
 
     else:
