@@ -19,4 +19,4 @@ class HashQuery(EntityBasedQuery['HashData', FallbackKey]):
         return await self.repository.entities(self)
 
 
-from . import HashRepository, HashData  # noqa isort:skip
+from .repository import HashRepository, HashData  # noqa isort:skip

@@ -4,7 +4,7 @@ from typing import Optional, Sequence, Tuple, TypedDict, Union
 from dbdaora.data_sources.memory import RangeWithScoresOutput, SortedSetData
 from dbdaora.keys import FallbackKey
 
-from ..entity_based import EntityBasedRepository
+from ..entity_based.repository import EntityBasedRepository
 from .entity import SortedSetEntity
 from .query import SortedSetQuery
 

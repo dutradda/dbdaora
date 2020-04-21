@@ -33,4 +33,4 @@ class Query(Generic[Entity, EntityData, FallbackKey]):
         await self.repository.add(query=self)
 
 
-from .repositories.base import MemoryRepository  # noqa isort:skip
+from .repository import MemoryRepository  # noqa isort:skip

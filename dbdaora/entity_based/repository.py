@@ -5,7 +5,7 @@ from dbdaora.exceptions import InvalidQueryError
 from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
 
-from ..base import MemoryRepository
+from ..repository import MemoryRepository
 from .entity import Entity
 from .query import EntityBasedQuery
 

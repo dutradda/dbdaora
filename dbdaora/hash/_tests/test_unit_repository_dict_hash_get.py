@@ -4,13 +4,13 @@ import asynctest
 import pytest
 from jsondaora import dataclasses
 
+from dbdaora import HashQuery
 from dbdaora.exceptions import EntityNotFoundError
-from dbdaora.repositories.hash.query import HashQuery
 
 
 @pytest.fixture
-def repository(aioredis_repository):
-    return aioredis_repository
+def repository(dict_repository):
+    return dict_repository
 
 
 @pytest.mark.asyncio
@@ -27,7 +27,6 @@ async def test_should_get_from_memory(
 
 @pytest.mark.asyncio
 async def test_should_raise_not_found_error(repository, fake_entity, mocker):
-    await repository.memory_data_source.delete('fake:fake')
     fake_query = HashQuery(repository, memory=True, entity_id=fake_entity.id)
 
     with pytest.raises(EntityNotFoundError) as exc_info:
@@ -65,13 +64,15 @@ async def test_should_raise_not_found_error_when_already_raised_before(
 
 @pytest.mark.asyncio
 async def test_should_get_from_fallback(repository, fake_entity):
-    await repository.memory_data_source.delete('fake:fake')
-    await repository.memory_data_source.delete('fake:not-found:fake')
+    repository.memory_data_source.hgetall = asynctest.CoroutineMock(
+        side_effect=[None]
+    )
     repository.fallback_data_source.db['fake:fake'] = dataclasses.asdict(
         fake_entity
     )
     entity = await repository.query(fake_entity.id).entity
 
+    assert repository.memory_data_source.hgetall.called
     assert entity == fake_entity
 
 

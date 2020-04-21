@@ -8,8 +8,8 @@ from dbdaora.exceptions import EntityNotFoundError, InvalidQueryError
 from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
 
-from ..entity_based import EntityBasedRepository
 from ..entity_based.entity import Entity
+from ..entity_based.repository import EntityBasedRepository
 
 
 HashData = Dict[str, Any]
