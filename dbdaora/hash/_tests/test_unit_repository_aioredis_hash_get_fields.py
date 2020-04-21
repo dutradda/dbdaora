@@ -23,7 +23,9 @@ async def test_should_get_from_memory(
     fake_entity.number = None
     fake_entity.boolean = False
 
-    entity = await repository.query('fake', fields=['id', 'integer']).entity
+    entity = await repository.query(
+        'fake', fields=['id', 'integer', 'inner_entities']
+    ).entity
 
     assert entity == fake_entity
 
@@ -44,7 +46,7 @@ async def test_should_raise_not_found_error_when_already_raised_before(
     repository, mocker
 ):
     fake_entity = 'fake'
-    fields = ['id', 'integer']
+    fields = ['id', 'integer', 'inner_entities']
     expected_query = HashQuery(
         repository, memory=True, entity_id=fake_entity, fields=fields
     )
@@ -74,11 +76,11 @@ async def test_should_get_from_fallback(repository, fake_entity):
     await repository.memory_data_source.delete('fake:fake')
     await repository.memory_data_source.delete('fake:not-found:fake')
     repository.fallback_data_source.db['fake:fake'] = dataclasses.asdict(
-        fake_entity
+        fake_entity, dumps_value=True
     )
     fake_entity.number = None
     fake_entity.boolean = False
-    fields = ['id', 'integer']
+    fields = ['id', 'integer', 'inner_entities']
 
     entity = await repository.query('fake', fields=fields).entity
 
@@ -94,12 +96,14 @@ async def test_should_set_memory_after_got_fallback(
     )
     repository.memory_data_source.hmset = asynctest.CoroutineMock()
     repository.fallback_data_source.db['fake:fake'] = dataclasses.asdict(
-        fake_entity
+        fake_entity, dumps_value=True
     )
     fake_entity.number = None
     fake_entity.boolean = False
 
-    entity = await repository.query('fake', fields=['id', 'integer']).entity
+    entity = await repository.query(
+        'fake', fields=['id', 'integer', 'inner_entities']
+    ).entity
 
     assert repository.memory_data_source.hmget.called
     assert repository.memory_data_source.hmset.call_args_list == [
@@ -109,6 +113,8 @@ async def test_should_set_memory_after_got_fallback(
             'fake',
             'integer',
             1,
+            'inner_entities',
+            b'[{"id":"inner1"},{"id":"inner2"}]',
             'number',
             0.1,
             'boolean',

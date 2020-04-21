@@ -1,4 +1,3 @@
-import dataclasses
 import itertools
 from typing import Any, ClassVar, Dict, List, Optional, Sequence, Type, Union
 
@@ -88,7 +87,7 @@ class HashRepository(EntityBasedRepository[HashData, FallbackKey]):
         from_fallback: bool = False,
     ) -> Entity:
         return jdataclasses.asdataclass(  # type: ignore
-            data, self.entity_cls, encode=True
+            data, self.entity_cls, encode_field_name=True
         )
 
     def make_entity_from_fallback(
@@ -121,8 +120,8 @@ class HashRepository(EntityBasedRepository[HashData, FallbackKey]):
 
     def make_memory_data(self, entity: Entity) -> HashData:
         return {
-            k: '1' if v is True else '0' if v is False else v
-            for k, v in dataclasses.asdict(entity).items()
+            k: int(v) if isinstance(v, bool) else v
+            for k, v in jdataclasses.asdict(entity, dumps_value=True).items()
         }
 
     async def get_memory_many(  # type: ignore
@@ -222,7 +221,7 @@ class HashRepository(EntityBasedRepository[HashData, FallbackKey]):
         ]
 
     async def add_fallback(self, entity: Entity, *entities: Entity) -> None:
-        data = jdataclasses.asdict(entity)
+        data = jdataclasses.asdict(entity, dumps_value=True)
         await self.fallback_data_source.put(self.fallback_key(entity), data)
 
 

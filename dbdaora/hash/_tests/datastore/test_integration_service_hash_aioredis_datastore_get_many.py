@@ -83,7 +83,7 @@ async def test_should_get_many_with_fields(
         'fake:fake2', *itertools.chain(*serialized_fake_entity2.items())
     )
     entities = await fake_service.get_many(
-        'fake', 'fake2', fields=['id', 'integer']
+        'fake', 'fake2', fields=['id', 'integer', 'inner_entities']
     )
     fake_entity.number = None
     fake_entity.boolean = False
@@ -103,7 +103,7 @@ async def test_should_get_many_from_cache_with_fields(
     fake_service.cache['fake'] = fake_entity
     fake_service.cache['fake2'] = fake_entity2
     entities = await fake_service.get_many(
-        'fake', 'fake2', fields=['id', 'integer']
+        'fake', 'fake2', fields=['id', 'integer', 'inner_entities']
     )
     fake_entity.number = None
     fake_entity.boolean = False
@@ -139,7 +139,7 @@ async def test_should_get_many_from_fallback_after_open_circuit_breaker_with_fie
     fake_entity2.boolean = False
 
     entities = await fake_service.get_many(
-        'fake', 'fake2', fields=['id', 'integer']
+        'fake', 'fake2', fields=['id', 'integer', 'inner_entities']
     )
 
     assert entities == [fake_entity, fake_entity2]

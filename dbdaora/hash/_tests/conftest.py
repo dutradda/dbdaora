@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Optional
+from typing import List, Optional
 
 import pytest
 from aioredis import RedisError
@@ -31,9 +31,15 @@ def fake_service(aioredis_repository, mocker):
 
 
 @dataclasses.dataclass
+class FakeInnerEntity:
+    id: str
+
+
+@dataclasses.dataclass
 class FakeEntity:
     id: str
     integer: int
+    inner_entities: List[FakeInnerEntity]
     number: Optional[float] = None
     boolean: Optional[bool] = None
 
@@ -60,12 +66,24 @@ def dict_repository_cls():
 
 @pytest.fixture
 def fake_entity():
-    return FakeEntity(id='fake', integer=1, number=0.1, boolean=True)
+    return FakeEntity(
+        id='fake',
+        inner_entities=[FakeInnerEntity('inner1'), FakeInnerEntity('inner2')],
+        integer=1,
+        number=0.1,
+        boolean=True,
+    )
 
 
 @pytest.fixture
 def fake_entity2():
-    return FakeEntity(id='fake2', integer=2, number=0.2, boolean=False)
+    return FakeEntity(
+        id='fake2',
+        inner_entities=[FakeInnerEntity('inner3'), FakeInnerEntity('inner4')],
+        integer=2,
+        number=0.2,
+        boolean=False,
+    )
 
 
 @pytest.fixture
@@ -75,6 +93,7 @@ def serialized_fake_entity():
         b'integer': b'1',
         b'number': b'0.1',
         b'boolean': b'1',
+        b'inner_entities': b'[{"id":"inner1"},{"id":"inner2"}]',
     }
 
 
@@ -85,6 +104,7 @@ def serialized_fake_entity2():
         b'integer': b'2',
         b'number': b'0.2',
         b'boolean': b'0',
+        b'inner_entities': b'[{"id":"inner3"},{"id":"inner4"}]',
     }
 
 

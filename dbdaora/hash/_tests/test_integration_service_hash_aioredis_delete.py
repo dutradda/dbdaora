@@ -30,7 +30,7 @@ async def test_should_delete_from_fallback_after_open_circuit_breaker(
     )
     fake_service.repository.fallback_data_source.db[
         'fake:fake'
-    ] = dataclasses.asdict(fake_entity)
+    ] = dataclasses.asdict(fake_entity, dumps_value=True)
 
     assert await fake_service.get_one('fake')
 
