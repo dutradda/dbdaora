@@ -6,16 +6,8 @@ __version__ = '0.0.11'
 
 from dbdaora.circuitbreaker import AsyncCircuitBreaker
 from dbdaora.data_sources.fallback import FallbackDataSource
-from dbdaora.data_sources.fallback.datastore import DatastoreDataSource
 from dbdaora.data_sources.fallback.dict import DictFallbackDataSource
 from dbdaora.data_sources.memory import MemoryDataSource
-from dbdaora.data_sources.memory.aioredis import (
-    AioRedisDataSource,
-    ShardsAioRedisDataSource,
-)
-from dbdaora.data_sources.memory.aioredis import (
-    make as make_aioredis_data_source,
-)
 from dbdaora.data_sources.memory.dict import DictMemoryDataSource
 from dbdaora.hash.query import HashQuery
 from dbdaora.hash.repository import HashData, HashRepository
@@ -27,6 +19,23 @@ from dbdaora.sorted_set.query import SortedSetQuery
 from dbdaora.sorted_set.repository import SortedSetRepository
 
 
+try:
+    from dbdaora.data_sources.fallback.datastore import DatastoreDataSource
+except ImportError:
+    DatastoreDataSource = None  # type: ignore
+
+
+try:
+    from dbdaora.data_sources.memory.aioredis import (
+        AioRedisDataSource,
+        ShardsAioRedisDataSource,
+        make as make_aioredis_data_source,
+    )
+except ImportError:
+    AioRedisDataSource = None  # type: ignore
+    ShardsAioRedisDataSource = None  # type: ignore
+
+
 __all__ = [
     'MemoryRepository',
     'HashRepository',
@@ -36,16 +45,23 @@ __all__ = [
     'SortedSetQuery',
     'SortedSetEntity',
     'DictFallbackDataSource',
-    'AioRedisDataSource',
     'HashService',
     'AsyncCircuitBreaker',
     'make_aioredis_data_source',
-    'ShardsAioRedisDataSource',
     'HashRing',
-    'DatastoreDataSource',
     'FallbackDataSource',
     'MemoryDataSource',
+    'DictMemoryDataSource',
 ]
 
-if DictMemoryDataSource:
-    __all__.append('DictMemoryDataSource')
+if AioRedisDataSource:
+    __all__.append('AioRedisDataSource')
+
+if ShardsAioRedisDataSource:
+    __all__.append('ShardsAioRedisDataSource')
+
+if make_aioredis_data_source:
+    __all__.append('make_aioredis_data_source')
+
+if DatastoreDataSource:
+    __all__.append('DatastoreDataSource')
