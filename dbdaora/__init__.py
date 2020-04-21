@@ -10,7 +10,7 @@ from dbdaora.data_sources.fallback.dict import DictFallbackDataSource
 from dbdaora.data_sources.memory import MemoryDataSource
 from dbdaora.data_sources.memory.dict import DictMemoryDataSource
 from dbdaora.hash.query import HashQuery
-from dbdaora.hash.repository import HashData, HashRepository
+from dbdaora.hash.repositories import HashData, HashRepository
 from dbdaora.hash.service import HashService
 from dbdaora.hashring import HashRing
 from dbdaora.repository import MemoryRepository
@@ -21,6 +21,7 @@ from dbdaora.sorted_set.repository import SortedSetRepository
 
 try:
     from dbdaora.data_sources.fallback.datastore import DatastoreDataSource
+    from dbdaora.hash.repositories.datastore import DatastoreHashRepository
 except ImportError:
     DatastoreDataSource = None  # type: ignore
 
@@ -65,3 +66,6 @@ if make_aioredis_data_source:
 
 if DatastoreDataSource:
     __all__.append('DatastoreDataSource')
+
+if DatastoreHashRepository:
+    __all__.append('DatastoreHashRepository')

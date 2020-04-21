@@ -4,12 +4,11 @@ from typing import Any, ClassVar, Dict, List, Optional, Sequence, Type, Union
 
 from jsondaora import dataclasses as jdataclasses
 
+from dbdaora.entity_based.entity import Entity
+from dbdaora.entity_based.repository import EntityBasedRepository
 from dbdaora.exceptions import EntityNotFoundError, InvalidQueryError
 from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
-
-from ..entity_based.entity import Entity
-from ..entity_based.repository import EntityBasedRepository
 
 
 HashData = Dict[str, Any]
@@ -227,7 +226,7 @@ class HashRepository(EntityBasedRepository[HashData, FallbackKey]):
         await self.fallback_data_source.put(self.fallback_key(entity), data)
 
 
-from .query import HashQuery  # noqa isort:skip
+from ..query import HashQuery  # noqa isort:skip
 
 
 HashRepository.query_cls = HashQuery  # type: ignore

@@ -8,11 +8,6 @@ class FakeRepository(SortedSetRepository[str]):
 
 
 @pytest.fixture
-def fake_repository_cls():
-    return FakeRepository
-
-
-@pytest.fixture
 def fake_entity():
     return SortedSetEntity(id='fake', data=['1', '2'])
 
@@ -20,3 +15,8 @@ def fake_entity():
 @pytest.fixture
 def fake_entity_withscores():
     return SortedSetEntity(id='fake', data=[('1', 0), ('2', 1)])
+
+
+@pytest.fixture
+def dict_repository_cls():
+    return FakeRepository

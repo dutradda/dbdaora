@@ -7,11 +7,6 @@ from jsondaora import dataclasses
 
 
 @pytest.fixture
-def fake_entity2(fake_entity_cls):
-    return fake_entity_cls(id='fake2', integer=2, number=0.2, boolean=False)
-
-
-@pytest.fixture
 def serialized_fake_entity2():
     return {
         b'id': b'fake2',

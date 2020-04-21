@@ -6,8 +6,8 @@ from cachetools import Cache
 from circuitbreaker import CircuitBreaker, CircuitBreakerError
 
 from ..entity_based.entity import Entity
-from ..hash.repository import HashRepository
 from ..keys import FallbackKey
+from .repositories import HashRepository
 
 
 @dataclass(init=False)
