@@ -5,21 +5,21 @@ from typing import Generic, Iterable, Optional
 from cachetools import Cache
 from circuitbreaker import CircuitBreaker, CircuitBreakerError
 
-from ..entity import Entity
 from ..keys import FallbackKey
+from ..repositories.entity_based.entity import Entity
 from ..repositories.hash import HashRepository
 
 
 @dataclass(init=False)
-class HashService(Generic[Entity, FallbackKey]):
-    repository: HashRepository[Entity, FallbackKey]
+class HashService(Generic[FallbackKey]):
+    repository: HashRepository[FallbackKey]
     circuit_breaker: CircuitBreaker
     cache: Optional[Cache]
     logger: Logger
 
     def __init__(
         self,
-        repository: HashRepository[Entity, FallbackKey],
+        repository: HashRepository[FallbackKey],
         circuit_breaker: CircuitBreaker,
         cache: Optional[Cache] = None,
         logger: Logger = getLogger(__name__),

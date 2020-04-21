@@ -2,6 +2,7 @@ import itertools
 
 import asynctest
 import pytest
+from jsondaora import dataclasses
 
 from dbdaora.exceptions import EntityNotFoundError
 from dbdaora.repositories.hash.query import HashQuery
@@ -63,12 +64,12 @@ async def test_should_raise_not_found_error_when_already_raised_before(
 
 
 @pytest.mark.asyncio
-async def test_should_get_from_fallback(
-    repository, serialized_fake_entity, fake_entity
-):
+async def test_should_get_from_fallback(repository, fake_entity):
     await repository.memory_data_source.delete('fake:fake')
     await repository.memory_data_source.delete('fake:not-found:fake')
-    repository.fallback_data_source.db['fake:fake'] = serialized_fake_entity
+    repository.fallback_data_source.db['fake:fake'] = dataclasses.asdict(
+        fake_entity
+    )
     entity = await repository.query(fake_entity.id).entity
 
     assert entity == fake_entity
@@ -76,27 +77,29 @@ async def test_should_get_from_fallback(
 
 @pytest.mark.asyncio
 async def test_should_set_memory_after_got_fallback(
-    repository, serialized_fake_entity, fake_entity, mocker
+    repository, fake_entity, mocker
 ):
     repository.memory_data_source.hgetall = asynctest.CoroutineMock(
         side_effect=[None]
     )
     repository.memory_data_source.hmset = asynctest.CoroutineMock()
-    repository.fallback_data_source.db['fake:fake'] = serialized_fake_entity
+    repository.fallback_data_source.db['fake:fake'] = dataclasses.asdict(
+        fake_entity
+    )
     entity = await repository.query(fake_entity.id).entity
 
     assert repository.memory_data_source.hgetall.called
     assert repository.memory_data_source.hmset.call_args_list == [
         mocker.call(
             'fake:fake',
-            b'id',
-            b'fake',
-            b'integer',
-            b'1',
-            b'number',
-            b'0.1',
-            b'boolean',
-            b'1',
+            'id',
+            'fake',
+            'integer',
+            1,
+            'number',
+            0.1,
+            'boolean',
+            1,
         )
     ]
     assert entity == fake_entity

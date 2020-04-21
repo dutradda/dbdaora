@@ -1,13 +1,12 @@
 import dataclasses
-from typing import ClassVar, Dict, Iterable, Optional
+from typing import Any, ClassVar, Dict, Iterable, Optional
 
-from dbdaora.data import FallbackData
 from dbdaora.data_sources.fallback import FallbackDataSource
 
 
 @dataclasses.dataclass
-class DictFallbackDataSource(FallbackDataSource[str, FallbackData]):
-    db: Dict[str, Optional[FallbackData]] = dataclasses.field(
+class DictFallbackDataSource(FallbackDataSource[str]):
+    db: Dict[str, Optional[Dict[str, Any]]] = dataclasses.field(
         default_factory=dict
     )
     key_separator: ClassVar[str] = ':'
@@ -15,10 +14,10 @@ class DictFallbackDataSource(FallbackDataSource[str, FallbackData]):
     def make_key(self, *key_parts: str) -> str:
         return self.key_separator.join(key_parts)
 
-    async def get(self, key: str) -> Optional[FallbackData]:
+    async def get(self, key: str) -> Optional[Dict[str, Any]]:
         return self.db.get(key)
 
-    async def put(self, key: str, data: FallbackData) -> None:
+    async def put(self, key: str, data: Dict[str, Any]) -> None:
         self.db[key] = data
 
     async def delete(self, key: str) -> None:
@@ -26,5 +25,5 @@ class DictFallbackDataSource(FallbackDataSource[str, FallbackData]):
 
     async def get_many(
         self, keys: Iterable[str]
-    ) -> Iterable[Optional[FallbackData]]:
+    ) -> Iterable[Optional[Dict[str, Any]]]:
         return [self.db.get(key) for key in keys]

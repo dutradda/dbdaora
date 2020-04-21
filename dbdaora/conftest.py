@@ -4,6 +4,7 @@ from typing import Optional
 import pytest
 
 from dbdaora import (
+    DatastoreDataSource,
     DictFallbackDataSource,
     DictMemoryDataSource,
     HashRepository,
@@ -19,8 +20,9 @@ class FakeEntity:
     boolean: Optional[bool] = None
 
 
-class FakeHashRepository(HashRepository[FakeEntity, str]):
+class FakeHashRepository(HashRepository):
     entity_name = 'fake'
+    entity_cls = FakeEntity
 
 
 @pytest.fixture
@@ -67,6 +69,21 @@ async def aioredis_repository(fake_repository_cls, mocker):
     yield fake_repository_cls(
         memory_data_source=memory_data_source,
         fallback_data_source=DictFallbackDataSource(),
+        expire_time=1,
+    )
+    memory_data_source.close()
+    await memory_data_source.wait_closed()
+
+
+@pytest.mark.asyncio
+@pytest.fixture
+async def aioredis_datastore_repository(fake_repository_cls, mocker):
+    memory_data_source = await make_aioredis_data_source(
+        'redis://', 'redis://localhost/1', 'redis://localhost/2'
+    )
+    yield fake_repository_cls(
+        memory_data_source=memory_data_source,
+        fallback_data_source=DatastoreDataSource(),
         expire_time=1,
     )
     memory_data_source.close()

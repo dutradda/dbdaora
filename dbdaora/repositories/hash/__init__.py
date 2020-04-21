@@ -1,42 +1,25 @@
 import dataclasses
 import itertools
-from typing import Dict, List, Optional, Sequence, Union, get_args, get_origin
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 from jsondaora import dataclasses as jdataclasses
 
-from dbdaora.entity import Entity
-from dbdaora.exceptions import (
-    EntityNotFoundError,
-    InvalidEntityAnnotationError,
-    InvalidQueryError,
-)
+from dbdaora.exceptions import EntityNotFoundError, InvalidQueryError
 from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
 
 from ..entity_based import EntityBasedRepository
+from ..entity_based.entity import Entity
 
 
-HashData = Dict[Union[bytes, str], Union[bytes, str]]
+HashData = Dict[str, Any]
 
 
-class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
-    def __init_subclass__(cls) -> None:
-        for generic in cls.__orig_bases__:  # type: ignore
-            origin = get_origin(generic)
-            if isinstance(origin, type) and issubclass(
-                origin, EntityBasedRepository
-            ):
-                cls.entity_cls = get_args(generic)[0]
-                return
-
-        raise InvalidEntityAnnotationError(
-            cls, f'Should be: {cls.__name__}[MyEntity]'
-        )
-
+class HashRepository(EntityBasedRepository[HashData, FallbackKey]):
     async def get_memory_data(  # type: ignore
-        self, key: str, query: 'HashQuery[Entity, FallbackKey]',
-    ) -> Optional[HashData]:
-        data: Optional[HashData]
+        self, key: str, query: 'HashQuery[FallbackKey]',
+    ) -> Optional[Union[HashData, Dict[bytes, Any]]]:
+        data: Optional[Union[HashData, Dict[bytes, Any]]]
 
         if query.fields:
             data = self.make_hmget_dict(
@@ -49,7 +32,7 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
 
             return data
 
-        data = await self.memory_data_source.hgetall(key)  # type: ignore
+        data = await self.memory_data_source.hgetall(key)
 
         if not data:
             return None
@@ -58,7 +41,7 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
 
     def make_hmget_dict(
         self, fields: Sequence[str], data: Sequence[Optional[bytes]]
-    ) -> HashData:
+    ) -> Dict[bytes, Any]:
         return {f.encode(): v for f, v in zip(fields, data) if v is not None}
 
     async def get_fallback_data(
@@ -76,16 +59,21 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
         if not for_memory and isinstance(query, HashQuery) and query.fields:
             return self.make_fallback_data_fields(query, data)
 
+        elif for_memory:
+            return {
+                k: int(v) if isinstance(v, bool) else v
+                for k, v in data.items()
+            }
+
         return data
 
     def make_fallback_data_fields(
         self,
         query: Union[Query[Entity, HashData, FallbackKey], Entity],
         data: HashData,
-        encode: bool = True,
     ) -> HashData:
         return {
-            f.encode() if encode else f: v  # type: ignore
+            f: v
             for f, v in data.items()
             if isinstance(query, HashQuery)
             and query.fields
@@ -99,17 +87,23 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
         from_fallback: bool = False,
     ) -> Entity:
         return jdataclasses.asdataclass(  # type: ignore
-            data, self.entity_cls, encode=not from_fallback  # type: ignore
+            data, self.entity_cls, encode=True
+        )
+
+    def make_entity_from_fallback(
+        self,
+        query: Union[Query[Entity, HashData, FallbackKey], Entity],
+        data: HashData,
+    ) -> Entity:
+        return jdataclasses.asdataclass(  # type: ignore
+            data, self.entity_cls
         )
 
     async def add_memory_data(
         self, key: str, data: HashData, from_fallback: bool = False
     ) -> None:
         input_data = itertools.chain(*data.items())
-        await self.memory_data_source.hmset(key, *input_data)  # type: ignore
-
-    def make_fallback_data(self, entity: Entity) -> HashData:
-        return jdataclasses.asdict(entity)  # type: ignore
+        await self.memory_data_source.hmset(key, *input_data)
 
     async def add_memory_data_from_fallback(
         self,
@@ -120,9 +114,7 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
         await self.add_memory_data(key, data)
 
         if isinstance(query, HashQuery) and query.fields:
-            return {
-                f: v for f, v in data.items() if f.decode() in query.fields  # type: ignore
-            }
+            return {f: v for f, v in data.items() if f in query.fields}
 
         return data
 
@@ -132,17 +124,11 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
             for k, v in dataclasses.asdict(entity).items()
         }
 
-    async def entities(
-        self, query: 'HashQuery[Entity, FallbackKey]',
+    async def get_memory_many(  # type: ignore
+        self, query: 'HashQuery[FallbackKey]',
     ) -> List[Optional[Entity]]:
-        if query.memory:
-            return await self.get_memory_many(query)
-        else:
-            return await self.get_fallback_many(query)
+        memory_data: Sequence[Union[HashData, Dict[bytes, Any]]]
 
-    async def get_memory_many(
-        self, query: 'HashQuery[Entity, FallbackKey]',
-    ) -> List[Optional[Entity]]:
         if query.entities_ids is None:
             raise InvalidQueryError(query, 'entities_ids is required')
 
@@ -206,8 +192,8 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
             for entity_data in memory_data
         ]
 
-    async def get_fallback_many(
-        self, query: 'HashQuery[Entity, FallbackKey]',
+    async def get_fallback_many(  # type: ignore
+        self, query: 'HashQuery[FallbackKey]',
     ) -> List[Optional[Entity]]:
         if query.entities_ids is None:
             raise InvalidQueryError(query, 'entities_ids is required')
@@ -226,12 +212,8 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
             return [
                 None
                 if entity_data is None
-                else self.make_entity(
-                    query,
-                    self.make_fallback_data_fields(
-                        query, entity_data, encode=False
-                    ),
-                    from_fallback=True,
+                else self.make_entity_from_fallback(
+                    query, self.make_fallback_data_fields(query, entity_data),
                 )
                 for entity_data in data
             ]
@@ -239,9 +221,13 @@ class HashRepository(EntityBasedRepository[Entity, HashData, FallbackKey]):
         return [
             None
             if entity_data is None
-            else self.make_entity(query, entity_data, from_fallback=True,)
+            else self.make_entity_from_fallback(query, entity_data)
             for entity_data in data
         ]
+
+    async def add_fallback(self, entity: Entity, *entities: Entity) -> None:
+        data = jdataclasses.asdict(entity)
+        await self.fallback_data_source.put(self.fallback_key(entity), data)
 
 
 from .query import HashQuery  # noqa isort:skip

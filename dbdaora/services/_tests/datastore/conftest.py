@@ -6,7 +6,7 @@ from dbdaora import AsyncCircuitBreaker, HashService
 
 
 @pytest.fixture
-def fake_service(aioredis_repository, mocker):
+def fake_service(aioredis_datastore_repository, mocker):
     circuit_breaker = AsyncCircuitBreaker(
         failure_threshold=0,
         recovery_timeout=10,
@@ -15,5 +15,8 @@ def fake_service(aioredis_repository, mocker):
     )
     cache = TTLCache(maxsize=1, ttl=1)
     return HashService(
-        aioredis_repository, circuit_breaker, cache, logger=mocker.MagicMock(),
+        aioredis_datastore_repository,
+        circuit_breaker,
+        cache,
+        logger=mocker.MagicMock(),
     )

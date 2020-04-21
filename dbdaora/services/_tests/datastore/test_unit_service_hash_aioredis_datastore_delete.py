@@ -22,15 +22,16 @@ async def test_should_delete(
 
 @pytest.mark.asyncio
 async def test_should_delete_from_fallback_after_open_circuit_breaker(
-    fake_service, fake_entity, mocker
+    fake_service, serialized_fake_entity, fake_entity, mocker
 ):
     await fake_service.repository.memory_data_source.delete('fake:fake')
     await fake_service.repository.memory_data_source.delete(
         'fake:not-found:fake'
     )
-    fake_service.repository.fallback_data_source.db[
-        'fake:fake'
-    ] = dataclasses.asdict(fake_entity)
+    key = fake_service.repository.fallback_data_source.make_key('fake', 'fake')
+    await fake_service.repository.fallback_data_source.put(
+        key, dataclasses.asdict(fake_entity)
+    )
 
     assert await fake_service.get_one('fake')
 

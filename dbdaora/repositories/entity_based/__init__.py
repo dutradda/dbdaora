@@ -1,19 +1,18 @@
 from typing import Any, ClassVar, Optional, Type, Union
 
-from dbdaora.entity import Entity, EntityData
+from dbdaora.entity import EntityData
 from dbdaora.exceptions import InvalidQueryError
 from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
 
 from ..base import MemoryRepository
+from .entity import Entity
 from .query import EntityBasedQuery
 
 
 class EntityBasedRepository(MemoryRepository[Entity, EntityData, FallbackKey]):
     entity_cls: ClassVar[Type[Entity]]
-    query_cls: ClassVar[
-        Type[EntityBasedQuery[Entity, EntityData, FallbackKey]]
-    ]
+    query_cls: ClassVar[Type[EntityBasedQuery[EntityData, FallbackKey]]]
 
     def memory_key(
         self,
@@ -27,7 +26,7 @@ class EntityBasedRepository(MemoryRepository[Entity, EntityData, FallbackKey]):
             )
 
         if isinstance(query, self.entity_cls):
-            entity_id = entity_id or query.id  # type: ignore
+            entity_id = entity_id or query.id
             return self.memory_data_source.make_key(
                 self.entity_name, entity_id
             )
@@ -46,7 +45,7 @@ class EntityBasedRepository(MemoryRepository[Entity, EntityData, FallbackKey]):
             )
 
         if isinstance(query, self.entity_cls):
-            entity_id = entity_id or query.id  # type: ignore
+            entity_id = entity_id or query.id
             return self.fallback_data_source.make_key(
                 self.entity_name, entity_id
             )
@@ -66,7 +65,7 @@ class EntityBasedRepository(MemoryRepository[Entity, EntityData, FallbackKey]):
             )
 
         if isinstance(query, self.entity_cls):
-            entity_id = entity_id or query.id  # type: ignore
+            entity_id = entity_id or query.id
             return self.memory_data_source.make_key(
                 self.entity_name, 'not-found', entity_id
             )

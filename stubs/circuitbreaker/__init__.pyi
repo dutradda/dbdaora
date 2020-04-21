@@ -1,4 +1,4 @@
-from typing import Any, Callable, TypeVar, Type, Optional, Awaitable
+from typing import Any, Awaitable, Callable, Optional, Type, TypeVar
 
 
 FuncReturn = TypeVar('FuncReturn')
@@ -22,25 +22,29 @@ class CircuitBreaker:
         recovery_timeout: Optional[int] = None,
         expected_exception: Optional[Type[Exception]] = None,
         name: Optional[str] = None,
-        fallback_function: Optional[Callable[..., Awaitable[FuncReturn]]] = None,
+        fallback_function: Optional[
+            Callable[..., Awaitable[FuncReturn]]
+        ] = None,
     ): ...
 
     async def call(
-        self, func: Callable[..., Awaitable[FuncReturn]], *args: Any, **kwargs: Any
+        self,
+        func: Callable[..., Awaitable[FuncReturn]],
+        *args: Any,
+        **kwargs: Any,
     ) -> FuncReturn: ...
 
     def __call__(
         self, wrapped: Callable[..., FuncReturn]
-    ) -> Callable[..., FuncReturn]:
-        ...
+    ) -> Callable[..., FuncReturn]: ...
 
     @property
-    def opened(self) -> bool:
-        ...
+    def opened(self) -> bool: ...
 
     @property
-    def fallback_function(self) -> Optional[Callable[..., Awaitable[FuncReturn]]]:
-        ...
+    def fallback_function(
+        self,
+    ) -> Optional[Callable[..., Awaitable[FuncReturn]]]: ...
 
 
 class CircuitBreakerError(Exception):

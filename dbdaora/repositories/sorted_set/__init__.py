@@ -1,7 +1,7 @@
 import itertools
-from typing import Optional, Union
+from typing import Optional, Sequence, Tuple, TypedDict, Union
 
-from dbdaora.data_sources import SortedSetData
+from dbdaora.data_sources.memory import SortedSetData
 from dbdaora.keys import FallbackKey
 
 from ..entity_based import EntityBasedRepository
@@ -9,15 +9,16 @@ from .entity import SortedSetEntity
 from .query import SortedSetQuery
 
 
-class SortedSetRepository(
-    EntityBasedRepository[SortedSetEntity, SortedSetData, FallbackKey],
-):
+class FallbackSortedSetData(TypedDict):
+    data: Sequence[Tuple[str, float]]
+
+
+class SortedSetRepository(EntityBasedRepository[SortedSetData, FallbackKey]):
     query_cls = SortedSetQuery
+    entity_cls = SortedSetEntity
 
     async def get_memory_data(  # type: ignore
-        self,
-        key: str,
-        query: SortedSetQuery[SortedSetEntity, SortedSetData, FallbackKey],
+        self, key: str, query: SortedSetQuery[FallbackKey],
     ) -> Optional[SortedSetData]:
         if query.reverse:
             return await self.memory_data_source.zrevrange(key)
@@ -26,13 +27,14 @@ class SortedSetRepository(
 
     async def get_fallback_data(  # type: ignore
         self,
-        query: Union[
-            SortedSetQuery[SortedSetEntity, SortedSetData, FallbackKey],
-            SortedSetEntity,
-        ],
+        query: Union[SortedSetQuery[FallbackKey], SortedSetEntity],
         for_memory: bool = False,
     ) -> Optional[SortedSetData]:
-        data = await self.fallback_data_source.get(self.fallback_key(query))
+        data: Optional[FallbackSortedSetData]
+
+        data = await self.fallback_data_source.get(  # type: ignore
+            self.fallback_key(query)
+        )
 
         if data is None:
             return None
@@ -42,15 +44,17 @@ class SortedSetRepository(
             or isinstance(query, SortedSetQuery)
             and query.withscores
         ):
-            return data
+            return data['data']
 
-        return [i[0] for i in data]  # type: ignore
+        return [i[0] for i in data['data']]
 
     def make_entity(  # type: ignore
-        self,
-        query: SortedSetQuery[SortedSetEntity, SortedSetData, FallbackKey],
-        data: SortedSetData,
-        from_fallback: bool = False,
+        self, query: SortedSetQuery[FallbackKey], data: SortedSetData,
+    ) -> SortedSetEntity:
+        return SortedSetEntity(id=query.entity_id, data=data)
+
+    def make_entity_from_fallback(  # type: ignore
+        self, query: SortedSetQuery[FallbackKey], data: SortedSetData,
     ) -> SortedSetEntity:
         return SortedSetEntity(id=query.entity_id, data=data)
 
@@ -59,19 +63,15 @@ class SortedSetRepository(
         input_data.reverse()
         await self.memory_data_source.zadd(key, *input_data)
 
-    async def add_fallback(
+    async def add_fallback(  # type: ignore
         self, entity: SortedSetEntity, *entities: SortedSetEntity
     ) -> None:
         await self.fallback_data_source.put(
-            self.fallback_key(entity), self.make_fallback_data(entity)
+            self.fallback_key(entity), {'data': entity.data}
         )
 
     def fallback_not_found_key(  # type: ignore
-        self,
-        query: Union[
-            SortedSetQuery[SortedSetEntity, SortedSetData, FallbackKey],
-            SortedSetEntity,
-        ],
+        self, query: Union[SortedSetQuery[FallbackKey], SortedSetEntity],
     ) -> str:
         if isinstance(query, SortedSetQuery):
             return self.memory_data_source.make_key(
@@ -86,10 +86,7 @@ class SortedSetRepository(
     async def add_memory_data_from_fallback(  # type: ignore
         self,
         key: str,
-        query: Union[
-            SortedSetQuery[SortedSetEntity, SortedSetData, FallbackKey],
-            SortedSetEntity,
-        ],
+        query: Union[SortedSetQuery[FallbackKey], SortedSetEntity],
         data: SortedSetData,
     ) -> SortedSetData:
         await self.add_memory_data(key, data)

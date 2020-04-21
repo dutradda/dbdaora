@@ -1,14 +1,14 @@
 import dataclasses
 from typing import Optional
 
-from dbdaora.entity import Entity, EntityData
+from dbdaora.data_sources.memory import SortedSetData
 from dbdaora.keys import FallbackKey
 
 from ..entity_based.query import EntityBasedQuery
 
 
 @dataclasses.dataclass
-class SortedSetQuery(EntityBasedQuery[Entity, EntityData, FallbackKey]):
+class SortedSetQuery(EntityBasedQuery[SortedSetData, FallbackKey]):
     reverse: bool = False
     withscores: bool = False
     page: Optional[int] = None

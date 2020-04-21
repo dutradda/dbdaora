@@ -1,6 +1,5 @@
-from collections.abc import MutableMapping
-from typing import Any
+from typing import Any, Dict
 
 
-class Cache(MutableMapping[Any, Any]):
+class Cache(Dict[Any, Any]):
     ...

@@ -11,8 +11,8 @@ from typing import (
 )
 
 
-rangeOutput = Sequence[bytes]
-rangeWithScoresOutput = Sequence[Tuple[bytes, float]]
+rangeOutput = Sequence[Union[bytes, str]]
+rangeWithScoresOutput = Sequence[Tuple[Union[bytes, str], float]]
 SortedSetData = Union[rangeOutput, rangeWithScoresOutput]
 
 

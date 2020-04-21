@@ -1,3 +1,7 @@
+export DATASTORE_EMULATOR_HOST = localhost:8085
+export DATASTORE_PROJECT_ID = dbdaora
+export GOOGLE_CLOUD_PROJECT = dbdaora
+
 build-virtualenv:
 	@virtualenv venv --python python3.7 --prompt 'dbdaora-> '
 
@@ -20,16 +24,16 @@ deploy: deploy-docs release-pypi
 integration: isort black flake8 mypy tests
 
 isort:
-	isort -y -w 100 -up -tc -rc -lai 2 -ac -w 79 -m 3 dbdaora
+	isort -y -w 100 -up -tc -rc -lai 2 -ac -w 79 -m 3 dbdaora stubs
 
 black:
 	black -S -t py38 -l 79 dbdaora
 
 flake8:
-	flake8 --max-line-length 100 dbdaora
+	flake8 --max-line-length 100 --filename *.py,*.pyi dbdaora stubs
 
 mypy:
-	mypy dbdaora --strict
+	mypy --strict dbdaora stubs
 
 tests:
 	pytest dbdaora -xvv --disable-warnings

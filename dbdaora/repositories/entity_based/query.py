@@ -1,8 +1,10 @@
 import dataclasses
 
-from dbdaora.entity import Entity, EntityData
+from dbdaora.entity import EntityData
 from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
+
+from .entity import Entity
 
 
 @dataclasses.dataclass
