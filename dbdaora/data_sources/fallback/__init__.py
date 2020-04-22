@@ -1,9 +1,11 @@
-from typing import Any, Dict, Generic, Iterable, Optional
+from typing import Any, Dict, Generic, Iterable, Optional, Sequence
 
 from dbdaora.keys import FallbackKey
 
+from .. import DataSource
 
-class FallbackDataSource(Generic[FallbackKey]):
+
+class FallbackDataSource(DataSource, Generic[FallbackKey]):
     def make_key(self, *key_parts: Any) -> FallbackKey:
         raise NotImplementedError()
 
@@ -12,7 +14,7 @@ class FallbackDataSource(Generic[FallbackKey]):
 
     async def get_many(
         self, keys: Iterable[FallbackKey]
-    ) -> Iterable[Dict[str, Any]]:
+    ) -> Sequence[Optional[Dict[str, Any]]]:
         raise NotImplementedError()
 
     async def put(self, key: FallbackKey, data: Dict[str, Any]) -> None:

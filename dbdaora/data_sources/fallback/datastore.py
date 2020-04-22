@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Dict, Iterable, Optional, Sequence
 
 from google.cloud.datastore import Client, Entity, Key
 
@@ -30,8 +30,12 @@ class DatastoreDataSource(FallbackDataSource[Key]):
     async def delete(self, key: Key) -> None:
         self.client.delete(key)
 
-    async def get_many(self, keys: Iterable[Key]) -> Iterable[Dict[str, Any]]:
-        return self.client.get_multi(keys)
+    async def get_many(
+        self, keys: Iterable[Key]
+    ) -> Sequence[Optional[Dict[str, Any]]]:
+        entities = self.client.get_multi(keys)
+        goted_keys = {entity.key: entity for entity in entities}
+        return [goted_keys.get(key) for key in keys]
 
 
 def entity_asdict(entity: Entity) -> Dict[str, Any]:

@@ -6,8 +6,8 @@ from cachetools import Cache
 from circuitbreaker import CircuitBreakerError
 
 from ..circuitbreaker import AsyncCircuitBreaker
-from ..entity_based.entity import Entity
 from ..keys import FallbackKey
+from .entity import HashEntity
 from .repositories import HashRepository
 
 
@@ -36,7 +36,7 @@ class HashService(Generic[FallbackKey]):
 
     async def get_all(
         self, fields: Optional[Iterable[str]] = None
-    ) -> Iterable[Entity]:
+    ) -> Iterable[HashEntity]:
         try:
             return await self.entities_circuit(
                 self.repository.query(all=True, fields=fields)
@@ -45,19 +45,19 @@ class HashService(Generic[FallbackKey]):
             self.logger.warning(
                 f'circuit-breaker={self.circuit_breaker.name}; method=get_all'
             )
-            return await self.repository.query(  # type: ignore
+            return await self.repository.query(
                 all=True, fields=fields, memory=False
             ).entities
 
     async def get_many(
         self, *ids: str, fields: Optional[Iterable[str]] = None
-    ) -> Iterable[Entity]:
+    ) -> Iterable[HashEntity]:
         try:
             if self.cache is None:
                 return [
                     entity
                     for entity in await self.entities_circuit(
-                        self.repository.query(entities_ids=ids, fields=fields)
+                        self.repository.query(many=ids, fields=fields)
                     )
                     if entity is not None
                 ]
@@ -75,8 +75,8 @@ class HashService(Generic[FallbackKey]):
 
             return [
                 entity
-                for entity in await self.repository.query(  # type: ignore
-                    entities_ids=ids, fields=fields, memory=False
+                for entity in await self.repository.query(
+                    many=ids, fields=fields, memory=False
                 ).entities
                 if entity is not None
             ]
@@ -87,7 +87,7 @@ class HashService(Generic[FallbackKey]):
         cache: Cache,
         fields: Optional[Iterable[str]] = None,
         memory: bool = True,
-    ) -> Iterable[Entity]:
+    ) -> Iterable[HashEntity]:
         missed_ids = []
         entities = {
             id_: missed_ids.append(id_)  # type: ignore
@@ -104,13 +104,11 @@ class HashService(Generic[FallbackKey]):
         if missed_ids:
             if memory:
                 missed_entities = await self.entities_circuit(
-                    self.repository.query(
-                        entities_ids=missed_ids, fields=fields
-                    )
+                    self.repository.query(many=missed_ids, fields=fields)
                 )
             else:
-                missed_entities = await self.repository.query(  # type: ignore
-                    entities_ids=missed_ids, fields=fields, memory=False
+                missed_entities = await self.repository.query(
+                    many=missed_ids, fields=fields, memory=False
                 ).entities
 
             missed_entities_map = {
@@ -125,11 +123,11 @@ class HashService(Generic[FallbackKey]):
 
     async def get_one(
         self, id: str, fields: Optional[Iterable[str]] = None
-    ) -> Entity:
+    ) -> HashEntity:
         try:
             if self.cache is None:
                 return await self.entity_circuit(
-                    self.repository.query(entity_id=id, fields=fields)
+                    self.repository.query(id, fields=fields)
                 )
 
             return await self.get_one_cached(id, self.cache, fields=fields)
@@ -144,7 +142,7 @@ class HashService(Generic[FallbackKey]):
                 )
 
             return await self.repository.query(
-                entity_id=id, fields=fields, memory=False
+                id, fields=fields, memory=False
             ).entity
 
     async def get_one_cached(
@@ -153,24 +151,24 @@ class HashService(Generic[FallbackKey]):
         cache: Cache,
         fields: Optional[Iterable[str]] = None,
         memory: bool = True,
-    ) -> Entity:
+    ) -> HashEntity:
         entity = cache.get((id, fields) if fields else id)
 
         if entity is None:
             if memory:
                 entity = await self.entity_circuit(
-                    self.repository.query(entity_id=id, fields=fields)
+                    self.repository.query(id, fields=fields)
                 )
             else:
                 entity = await self.repository.query(
-                    entity_id=id, fields=fields, memory=False
+                    id, fields=fields, memory=False
                 ).entity
 
             cache[(id, fields)] = entity
 
         return entity
 
-    async def add(self, entity: Entity, *entities: Entity) -> None:
+    async def add(self, entity: HashEntity, *entities: HashEntity) -> None:
         try:
             await self.add_circuit(entity, *entities)
 

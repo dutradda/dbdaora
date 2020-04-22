@@ -72,11 +72,13 @@ class FakeEntity:
 
 class FakeHashRepository(HashRepository[str]):
     entity_name = 'fake'
+    key_attrs = many_attr_names = ('id',)
     entity_cls = FakeEntity
 
 
 class FakeDatastoreHashRepository(DatastoreHashRepository):
     entity_name = 'fake'
+    key_attrs = many_attr_names = ('id',)
     entity_cls = FakeEntity
 
 

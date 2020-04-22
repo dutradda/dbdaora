@@ -10,13 +10,15 @@ from typing import (
     Union,
 )
 
+from .. import DataSource
+
 
 RangeOutput = Sequence[Union[bytes, str]]
 RangeWithScoresOutput = Sequence[Union[Tuple[str, float], Tuple[bytes, float]]]
 SortedSetData = Union[RangeOutput, RangeWithScoresOutput]
 
 
-class MemoryDataSource(Protocol):
+class MemoryDataSource(DataSource):
     key_separator: ClassVar[str] = ':'
 
     def make_key(self, *key_parts: str) -> str:
@@ -89,4 +91,7 @@ class Pipeline(Protocol):
         ...
 
     def hgetall(self, key: str) -> None:
+        ...
+
+    def exists(self, key: str) -> None:
         ...

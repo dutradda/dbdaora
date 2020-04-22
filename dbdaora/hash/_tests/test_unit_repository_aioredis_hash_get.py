@@ -23,7 +23,7 @@ async def test_should_get_from_memory(
 @pytest.mark.asyncio
 async def test_should_raise_not_found_error(repository, fake_entity, mocker):
     await repository.memory_data_source.delete('fake:fake')
-    fake_query = HashQuery(repository, memory=True, entity_id=fake_entity.id)
+    fake_query = HashQuery(repository, memory=True, id=fake_entity.id)
 
     with pytest.raises(EntityNotFoundError) as exc_info:
         await repository.query(fake_entity.id).entity
@@ -36,7 +36,7 @@ async def test_should_raise_not_found_error_when_already_raised_before(
     repository, mocker
 ):
     fake_entity = 'fake'
-    expected_query = HashQuery(repository, memory=True, entity_id=fake_entity)
+    expected_query = HashQuery(repository, memory=True, id=fake_entity)
     repository.memory_data_source.hgetall = asynctest.CoroutineMock(
         side_effect=[None]
     )

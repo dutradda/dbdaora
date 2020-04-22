@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, ClassVar, Dict, Iterable, Optional
+from typing import Any, ClassVar, Dict, Iterable, Optional, Sequence
 
 from dbdaora.data_sources.fallback import FallbackDataSource
 
@@ -21,5 +21,7 @@ class DictFallbackDataSource(FallbackDataSource[str]):
     async def delete(self, key: str) -> None:
         self.db.pop(key, None)
 
-    async def get_many(self, keys: Iterable[str]) -> Iterable[Dict[str, Any]]:
-        return [self.db[key] for key in keys if key in self.db]
+    async def get_many(
+        self, keys: Iterable[str]
+    ) -> Sequence[Optional[Dict[str, Any]]]:
+        return [self.db.get(key) for key in keys]

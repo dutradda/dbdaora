@@ -109,6 +109,9 @@ class ShardsPipeline(Pipeline):
     def hgetall(self, key: str) -> None:
         self.tasks.append(self.get_client(key).hgetall(key))
 
+    def exists(self, key: str) -> None:
+        self.tasks.append(self.get_client(key).exists(key))
+
 
 async def make(
     *uris: str,

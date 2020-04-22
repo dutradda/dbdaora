@@ -5,6 +5,7 @@ from dbdaora import SortedSetEntity, SortedSetRepository
 
 class FakeRepository(SortedSetRepository[str]):
     entity_name = 'fake'
+    key_attrs = ('id',)
 
 
 @pytest.fixture

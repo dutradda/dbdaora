@@ -1,37 +1,54 @@
-from dataclasses import dataclass
-from typing import Any, ClassVar, Generic, List, Optional, Type, Union
+import dataclasses
+from typing import (
+    Any,
+    ClassVar,
+    Generic,
+    List,
+    Optional,
+    Sequence,
+    Type,
+    Union,
+)
 
 from dbdaora import FallbackDataSource, MemoryDataSource
-from dbdaora.entity import Entity, EntityData
-from dbdaora.exceptions import EntityNotFoundError
+from dbdaora.entity import EntityData
+from dbdaora.exceptions import (
+    EntityNotFoundError,
+    InvalidKeyAttributeError,
+    InvalidQueryError,
+)
 from dbdaora.keys import FallbackKey
 
+from .entity import Entity
 
-@dataclass
+
+@dataclasses.dataclass
 class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
-    entity_name: ClassVar[str]
-    query_cls: ClassVar[Type['Query[Entity, EntityData, FallbackKey]']]
     memory_data_source: MemoryDataSource
     fallback_data_source: FallbackDataSource[FallbackKey]
     expire_time: int
+    entity_name: ClassVar[str]
+    entity_cls: ClassVar[Type[Entity]]
+    key_attrs: ClassVar[Sequence[str]]
+    many_attr_names: ClassVar[Union[Sequence[str], str]]
 
     async def get_memory_data(
         self,
         key: str,
-        query: 'Query[Entity, EntityData, FallbackKey]',
+        query: 'BaseQuery[Entity, EntityData, FallbackKey]',
         *,
         many: bool = False,
     ) -> Optional[EntityData]:
         raise NotImplementedError()
 
     async def get_memory_many(
-        self, query: 'Query[Entity, EntityData, FallbackKey]',
+        self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
     ) -> List[Entity]:
         raise NotImplementedError()
 
     async def get_fallback_data(
         self,
-        query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
+        query: Union['BaseQuery[Entity, EntityData, FallbackKey]', Entity],
         *,
         for_memory: bool = False,
         many: bool = False,
@@ -39,21 +56,21 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         raise NotImplementedError()
 
     async def get_fallback_many(
-        self, query: 'Query[Entity, EntityData, FallbackKey]',
+        self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
     ) -> List[Entity]:
         raise NotImplementedError()
 
     def make_entity(
         self,
-        query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
         data: EntityData,
+        query: 'BaseQuery[Entity, EntityData, FallbackKey]',
     ) -> Entity:
         raise NotImplementedError()
 
     def make_entity_from_fallback(
         self,
-        query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
         data: EntityData,
+        query: 'BaseQuery[Entity, EntityData, FallbackKey]',
     ) -> Entity:
         raise NotImplementedError()
 
@@ -63,7 +80,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     async def add_memory_data_from_fallback(
         self,
         key: str,
-        query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
+        query: Union['BaseQuery[Entity, EntityData, FallbackKey]', Entity],
         data: EntityData,
     ) -> EntityData:
         raise NotImplementedError()
@@ -71,24 +88,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     def make_memory_data(self, entity: Entity) -> EntityData:
         raise NotImplementedError()
 
-    def memory_key(
-        self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
-    ) -> str:
-        raise NotImplementedError()
-
     async def add_fallback(self, entity: Entity, *entities: Entity) -> None:
-        raise NotImplementedError()
-
-    def fallback_key(
-        self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
-    ) -> FallbackKey:
-        raise NotImplementedError()
-
-    def fallback_not_found_key(
-        self,
-        query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
-        **kwargs: Any,
-    ) -> str:
         raise NotImplementedError()
 
     async def entity(
@@ -100,7 +100,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
             return await self.get_fallback(query)
 
     async def entities(
-        self, query: 'Query[Entity, EntityData, FallbackKey]',
+        self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
     ) -> List[Entity]:
         if query.memory:
             return await self.get_memory_many(query)
@@ -131,26 +131,27 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
             raise EntityNotFoundError(query)
 
         return (
-            self.make_entity_from_fallback(query, memory_data)
+            self.make_entity_from_fallback(memory_data, query)
             if from_fallback
-            else self.make_entity(query, memory_data)
+            else self.make_entity(memory_data, query)
         )
 
     async def get_fallback(
-        self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
+        self,
+        query: Union['BaseQuery[Entity, EntityData, FallbackKey]', Entity],
     ) -> Entity:
         data = await self.get_fallback_data(query)
 
         if data is None:
             raise EntityNotFoundError(query)
 
-        return self.make_entity_from_fallback(query, data)
+        return self.make_entity_from_fallback(data, query)  # type: ignore
 
     async def add(
         self,
         *entities: Entity,
         memory: bool = True,
-        query: Optional['Query[Entity, EntityData, FallbackKey]'] = None,
+        query: Optional['BaseQuery[Entity, EntityData, FallbackKey]'] = None,
     ) -> None:
         if memory:
             return await self.add_memory(*entities)
@@ -169,9 +170,18 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         await self.memory_data_source.expire(key, self.expire_time)
 
     def query(
-        self, *args: Any, memory: bool = True, **kwargs: Any
-    ) -> 'Query[Entity, EntityData, FallbackKey]':
-        return self.query_cls(self, memory, *args, **kwargs)
+        self,
+        *args: Any,
+        memory: bool = True,
+        many: Optional[Sequence[Any]] = None,
+        **kwargs: Any,
+    ) -> 'BaseQuery[Entity, EntityData, FallbackKey]':
+        return self.make_query(memory=memory, many=many, *args, **kwargs)
+
+    def make_query(
+        self, *args: Any, **kwargs: Any
+    ) -> 'BaseQuery[Entity, EntityData, FallbackKey]':
+        return query_factory(self, *args, **kwargs)
 
     async def delete(
         self, query: 'Query[Entity, EntityData, FallbackKey]',
@@ -182,33 +192,115 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         await self.fallback_data_source.delete(self.fallback_key(query))
 
     async def already_got_not_found(
-        self,
-        query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
-        **kwargs: Any,
+        self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
     ) -> bool:
         return bool(
             await self.memory_data_source.exists(
-                self.fallback_not_found_key(query, **kwargs)
+                self.fallback_not_found_key(query)
             )
         )
 
     async def delete_fallback_not_found(
-        self,
-        query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
-        **kwargs: Any,
+        self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
     ) -> None:
         await self.memory_data_source.delete(
-            self.fallback_not_found_key(query, **kwargs)
+            self.fallback_not_found_key(query)
         )
 
     async def set_fallback_not_found(
-        self,
-        query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
-        **kwargs: Any,
+        self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
     ) -> None:
-        key = self.fallback_not_found_key(query, **kwargs)
+        key = self.fallback_not_found_key(query)
         await self.memory_data_source.set(key, '1')
         await self.set_expire_time(key)
 
+    def memory_key(
+        self, query: 'Union[Query[Entity, EntityData, FallbackKey], Entity]',
+    ) -> str:
+        if isinstance(query, Query):
+            return self.memory_data_source.make_key(
+                self.entity_name, *query.key_parts
+            )
 
-from dbdaora.query import Query  # noqa isort:skip
+        if isinstance(query, self.entity_cls):
+            return self.memory_data_source.make_key(
+                self.entity_name, *self.key_parts(query)
+            )
+
+        raise InvalidQueryError(query)
+
+    def memory_keys(
+        self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
+    ) -> List[str]:
+        return [
+            self.memory_data_source.make_key(self.entity_name, *key_parts)
+            for key_parts in query.many_key_parts
+        ]
+
+    def fallback_key(
+        self, query: 'Union[Query[Entity, EntityData, FallbackKey], Entity]',
+    ) -> FallbackKey:
+        if isinstance(query, Query):
+            return self.fallback_data_source.make_key(
+                self.entity_name, *query.key_parts
+            )
+
+        if isinstance(query, self.entity_cls):
+            return self.fallback_data_source.make_key(
+                self.entity_name, *self.key_parts(query)
+            )
+
+        raise InvalidQueryError(query)
+
+    def fallback_keys(
+        self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
+    ) -> List[FallbackKey]:
+        return [
+            self.fallback_data_source.make_key(self.entity_name, *key_parts)
+            for key_parts in query.many_key_parts
+        ]
+
+    @classmethod
+    def key_parts(cls, entity: Entity) -> List[Any]:
+        if hasattr(entity, '__getitem__'):
+            try:
+                return [
+                    entity[attr_name]  # type: ignore
+                    for attr_name in cls.key_attrs
+                ]
+            except KeyError as error:
+                raise InvalidKeyAttributeError(
+                    cls.__name__,
+                    cls.key_attrs,
+                    type(entity).__name__,
+                    *error.args,
+                )
+
+        try:
+            return [getattr(entity, attr_name) for attr_name in cls.key_attrs]
+        except AttributeError as error:
+            raise InvalidKeyAttributeError(
+                cls.__name__,
+                cls.key_attrs,
+                type(entity).__name__,
+                *error.args,
+            )
+
+    def fallback_not_found_key(
+        self, query: 'Union[Query[Entity, EntityData, FallbackKey], Entity]',
+    ) -> str:
+        if isinstance(query, Query):
+            return self.memory_data_source.make_key(
+                self.entity_name, 'not-found', *query.key_parts
+            )
+
+        if isinstance(query, self.entity_cls):
+            return self.memory_data_source.make_key(
+                self.entity_name, 'not-found', *self.key_parts(query)
+            )
+
+        raise InvalidQueryError(query)
+
+
+from .query import BaseQuery, Query, QueryMany  # noqa isort:skip
+from .query import make as query_factory  # noqa isort:skip

@@ -1,8 +1,5 @@
-from dataclasses import dataclass
-from typing import Dict
+from typing import Protocol
 
 
-@dataclass
-class HashEntity:
+class HashEntity(Protocol):
     id: str
-    data: Dict[bytes, bytes]
