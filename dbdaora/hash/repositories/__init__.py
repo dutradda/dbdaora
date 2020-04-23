@@ -1,9 +1,10 @@
+import dataclasses
 import itertools
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 from jsondaora import dataclasses as jdataclasses
 
-from dbdaora.exceptions import EntityNotFoundError
+from dbdaora.exceptions import EntityNotFoundError, InvalidEntityTypeError
 from dbdaora.keys import FallbackKey
 from dbdaora.query import BaseQuery, Query
 from dbdaora.repository import MemoryRepository
@@ -72,9 +73,12 @@ class HashRepository(MemoryRepository[HashEntity, HashData, FallbackKey]):
         data: HashData,
         query: 'BaseQuery[HashEntity, HashData, FallbackKey]',
     ) -> HashEntity:
-        return jdataclasses.asdataclass(  # type: ignore
-            data, self.entity_cls, encode_field_name=True
-        )
+        if dataclasses.is_dataclass(self.get_entity_type(query)):
+            return jdataclasses.asdataclass(  # type: ignore
+                data, self.get_entity_type(query), encode_field_name=True
+            )
+
+        raise InvalidEntityTypeError(self.get_entity_type(query))
 
     def make_entity_from_fallback(
         self,
@@ -82,7 +86,7 @@ class HashRepository(MemoryRepository[HashEntity, HashData, FallbackKey]):
         query: 'BaseQuery[HashEntity, HashData, FallbackKey]',
     ) -> HashEntity:
         return jdataclasses.asdataclass(  # type: ignore
-            data, self.entity_cls
+            data, self.get_entity_type(query)
         )
 
     async def add_memory_data(

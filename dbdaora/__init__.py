@@ -10,6 +10,8 @@ from dbdaora.data_sources.fallback import FallbackDataSource
 from dbdaora.data_sources.fallback.dict import DictFallbackDataSource
 from dbdaora.data_sources.memory import MemoryDataSource
 from dbdaora.data_sources.memory.dict import DictMemoryDataSource
+from dbdaora.exceptions import EntityNotFoundError
+from dbdaora.hash.entity import HashEntity
 from dbdaora.hash.query import HashQuery
 from dbdaora.hash.repositories import HashData, HashRepository
 from dbdaora.hash.service import HashService
@@ -27,6 +29,7 @@ try:
     from dbdaora.hash.repositories.datastore import DatastoreHashRepository
 except ImportError:
     DatastoreDataSource = None  # type: ignore
+    DatastoreHashRepository = None  # type: ignore
 
 
 try:
@@ -38,6 +41,7 @@ try:
 except ImportError:
     AioRedisDataSource = None  # type: ignore
     ShardsAioRedisDataSource = None  # type: ignore
+    make_aioredis_data_source = None  # type: ignore
 
 
 __all__ = [
@@ -51,7 +55,6 @@ __all__ = [
     'DictFallbackDataSource',
     'HashService',
     'AsyncCircuitBreaker',
-    'make_aioredis_data_source',
     'HashRing',
     'FallbackDataSource',
     'MemoryDataSource',
@@ -59,6 +62,8 @@ __all__ = [
     'build_service',
     'CacheType',
     'Service',
+    'HashEntity',
+    'EntityNotFoundError',
 ]
 
 if AioRedisDataSource:

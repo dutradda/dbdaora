@@ -222,7 +222,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                 self.entity_name, *query.key_parts
             )
 
-        if isinstance(query, self.entity_cls):
+        if isinstance(query, self.get_entity_type(query)):
             return self.memory_data_source.make_key(
                 self.entity_name, *self.key_parts(query)
             )
@@ -245,7 +245,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                 self.entity_name, *query.key_parts
             )
 
-        if isinstance(query, self.entity_cls):
+        if isinstance(query, self.get_entity_type(query)):
             return self.fallback_data_source.make_key(
                 self.entity_name, *self.key_parts(query)
             )
@@ -294,12 +294,17 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                 self.entity_name, 'not-found', *query.key_parts
             )
 
-        if isinstance(query, self.entity_cls):
+        if isinstance(query, self.get_entity_type(query)):
             return self.memory_data_source.make_key(
                 self.entity_name, 'not-found', *self.key_parts(query)
             )
 
         raise InvalidQueryError(query)
+
+    def get_entity_type(
+        self, query: 'Query[Entity, EntityData, FallbackKey]'
+    ) -> Type[Entity]:
+        return self.entity_cls
 
 
 from .query import BaseQuery, Query, QueryMany  # noqa isort:skip

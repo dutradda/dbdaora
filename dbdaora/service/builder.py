@@ -1,5 +1,5 @@
 from logging import Logger, getLogger
-from typing import Any, Dict, Optional, Type
+from typing import Any, Optional, Type
 
 from cachetools import Cache
 
@@ -24,31 +24,21 @@ async def build(
     cb_recovery_timeout: Optional[int] = None,
     cb_expected_exception: Optional[Type[Exception]] = None,
     logger: Logger = getLogger(__name__),
-    singleton: bool = True,
 ) -> Service[Entity, EntityData, FallbackKey]:
-    async def build_service() -> Service[Entity, EntityData, FallbackKey]:
-        repository = await build_repository(
-            repository_cls,
-            memory_data_source_factory,
-            fallback_data_source_factory,
-            repository_expire_time,
-        )
-        circuit_breaker = build_circuit_breaker(
-            repository_cls.entity_name,
-            cb_failure_threshold,
-            cb_recovery_timeout,
-            cb_expected_exception,
-        )
-        cache = build_cache(cache_type, cache_ttl, cache_max_size)
-        return service_cls(repository, circuit_breaker, cache, logger)
-
-    if singleton:
-        if service_cls not in __SINGLETON:
-            __SINGLETON[service_cls] = await build_service()
-
-        return __SINGLETON[service_cls]
-
-    return await build_service()
+    repository = await build_repository(
+        repository_cls,
+        memory_data_source_factory,
+        fallback_data_source_factory,
+        repository_expire_time,
+    )
+    circuit_breaker = build_circuit_breaker(
+        repository_cls.entity_name,
+        cb_failure_threshold,
+        cb_recovery_timeout,
+        cb_expected_exception,
+    )
+    cache = build_cache(cache_type, cache_ttl, cache_max_size)
+    return service_cls(repository, circuit_breaker, cache, logger)
 
 
 async def build_repository(
@@ -94,6 +84,3 @@ def build_circuit_breaker(
     return AsyncCircuitBreaker(
         failure_threshold, recovery_timeout, expected_exception, name=name,
     )
-
-
-__SINGLETON: Dict[Type[Service[Any, Any, Any]], Service[Any, Any, Any]] = {}

@@ -8,5 +8,5 @@ class CacheType(Enum):
     value: Union[Type[Cache]]
 
     TTL = TTLCache
-    LFUCache = LFUCache
-    LRUCache = LRUCache
+    LFU = LFUCache
+    LRU = LRUCache

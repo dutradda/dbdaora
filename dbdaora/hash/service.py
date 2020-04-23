@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from logging import Logger, getLogger
-from typing import Generic, Iterable, Optional
+from typing import Any, Generic, Iterable, Optional
 
 from cachetools import Cache
 from circuitbreaker import CircuitBreakerError
@@ -41,42 +41,45 @@ class HashService(Generic[FallbackKey]):
             return await self.entities_circuit(
                 self.repository.query(all=True, fields=fields)
             )
-        except CircuitBreakerError:
-            self.logger.warning(
-                f'circuit-breaker={self.circuit_breaker.name}; method=get_all'
-            )
+        except CircuitBreakerError as error:
+            self.logger.warning(error)
             return await self.repository.query(
                 all=True, fields=fields, memory=False
             ).entities
 
     async def get_many(
-        self, *ids: str, fields: Optional[Iterable[str]] = None
+        self,
+        *ids: str,
+        fields: Optional[Iterable[str]] = None,
+        **filters: Any,
     ) -> Iterable[HashEntity]:
         try:
             if self.cache is None:
                 return [
                     entity
                     for entity in await self.entities_circuit(
-                        self.repository.query(many=ids, fields=fields)
+                        self.repository.query(
+                            many=ids, fields=fields, **filters
+                        )
                     )
                     if entity is not None
                 ]
 
-            return await self.get_many_cached(ids, self.cache, fields=fields)
-
-        except CircuitBreakerError:
-            self.logger.warning(
-                f'circuit-breaker={self.circuit_breaker.name}; method=get_many'
+            return await self.get_many_cached(
+                ids, self.cache, fields=fields, **filters
             )
+
+        except CircuitBreakerError as error:
+            self.logger.warning(error)
             if self.cache:
                 return await self.get_many_cached(
-                    ids, self.cache, fields=fields, memory=False
+                    ids, self.cache, fields=fields, memory=False, **filters
                 )
 
             return [
                 entity
                 for entity in await self.repository.query(
-                    many=ids, fields=fields, memory=False
+                    many=ids, fields=fields, memory=False, **filters
                 ).entities
                 if entity is not None
             ]
@@ -87,6 +90,7 @@ class HashService(Generic[FallbackKey]):
         cache: Cache,
         fields: Optional[Iterable[str]] = None,
         memory: bool = True,
+        **filters: Any,
     ) -> Iterable[HashEntity]:
         missed_ids = []
         entities = {
@@ -104,11 +108,13 @@ class HashService(Generic[FallbackKey]):
         if missed_ids:
             if memory:
                 missed_entities = await self.entities_circuit(
-                    self.repository.query(many=missed_ids, fields=fields)
+                    self.repository.query(
+                        many=missed_ids, fields=fields, **filters
+                    )
                 )
             else:
                 missed_entities = await self.repository.query(
-                    many=missed_ids, fields=fields, memory=False
+                    many=missed_ids, fields=fields, memory=False, **filters
                 ).entities
 
             missed_entities_map = {
@@ -122,27 +128,27 @@ class HashService(Generic[FallbackKey]):
         return [entity for entity in entities.values() if entity is not None]
 
     async def get_one(
-        self, id: str, fields: Optional[Iterable[str]] = None
+        self, id: str, fields: Optional[Iterable[str]] = None, **filters: Any
     ) -> HashEntity:
         try:
             if self.cache is None:
                 return await self.entity_circuit(
-                    self.repository.query(id, fields=fields)
+                    self.repository.query(id, fields=fields, **filters)
                 )
 
-            return await self.get_one_cached(id, self.cache, fields=fields)
-
-        except CircuitBreakerError:
-            self.logger.warning(
-                f'circuit-breaker={self.circuit_breaker.name}; method=get_one'
+            return await self.get_one_cached(
+                id, self.cache, fields=fields, **filters
             )
+
+        except CircuitBreakerError as error:
+            self.logger.warning(error)
             if self.cache:
                 return await self.get_one_cached(
-                    id, self.cache, fields=fields, memory=False
+                    id, self.cache, fields=fields, memory=False, **filters
                 )
 
             return await self.repository.query(
-                id, fields=fields, memory=False
+                id, fields=fields, memory=False, **filters
             ).entity
 
     async def get_one_cached(
@@ -151,17 +157,18 @@ class HashService(Generic[FallbackKey]):
         cache: Cache,
         fields: Optional[Iterable[str]] = None,
         memory: bool = True,
+        **filters: Any,
     ) -> HashEntity:
         entity = cache.get((id, fields) if fields else id)
 
         if entity is None:
             if memory:
                 entity = await self.entity_circuit(
-                    self.repository.query(id, fields=fields)
+                    self.repository.query(id, fields=fields, **filters)
                 )
             else:
                 entity = await self.repository.query(
-                    id, fields=fields, memory=False
+                    id, fields=fields, memory=False, **filters
                 ).entity
 
             cache[(id, fields)] = entity
@@ -172,18 +179,22 @@ class HashService(Generic[FallbackKey]):
         try:
             await self.add_circuit(entity, *entities)
 
-        except CircuitBreakerError:
-            self.logger.warning(
-                f'circuit-breaker={self.circuit_breaker.name}; method=add'
-            )
+        except CircuitBreakerError as error:
+            self.logger.warning(error)
             await self.repository.add(entity, *entities, memory=False)
 
-    async def delete(self, entity_id: str) -> None:
+    async def delete(self, entity_id: str, **filters: Any) -> None:
         try:
-            await self.delete_circuit(self.repository.query(entity_id))
-
-        except CircuitBreakerError:
-            self.logger.warning(
-                f'circuit-breaker={self.circuit_breaker.name}; method=delete'
+            await self.delete_circuit(
+                self.repository.query(entity_id, **filters)
             )
-            await self.repository.query(entity_id, memory=False).delete
+
+        except CircuitBreakerError as error:
+            self.logger.warning(error)
+            await self.repository.query(
+                entity_id, memory=False, **filters
+            ).delete
+
+    async def shutdown(self) -> None:
+        self.repository.memory_data_source.close()
+        await self.repository.memory_data_source.wait_closed()

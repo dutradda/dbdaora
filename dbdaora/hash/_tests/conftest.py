@@ -42,7 +42,6 @@ async def fake_service(mocker, fallback_data_source):
         cb_recovery_timeout=10,
         cb_expected_exception=RedisError,
         logger=mocker.MagicMock(),
-        singleton=False,
     )
 
     yield service

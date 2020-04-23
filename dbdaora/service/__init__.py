@@ -26,3 +26,6 @@ class Service(Protocol, Generic[Entity, EntityData, FallbackKey]):
 
     async def add(self, entity: Entity, *entities: Entity) -> None:
         ...
+
+    async def shutdown(self) -> None:
+        ...
