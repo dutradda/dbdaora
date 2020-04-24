@@ -5,7 +5,7 @@ from aioredis import Redis, create_redis_pool
 
 from dbdaora.hashring import HashRing
 
-from . import MemoryDataSource, Pipeline, SortedSetData
+from . import MemoryDataSource, Pipeline, RangeOutput
 
 
 class AioRedisDataSource(Redis, MemoryDataSource):
@@ -36,12 +36,12 @@ class ShardsAioRedisDataSource(MemoryDataSource):
 
     async def zrevrange(
         self, key: str, withscores: bool = False
-    ) -> Optional[SortedSetData]:
+    ) -> Optional[RangeOutput]:
         return await self.get_client(key).zrevrange(key, withscores)
 
     async def zrange(
         self, key: str, withscores: bool = False
-    ) -> Optional[SortedSetData]:
+    ) -> Optional[RangeOutput]:
         return await self.get_client(key).zrange(key, withscores)
 
     async def zadd(

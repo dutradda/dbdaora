@@ -1,11 +1,10 @@
 import itertools
 from typing import Any, Optional, Sequence, Tuple, TypedDict, Union
 
-from dbdaora.data_sources.memory import RangeWithScoresOutput, SortedSetData
 from dbdaora.keys import FallbackKey
 from dbdaora.repository import MemoryRepository
 
-from .entity import SortedSetEntity
+from .entity import SortedSetData, SortedSetEntity
 from .query import SortedSetQuery
 
 
@@ -52,17 +51,15 @@ class SortedSetRepository(
     def make_entity(  # type: ignore
         self, data: SortedSetData, query: SortedSetQuery[FallbackKey]
     ) -> SortedSetEntity:
-        return SortedSetEntity(id=query.attribute_from_key('id'), data=data)
+        return self.entity_cls(id=query.attribute_from_key('id'), data=data)
 
     def make_entity_from_fallback(  # type: ignore
         self, data: SortedSetData, query: SortedSetQuery[FallbackKey]
     ) -> SortedSetEntity:
-        return SortedSetEntity(id=query.attribute_from_key('id'), data=data)
+        return self.entity_cls(id=query.attribute_from_key('id'), data=data)
 
     async def add_memory_data(self, key: str, data: SortedSetData) -> None:
-        input_data = list(itertools.chain(*data))
-        input_data.reverse()
-        await self.memory_data_source.zadd(key, *input_data)
+        await self.memory_data_source.zadd(key, *data)
 
     async def add_fallback(
         self, entity: SortedSetEntity, *entities: SortedSetEntity
@@ -88,9 +85,9 @@ class SortedSetRepository(
         self,
         key: str,
         query: Union[SortedSetQuery[FallbackKey], SortedSetEntity],
-        data: RangeWithScoresOutput,
+        data: Sequence[Tuple[str, float]],
     ) -> SortedSetData:
-        await self.add_memory_data(key, data)
+        await self.add_memory_data(key, self.format_memory_data(data))
 
         if isinstance(query, SortedSetQuery) and query.withscores:
             return data
@@ -101,3 +98,11 @@ class SortedSetRepository(
         self, *args: Any, **kwargs: Any
     ) -> SortedSetQuery[FallbackKey]:
         return SortedSetQuery(self, *args, **kwargs)
+
+    def make_memory_data(self, entity: SortedSetEntity) -> SortedSetData:
+        return self.format_memory_data(entity.data)
+
+    def format_memory_data(self, data: SortedSetData) -> SortedSetData:
+        data = list(itertools.chain(*data))
+        data.reverse()
+        return data

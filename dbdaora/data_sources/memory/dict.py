@@ -1,13 +1,11 @@
 import dataclasses
-from typing import Any, Dict, Generic, Optional, Sequence, Union
+from typing import Any, Dict, Optional, Sequence, Union
 
-from dbdaora.entity import Entity
-
-from . import MemoryDataSource, SortedSetData
+from . import MemoryDataSource, RangeOutput
 
 
 @dataclasses.dataclass
-class DictMemoryDataSource(MemoryDataSource, Generic[Entity]):
+class DictMemoryDataSource(MemoryDataSource):
     db: Dict[str, Any] = dataclasses.field(default_factory=dict)
 
     async def get(self, key: str) -> Optional[bytes]:
@@ -22,19 +20,13 @@ class DictMemoryDataSource(MemoryDataSource, Generic[Entity]):
     async def expire(self, key: str, time: int) -> None:
         ...
 
-    def get_obj(self, key: str) -> Optional[Entity]:
-        return self.db.get(key)
-
-    def set_obj(self, key: str, entity: Entity) -> None:
-        self.db[key] = entity
-
     async def exists(self, key: str) -> bool:
         return key in self.db
 
     async def zrevrange(
         self, key: str, withscores: bool = False
-    ) -> Optional[SortedSetData]:
-        data: SortedSetData
+    ) -> Optional[RangeOutput]:
+        data: RangeOutput
 
         if key not in self.db:
             return None
@@ -49,8 +41,8 @@ class DictMemoryDataSource(MemoryDataSource, Generic[Entity]):
 
     async def zrange(
         self, key: str, withscores: bool = False
-    ) -> Optional[SortedSetData]:
-        data: Optional[SortedSetData] = self.db.get(key)
+    ) -> Optional[RangeOutput]:
+        data: Optional[RangeOutput] = self.db.get(key)
 
         if data is None:
             return None

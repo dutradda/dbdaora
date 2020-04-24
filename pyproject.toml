@@ -46,3 +46,21 @@ datastore = [
 aioredis = [
     'aioredis'
 ]
+
+[tool.isort]
+case_sensitive= '1'
+use_parentheses = '1'
+line_length = '79'
+order_by_type = '1'
+multi_line_output = '3'
+include_trailing_comma = '1'
+lines_after_imports = '2'
+atomic = '1'
+
+[tool.black]
+exclude = '''
+    \.pyi
+'''
+target-version = ['py38']
+line-length = '79'
+skip-string-normalization = '1'

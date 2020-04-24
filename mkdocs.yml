@@ -1,55 +1,38 @@
 site_name: dbdaora
-site_description: Generates SQL and NoSQL Database Models from @dataclass
+site_description: |
+  Communicates with databases using repository and
+  service patterns and python dataclasses
 
 theme:
     name: 'material'
+    custom_dir: 'theme'
     palette:
-      primary: 'deep purple'
-      accent: 'indigo'
-    logo: 'dbdaora-white.svg'
+      primary: 'deep-purple'
+      accent: 'grey'
+    logo: 'dbdaora.svg'
     favicon: 'favicon.png'
 
 repo_name: dutradda/dbdaora
 repo_url: https://github.com/dutradda/dbdaora
 edit_uri: ''
-google_analytics:
-    - ''
-    - 'auto'
 
 nav:
     - dbdaora: 'index.md'
-    - Features: 'features.md'
-    - Python dataclass intro: 'python-dataclass.md'
-    - Repository pattern intro: 'repository-pattern.md'
-    - Tutorial - User Guide:
-        - Introduciton: 'tutorial/intro.md'
-        - First Steps: 'tutorial/first-steps.md'
-        - Relationships: 'tutorial/relationships.md'
-        - SQLAlchemy data source:
-          - Simple: 'tutorial/sqlalchemy/simple.md'
-          - Custom Types: 'tutorial/sqlalchemy/custom-types.md'
-          - Custom Relationships: 'tutorial/sqlalchemy/custom-relationships.md'
-          - SQLAlchemy Session: 'tutorial/sqlalchemy/session.md'
-        - aioredis data source:
-          - Simple: 'tutorial/aioredis/simple.md'
-          - Complex: 'tutorial/aioredis/complex.md'
-        - google-datastore data source:
-          - Simple: 'tutorial/datastore/simple.md'
-          - Complex: 'tutorial/datastore/complex.md'
-        - Custom data source: 'tutorial/custom-data-source.md'
-    - Alternatives, Inspiration and Comparisons: 'alternatives.md'
-    - History, Design and Future: 'history-design-future.md'
-    - External Links and Articles: 'external-links.md'
-    - Benchmarks: 'benchmarks.md'
-    - Help dbdaora - Get Help: 'help.md'
+    # - Features: 'features.md'
+    # - Repository pattern intro: 'repository-pattern.md'
+    # - Alternatives, Inspiration and Comparisons: 'alternatives.md'
+    # - History, Design and Future: 'history-design-future.md'
+    # - External Links and Articles: 'external-links.md'
+    # - Benchmarks: 'benchmarks.md'
     - Development - Contributing: 'contributing.md'
     - Changelog: changelog.md
 
 markdown_extensions:
-  - markdown.extensions.codehilite:
-      guess_lang: false
-  - markdown_include.include:
-      base_path: docs
-  - admonition
-  - codehilite
-  - extra
+    - markdown_include.include:
+        base_path: docs
+    - codehilite:
+        guess_lang: false
+
+extra_css:
+  - stylesheets/dark_theme.css
+  - stylesheets/codehilite.css

@@ -13,9 +13,11 @@ from typing import (
 from .. import DataSource
 
 
-RangeOutput = Sequence[Union[bytes, str]]
-RangeWithScoresOutput = Sequence[Union[Tuple[str, float], Tuple[bytes, float]]]
-SortedSetData = Union[RangeOutput, RangeWithScoresOutput]
+RangeOutput = Union[
+    Sequence[Tuple[str, float]],
+    Sequence[Tuple[bytes, float]],
+    Sequence[Union[bytes, str]],
+]
 
 
 class MemoryDataSource(DataSource):
@@ -41,12 +43,12 @@ class MemoryDataSource(DataSource):
 
     async def zrevrange(
         self, key: str, withscores: bool = False
-    ) -> Optional[SortedSetData]:
+    ) -> Optional[RangeOutput]:
         ...
 
     async def zrange(
         self, key: str, withscores: bool = False
-    ) -> Optional[SortedSetData]:
+    ) -> Optional[RangeOutput]:
         ...
 
     async def zadd(

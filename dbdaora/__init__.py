@@ -1,7 +1,7 @@
-"""Generates ***SQL*** and ***NoSQL*** Database Models from @dataclass"""
+"""Communicates with databases using repository pattern and service patterns"""
 
 
-__version__ = '0.0.11'
+__version__ = '0.1.0'
 
 
 from dbdaora.cache import CacheType
@@ -12,6 +12,7 @@ from dbdaora.data_sources.memory import MemoryDataSource
 from dbdaora.data_sources.memory.dict import DictMemoryDataSource
 from dbdaora.exceptions import EntityNotFoundError
 from dbdaora.hash.entity import HashEntity
+from dbdaora.hash.factory import make_service as make_hash_service
 from dbdaora.hash.query import HashQuery, HashQueryMany
 from dbdaora.hash.repositories import HashData, HashRepository
 from dbdaora.hash.service import HashService
@@ -65,6 +66,7 @@ __all__ = [
     'HashEntity',
     'EntityNotFoundError',
     'HashQueryMany',
+    'make_hash_service',
 ]
 
 if AioRedisDataSource:

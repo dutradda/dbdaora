@@ -1,11 +1,10 @@
 import dataclasses
 from typing import Any, List, Optional
 
-from dbdaora.data_sources.memory import SortedSetData
 from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
 
-from .entity import SortedSetEntity
+from .entity import SortedSetData, SortedSetEntity
 
 
 @dataclasses.dataclass
