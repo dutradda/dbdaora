@@ -47,6 +47,26 @@ aioredis = [
     'aioredis'
 ]
 
+[tool.flit.sdist]
+exclude = [
+    "dbdaora/conftest.py",
+    "dbdaora/*/_tests",
+    "dbdaora/*/*/_tests",
+    "Makefile",
+    "Bakefile",
+    "devtools",
+    "docs",
+    "stubs",
+    "mypy.ini",
+    "mkdocs.yml",
+    "theme",
+    ".bumpversion.cfg",
+    ".coveragerc",
+    ".gitignore",
+    ".gitmodules",
+    ".flake8",
+]
+
 [tool.isort]
 case_sensitive= '1'
 use_parentheses = '1'
