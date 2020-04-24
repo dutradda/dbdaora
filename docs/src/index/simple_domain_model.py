@@ -21,7 +21,7 @@ async def make_fallback_data_source() -> DictFallbackDataSource:
     return DictFallbackDataSource()
 
 
-# Person Subdomain
+# Domain Layer
 
 @dataclass
 class Person:
@@ -49,8 +49,6 @@ person_service = asyncio.run(
     )
 )
 
-
-# Playlist Subdomain
 
 class PlayList(SortedSetEntity):
     ...
