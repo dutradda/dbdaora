@@ -13,6 +13,7 @@ from dbdaora import (
 
 # Data Source Layer
 
+
 async def make_memory_data_source() -> DictMemoryDataSource:
     return DictMemoryDataSource()
 
@@ -22,6 +23,7 @@ async def make_fallback_data_source() -> DictFallbackDataSource:
 
 
 # Domain Layer
+
 
 @dataclass
 class Person:
@@ -74,6 +76,7 @@ def make_playlist(person_id: str, *musics_ids: str) -> PlayList:
 
 
 # Application Layer
+
 
 async def main() -> None:
     person = make_person('John Doe', 33)
