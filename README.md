@@ -2,7 +2,7 @@
 
 <p align="center" style="margin: 3em">
   <a href="https://github.com/dutradda/dbdaora">
-    <img src="dbdaora-white.svg" alt="dbdaora" width="300"/>
+    <img src="https://dutradda.github.io/dbdaora/dbdaora.svg" alt="dbdaora" width="300"/>
   </a>
 </p>
 
@@ -12,7 +12,7 @@
 
 ---
 
-**Documentation**: <a href="https://dutradda.github.io/dbdaora" target="_blank">https://dutradda.github.io/dbdaora/</a>
+**Documentation**: <a href="https://dutradda.github.io/dbdaora/" target="_blank">https://dutradda.github.io/dbdaora/</a>
 
 **Source Code**: <a href="https://github.com/dutradda/dbdaora" target="_blank">https://github.com/dutradda/dbdaora</a>
 
