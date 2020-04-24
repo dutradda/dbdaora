@@ -302,7 +302,8 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         raise InvalidQueryError(query)
 
     def get_entity_type(
-        self, query: 'Query[Entity, EntityData, FallbackKey]'
+        self,
+        query: 'Union[BaseQuery[Entity, EntityData, FallbackKey], Entity]',
     ) -> Type[Entity]:
         return self.entity_cls
 

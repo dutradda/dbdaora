@@ -46,6 +46,4 @@ async def test_should_get_one_from_fallback_after_open_circuit_breaker(
     entity = await fake_service.get_one('fake')
 
     assert entity == fake_entity
-    assert fake_service.logger.warning.call_args_list == [
-        mocker.call('circuit-breaker=fake; method=get_one')
-    ]
+    assert fake_service.logger.warning.call_count == 1

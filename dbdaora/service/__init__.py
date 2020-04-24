@@ -1,5 +1,5 @@
 from logging import Logger, getLogger
-from typing import Generic, Optional, Protocol
+from typing import Any, Generic, Optional, Protocol, Sequence
 
 from cachetools import Cache
 
@@ -28,4 +28,22 @@ class Service(Protocol, Generic[Entity, EntityData, FallbackKey]):
         ...
 
     async def shutdown(self) -> None:
+        ...
+
+    async def get_all(
+        self, fields: Optional[Sequence[str]] = None
+    ) -> Sequence[Entity]:
+        ...
+
+    async def get_many(
+        self,
+        *ids: str,
+        fields: Optional[Sequence[str]] = None,
+        **filters: Any,
+    ) -> Sequence[Entity]:
+        ...
+
+    async def get_one(
+        self, id: str, fields: Optional[Sequence[str]] = None, **filters: Any
+    ) -> Entity:
         ...

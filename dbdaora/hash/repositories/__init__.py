@@ -112,6 +112,7 @@ class HashRepository(MemoryRepository[HashEntity, HashData, FallbackKey]):
         return {
             k: int(v) if isinstance(v, bool) else v
             for k, v in jdataclasses.asdict(entity, dumps_value=True).items()
+            if v is not None
         }
 
     async def get_memory_many(  # type: ignore

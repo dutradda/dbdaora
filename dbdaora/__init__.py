@@ -12,7 +12,7 @@ from dbdaora.data_sources.memory import MemoryDataSource
 from dbdaora.data_sources.memory.dict import DictMemoryDataSource
 from dbdaora.exceptions import EntityNotFoundError
 from dbdaora.hash.entity import HashEntity
-from dbdaora.hash.query import HashQuery
+from dbdaora.hash.query import HashQuery, HashQueryMany
 from dbdaora.hash.repositories import HashData, HashRepository
 from dbdaora.hash.service import HashService
 from dbdaora.hashring import HashRing
@@ -64,6 +64,7 @@ __all__ = [
     'Service',
     'HashEntity',
     'EntityNotFoundError',
+    'HashQueryMany',
 ]
 
 if AioRedisDataSource:

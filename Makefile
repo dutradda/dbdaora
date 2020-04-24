@@ -37,3 +37,10 @@ mypy:
 
 tests:
 	pytest dbdaora -xvv --disable-warnings
+
+define run-tests-query
+pytest -xvv dbdaora -k "$(q)" $(1) --ignore="$(i)" --disable-warnings
+endef
+
+tests-query:
+	$(call run-tests-query)

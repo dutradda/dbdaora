@@ -44,7 +44,4 @@ async def test_should_delete_from_fallback_after_open_circuit_breaker(
     with pytest.raises(EntityNotFoundError):
         await fake_service.get_one('fake')
 
-    assert fake_service.logger.warning.call_args_list == [
-        mocker.call('circuit-breaker=fake; method=delete'),
-        mocker.call('circuit-breaker=fake; method=get_one'),
-    ]
+    assert fake_service.logger.warning.call_count == 2
