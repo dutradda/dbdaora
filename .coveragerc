@@ -1,0 +1,10 @@
+[run]
+source =
+    dbdaora
+omit =
+    */test_*.py
+    *conftest.py
+    *venv*
+
+[report]
+show_missing = True

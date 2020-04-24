@@ -1,0 +1,18 @@
+include devtools/python/Bakefile devtools/common/Bakefile
+
+export MYPYPATH=./stubs
+export PYTHONPATH=.
+export PROJECT_NAME=dbdaora
+
+deploy: //check-virtualenv @confirm:secure deploy-docs release-pypi
+
+setup-dbdaora: //check-virtualenv
+    pip install --force-reinstall git+https://github.com/pycqa/pyflakes
+
+integration: check-code tests coverage
+
+tests-code: //check-virtualenv
+    export DATASTORE_EMULATOR_HOST=localhost:8085
+    export DATASTORE_PROJECT_ID=dbdaora
+    export GOOGLE_CLOUD_PROJECT=dbdaora
+    coverage run -p -m pytest -xvv --disable-warnings ${PROJECT_NAME} docs/src
