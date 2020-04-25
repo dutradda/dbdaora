@@ -16,3 +16,9 @@ tests-code: //check-virtualenv
     export DATASTORE_PROJECT_ID=dbdaora
     export GOOGLE_CLOUD_PROJECT=dbdaora
     coverage run -p -m pytest -xvv --disable-warnings ${PROJECT_NAME} docs/src
+
+tests-code-query:
+    export DATASTORE_EMULATOR_HOST=localhost:8085
+    export DATASTORE_PROJECT_ID=dbdaora
+    export GOOGLE_CLOUD_PROJECT=dbdaora
+    coverage run -p -m pytest -xvv -k "${q}" --disable-warnings ${PROJECT_NAME} docs/src

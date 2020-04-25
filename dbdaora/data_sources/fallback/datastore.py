@@ -11,7 +11,10 @@ class DatastoreDataSource(FallbackDataSource[Key]):
     client: Client = dataclasses.field(default_factory=Client)
 
     def make_key(self, *key_parts: Any) -> Key:
-        return self.client.key(*[str(p) for p in key_parts])
+        return self.client.key(
+            key_parts[0],
+            self.key_separator.join([str(k) for k in key_parts[1:]]),
+        )
 
     async def get(self, key: Key) -> Optional[Dict[str, Any]]:
         entity = self.client.get(key)

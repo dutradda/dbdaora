@@ -206,13 +206,13 @@ class HashService(Service[HashEntity, HashData, FallbackKey]):
 
         try:
             await self.delete_circuit(
-                self.repository.query(entity_id, **filters)
+                self.repository.query(id=entity_id, **filters)
             )
 
         except CircuitBreakerError as error:
             self.logger.warning(error)
             await self.repository.query(
-                entity_id, memory=False, **filters
+                id=entity_id, memory=False, **filters
             ).delete
 
     async def shutdown(self) -> None:

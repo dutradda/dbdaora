@@ -12,36 +12,40 @@ async def test_should_delete(
 ):
     await fake_service.add(fake_entity)
 
-    assert await fake_service.get_one('fake')
+    assert await fake_service.get_one('fake', other_id='other_fake')
 
-    await fake_service.delete(fake_entity.id)
+    await fake_service.delete(fake_entity.id, other_id='other_fake')
 
     with pytest.raises(EntityNotFoundError):
-        await fake_service.get_one('fake')
+        await fake_service.get_one('fake', other_id='other_fake')
 
 
 @pytest.mark.asyncio
 async def test_should_delete_from_fallback_after_open_circuit_breaker(
     fake_service, serialized_fake_entity, fake_entity, mocker
 ):
-    await fake_service.repository.memory_data_source.delete('fake:fake')
     await fake_service.repository.memory_data_source.delete(
-        'fake:not-found:fake'
+        'fake:other_fake:fake'
     )
-    key = fake_service.repository.fallback_data_source.make_key('fake', 'fake')
+    await fake_service.repository.memory_data_source.delete(
+        'fake:not-found:other_fake:fake'
+    )
+    key = fake_service.repository.fallback_data_source.make_key(
+        'fake', 'other_fake', 'fake'
+    )
     await fake_service.repository.fallback_data_source.put(
         key, dataclasses.asdict(fake_entity, dumps_value=True)
     )
 
-    assert await fake_service.get_one('fake')
+    assert await fake_service.get_one('fake', other_id='other_fake')
 
     fake_service.repository.memory_data_source.delete = asynctest.CoroutineMock(
         side_effect=RedisError
     )
 
-    await fake_service.delete(fake_entity.id)
+    await fake_service.delete(fake_entity.id, other_id='other_fake')
 
     with pytest.raises(EntityNotFoundError):
-        await fake_service.get_one('fake')
+        await fake_service.get_one('fake', other_id='other_fake')
 
     assert fake_service.logger.warning.call_count == 2

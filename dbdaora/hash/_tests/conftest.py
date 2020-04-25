@@ -7,7 +7,6 @@ from aioredis import RedisError
 
 from dbdaora import (
     CacheType,
-    DatastoreHashRepository,
     DictFallbackDataSource,
     HashRepository,
     HashService,
@@ -18,7 +17,7 @@ from dbdaora import (
 
 @pytest.mark.asyncio
 @pytest.fixture
-async def fake_service(mocker, fallback_data_source):
+async def fake_service(mocker, fallback_data_source, fake_hash_repository_cls):
     memory_data_source_factory = partial(
         make_aioredis_data_source,
         'redis://',
@@ -31,7 +30,7 @@ async def fake_service(mocker, fallback_data_source):
 
     service = await build_service(
         HashService,
-        FakeDatastoreHashRepository,
+        fake_hash_repository_cls,
         memory_data_source_factory,
         fallback_data_source_factory,
         repository_expire_time=1,
@@ -75,15 +74,9 @@ class FakeHashRepository(HashRepository[str]):
     entity_cls = FakeEntity
 
 
-class FakeDatastoreHashRepository(DatastoreHashRepository):
-    entity_name = 'fake'
-    key_attrs = many_attr_names = ('id',)
-    entity_cls = FakeEntity
-
-
 @pytest.fixture
-def fake_datastore_repository_cls():
-    return FakeDatastoreHashRepository
+def fake_hash_repository_cls():
+    return FakeHashRepository
 
 
 @pytest.fixture

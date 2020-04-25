@@ -1,4 +1,4 @@
-from typing import Any, Dict, Generic, Iterable, Optional, Sequence
+from typing import Any, ClassVar, Dict, Generic, Iterable, Optional, Sequence
 
 from dbdaora.keys import FallbackKey
 
@@ -6,6 +6,8 @@ from .. import DataSource
 
 
 class FallbackDataSource(DataSource, Generic[FallbackKey]):
+    key_separator: ClassVar[str] = ':'
+
     def make_key(self, *key_parts: Any) -> FallbackKey:
         raise NotImplementedError()
 
