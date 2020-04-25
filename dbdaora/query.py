@@ -42,15 +42,15 @@ class BaseQuery(Generic[Entity, EntityData, FallbackKey]):
 
     @property
     async def entity(self) -> Entity:
-        ...
+        raise NotImplementedError()  # pragma: no cover
 
     @property
     async def entities(self) -> List[Entity]:
-        ...
+        raise NotImplementedError()  # pragma: no cover
 
     @property
     async def delete(self) -> None:
-        ...
+        raise NotImplementedError()  # pragma: no cover
 
 
 class Query(BaseQuery[Entity, EntityData, FallbackKey]):

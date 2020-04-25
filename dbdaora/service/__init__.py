@@ -22,18 +22,18 @@ class Service(Protocol, Generic[Entity, EntityData, FallbackKey]):
         cache: Optional[Cache] = None,
         logger: Logger = getLogger(__name__),
     ):
-        ...
+        raise NotImplementedError()  # pragma: no cover
 
     async def add(self, entity: Entity, *entities: Entity) -> None:
-        ...
+        raise NotImplementedError()  # pragma: no cover
 
     async def shutdown(self) -> None:
-        ...
+        raise NotImplementedError()  # pragma: no cover
 
     async def get_all(
         self, fields: Optional[Sequence[str]] = None
     ) -> Sequence[Entity]:
-        ...
+        raise NotImplementedError()  # pragma: no cover
 
     async def get_many(
         self,
@@ -41,9 +41,9 @@ class Service(Protocol, Generic[Entity, EntityData, FallbackKey]):
         fields: Optional[Sequence[str]] = None,
         **filters: Any,
     ) -> Sequence[Entity]:
-        ...
+        raise NotImplementedError()  # pragma: no cover
 
     async def get_one(
         self, id: str, fields: Optional[Sequence[str]] = None, **filters: Any
     ) -> Entity:
-        ...
+        raise NotImplementedError()  # pragma: no cover
