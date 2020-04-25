@@ -267,17 +267,34 @@ service patterns and python dataclasses
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#simple-domain-model-example" class="md-nav__link">
-    Simple Domain Model Example
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
     
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="domain-model/simple/" title="Domain Model Example" class="md-nav__link">
+      Domain Model Example
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="typed-dict/" title="Typed Dict Entity" class="md-nav__link">
+      Typed Dict Entity
+    </a>
   </li>
 
     
@@ -368,13 +385,6 @@ service patterns and python dataclasses
         <li class="md-nav__item">
   <a href="#using-the-service-layer" class="md-nav__link">
     Using the service layer
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#simple-domain-model-example" class="md-nav__link">
-    Simple Domain Model Example
   </a>
   
 </li>
@@ -480,7 +490,6 @@ service patterns and python dataclasses
 
 
 <span class="k">class</span> <span class="nc">PersonRepository</span><span class="p">(</span><span class="n">HashRepository</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
-    <span class="n">entity_name</span> <span class="o">=</span> <span class="s1">&#39;person&#39;</span>
     <span class="n">entity_cls</span> <span class="o">=</span> <span class="n">Person</span>
     <span class="n">key_attrs</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,)</span>
 
@@ -498,8 +507,13 @@ service patterns and python dataclasses
 </code></pre></div>
 
 
+<div class="codehilite"><pre><span></span><code>Person<span class="o">(</span><span class="nv">id</span><span class="o">=</span><span class="s1">&#39;john_doe&#39;</span>, <span class="nv">name</span><span class="o">=</span><span class="s1">&#39;John Doe&#39;</span>, <span class="nv">age</span><span class="o">=</span><span class="m">33</span>
+</code></pre></div>
+
+
 <h2 id="simple-redis-sorted-set-example">Simple redis sorted set example</h2>
 <div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 
 <span class="kn">from</span> <span class="nn">dbdaora</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">DictFallbackDataSource</span><span class="p">,</span>
@@ -509,14 +523,14 @@ service patterns and python dataclasses
 <span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">PlayList</span><span class="p">(</span><span class="n">SortedSetEntity</span><span class="p">):</span>
-    <span class="o">...</span>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Playlist</span><span class="p">(</span><span class="n">SortedSetEntity</span><span class="p">):</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
 
 
 <span class="k">class</span> <span class="nc">PlaylistRepository</span><span class="p">(</span><span class="n">SortedSetRepository</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
-    <span class="n">entity_name</span> <span class="o">=</span> <span class="s1">&#39;playlist&#39;</span>
+    <span class="n">entity_cls</span> <span class="o">=</span> <span class="n">Playlist</span>
     <span class="n">key_attrs</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,)</span>
-    <span class="n">entity_cls</span> <span class="o">=</span> <span class="n">PlayList</span>
 
 
 <span class="n">repository</span> <span class="o">=</span> <span class="n">PlaylistRepository</span><span class="p">(</span>
@@ -524,12 +538,16 @@ service patterns and python dataclasses
     <span class="n">fallback_data_source</span><span class="o">=</span><span class="n">DictFallbackDataSource</span><span class="p">(),</span>
     <span class="n">expire_time</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;m1&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;m2&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;m3&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
-<span class="n">playlist</span> <span class="o">=</span> <span class="n">PlayList</span><span class="p">(</span><span class="s1">&#39;my_plalist&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;m1&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;m2&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;m3&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
+<span class="n">playlist</span> <span class="o">=</span> <span class="n">Playlist</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;my_plalist&#39;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">)</span>
 <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">repository</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">playlist</span><span class="p">))</span>
 
 <span class="n">geted_playlist</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">repository</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">playlist</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">entity</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">geted_playlist</span><span class="p">)</span>
+</code></pre></div>
+
+
+<div class="codehilite"><pre><span></span><code><span class="n">Playlist</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;m1&#39;</span><span class="p">,</span> <span class="s1">&#39;m2&#39;</span><span class="p">,</span> <span class="s1">&#39;m3&#39;</span><span class="p">],</span> <span class="nb">id</span><span class="o">=</span><span class="s1">&#39;my_plalist&#39;</span>
 </code></pre></div>
 
 
@@ -588,102 +606,7 @@ service patterns and python dataclasses
 </code></pre></div>
 
 
-<h2 id="simple-domain-model-example">Simple Domain Model Example</h2>
-<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">asyncio</span>
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
-
-<span class="kn">from</span> <span class="nn">dbdaora</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">DictFallbackDataSource</span><span class="p">,</span>
-    <span class="n">DictMemoryDataSource</span><span class="p">,</span>
-    <span class="n">HashRepository</span><span class="p">,</span>
-    <span class="n">SortedSetEntity</span><span class="p">,</span>
-    <span class="n">SortedSetRepository</span><span class="p">,</span>
-    <span class="n">make_hash_service</span><span class="p">,</span>
-<span class="p">)</span>
-
-
-<span class="c1"># Data Source Layer</span>
-
-
-<span class="k">async</span> <span class="k">def</span> <span class="nf">make_memory_data_source</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DictMemoryDataSource</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">DictMemoryDataSource</span><span class="p">()</span>
-
-
-<span class="k">async</span> <span class="k">def</span> <span class="nf">make_fallback_data_source</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DictFallbackDataSource</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">DictFallbackDataSource</span><span class="p">()</span>
-
-
-<span class="c1"># Domain Layer</span>
-
-
-<span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
-    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">age</span><span class="p">:</span> <span class="nb">int</span>
-
-
-<span class="k">def</span> <span class="nf">make_person</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">age</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Person</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">Person</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">name</span><span class="p">,</span> <span class="n">age</span><span class="p">)</span>
-
-
-<span class="k">class</span> <span class="nc">PersonRepository</span><span class="p">(</span><span class="n">HashRepository</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
-    <span class="n">entity_name</span> <span class="o">=</span> <span class="s1">&#39;person&#39;</span>
-    <span class="n">entity_cls</span> <span class="o">=</span> <span class="n">Person</span>
-    <span class="n">key_attrs</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,)</span>
-
-
-<span class="n">person_service</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-    <span class="n">make_hash_service</span><span class="p">(</span>
-        <span class="n">PersonRepository</span><span class="p">,</span>
-        <span class="n">memory_data_source_factory</span><span class="o">=</span><span class="n">make_memory_data_source</span><span class="p">,</span>
-        <span class="n">fallback_data_source_factory</span><span class="o">=</span><span class="n">make_fallback_data_source</span><span class="p">,</span>
-        <span class="n">repository_expire_time</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-
-<span class="k">class</span> <span class="nc">PlayList</span><span class="p">(</span><span class="n">SortedSetEntity</span><span class="p">):</span>
-    <span class="o">...</span>
-
-
-<span class="k">class</span> <span class="nc">PlaylistRepository</span><span class="p">(</span><span class="n">SortedSetRepository</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
-    <span class="n">entity_name</span> <span class="o">=</span> <span class="s1">&#39;playlist&#39;</span>
-    <span class="n">key_attrs</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,)</span>
-    <span class="n">entity_cls</span> <span class="o">=</span> <span class="n">PlayList</span>
-
-
-<span class="n">playlist_repository</span> <span class="o">=</span> <span class="n">PlaylistRepository</span><span class="p">(</span>
-    <span class="n">memory_data_source</span><span class="o">=</span><span class="n">DictMemoryDataSource</span><span class="p">(),</span>
-    <span class="n">fallback_data_source</span><span class="o">=</span><span class="n">DictFallbackDataSource</span><span class="p">(),</span>
-    <span class="n">expire_time</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
-<span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">make_playlist</span><span class="p">(</span><span class="n">person_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">musics_ids</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PlayList</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">PlayList</span><span class="p">(</span>
-        <span class="n">person_id</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">[(</span><span class="n">id_</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">id_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">musics_ids</span><span class="p">)]</span>
-    <span class="p">)</span>
-
-
-<span class="c1"># Application Layer</span>
-
-
-<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">person</span> <span class="o">=</span> <span class="n">make_person</span><span class="p">(</span><span class="s1">&#39;John Doe&#39;</span><span class="p">,</span> <span class="mi">33</span><span class="p">)</span>
-    <span class="n">playlist</span> <span class="o">=</span> <span class="n">make_playlist</span><span class="p">(</span><span class="n">person</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;m1&#39;</span><span class="p">,</span> <span class="s1">&#39;m2&#39;</span><span class="p">,</span> <span class="s1">&#39;m3&#39;</span><span class="p">)</span>
-
-    <span class="k">await</span> <span class="n">person_service</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">person</span><span class="p">)</span>
-    <span class="k">await</span> <span class="n">playlist_repository</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">playlist</span><span class="p">)</span>
-
-    <span class="n">goted_person</span> <span class="o">=</span> <span class="k">await</span> <span class="n">person_service</span><span class="o">.</span><span class="n">get_one</span><span class="p">(</span><span class="n">person</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-    <span class="n">goted_playlist</span> <span class="o">=</span> <span class="k">await</span> <span class="n">playlist_repository</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">goted_person</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">entity</span>
-
-    <span class="nb">print</span><span class="p">(</span><span class="n">goted_person</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">goted_playlist</span><span class="p">)</span>
-
-
-<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+<div class="codehilite"><pre><span></span><code><span class="n">Person</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;john_doe&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;John Doe&#39;</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="mi">33</span>
 </code></pre></div>
                 
               
@@ -704,13 +627,13 @@ service patterns and python dataclasses
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
         
-          <a href="contributing/" title="Development - Contributing" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="domain-model/simple/" title="Domain Model Example" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Development - Contributing
+                Domain Model Example
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">

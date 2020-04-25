@@ -19,7 +19,7 @@ service patterns and python dataclasses
     
     
       
-        <title>Development - Contributing - dbdaora</title>
+        <title>Typed Dict Entity - dbdaora</title>
       
     
     
@@ -72,7 +72,7 @@ service patterns and python dataclasses
     <div data-md-component="skip">
       
         
-        <a href="#starting-development" class="md-skip">
+        <a href="#typed-dict-example" class="md-skip">
           Skip to content
         </a>
       
@@ -99,7 +99,7 @@ service patterns and python dataclasses
           </span>
           <span class="md-header-nav__topic md-ellipsis">
             
-              Development - Contributing
+              Typed Dict Entity
             
           </span>
         </div>
@@ -220,18 +220,6 @@ service patterns and python dataclasses
       
       
 
-
-  <li class="md-nav__item">
-    <a href="../typed-dict/" title="Typed Dict Entity" class="md-nav__link">
-      Typed Dict Entity
-    </a>
-  </li>
-
-    
-      
-      
-      
-
   
 
 
@@ -239,56 +227,25 @@ service patterns and python dataclasses
     
     <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
+      
     
-      <label class="md-nav__link md-nav__link--active" for="__toc">
-        Development - Contributing
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,9H17V7H3V9M3,13H17V11H3V13M3,17H17V15H3V17M19,17H21V15H19V17M19,7V9H21V7H19M19,13H21V11H19V13Z" /></svg>
-        </span>
-      </label>
     
-    <a href="./" title="Development - Contributing" class="md-nav__link md-nav__link--active">
-      Development - Contributing
+    <a href="./" title="Typed Dict Entity" class="md-nav__link md-nav__link--active">
+      Typed Dict Entity
     </a>
     
-      
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
-      </span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#starting-development" class="md-nav__link">
-    Starting Development
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-the-integration-suite" class="md-nav__link">
-    Running the integration suite:
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#other-bake-tasks" class="md-nav__link">
-    Other bake tasks:
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
+  </li>
+
     
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../contributing/" title="Development - Contributing" class="md-nav__link">
+      Development - Contributing
+    </a>
   </li>
 
     
@@ -318,37 +275,8 @@ service patterns and python dataclasses
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
+    
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
-      </span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#starting-development" class="md-nav__link">
-    Starting Development
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-the-integration-suite" class="md-nav__link">
-    Running the integration suite:
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#other-bake-tasks" class="md-nav__link">
-    Other bake tasks:
-  </a>
-  
-</li>
-      
-    </ul>
   
 </nav>
                   </div>
@@ -364,36 +292,109 @@ service patterns and python dataclasses
                   
                 
                 
-                  <h1>Development - Contributing</h1>
-                
-                <h2 id="starting-development">Starting Development</h2>
-<div class="codehilite"><pre><span></span><code>git clone git@github.com:dutradda/dbdaora.git --recursive
-<span class="nb">cd</span> dbdaora
-make setup-python-virtualenv
-<span class="nb">source</span> venv/bin/activate
-make setup-python-project
-bake setup-dbdaora
-bake dependencies
+                <h1 id="typed-dict-example">Typed Dict Example</h1>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TypedDict</span>
+
+<span class="kn">from</span> <span class="nn">jsondaora</span> <span class="kn">import</span> <span class="n">jsondaora</span>
+
+<span class="kn">from</span> <span class="nn">dbdaora</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DictFallbackDataSource</span><span class="p">,</span>
+    <span class="n">DictMemoryDataSource</span><span class="p">,</span>
+    <span class="n">HashRepository</span><span class="p">,</span>
+    <span class="n">SortedSetDictEntity</span><span class="p">,</span>
+    <span class="n">SortedSetRepository</span><span class="p">,</span>
+    <span class="n">make_hash_service</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># Data Source Layer</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">make_memory_data_source</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DictMemoryDataSource</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">DictMemoryDataSource</span><span class="p">()</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">make_fallback_data_source</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DictFallbackDataSource</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">DictFallbackDataSource</span><span class="p">()</span>
+
+
+<span class="c1"># Domain Layer</span>
+
+
+<span class="nd">@jsondaora</span>
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">age</span><span class="p">:</span> <span class="nb">int</span>
+
+
+<span class="k">def</span> <span class="nf">make_person</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">age</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Person</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Person</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="n">age</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">PersonRepository</span><span class="p">(</span><span class="n">HashRepository</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">entity_cls</span><span class="o">=</span><span class="n">Person</span><span class="p">):</span>
+    <span class="n">key_attrs</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,)</span>
+
+
+<span class="n">person_service</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">make_hash_service</span><span class="p">(</span>
+        <span class="n">PersonRepository</span><span class="p">,</span>
+        <span class="n">memory_data_source_factory</span><span class="o">=</span><span class="n">make_memory_data_source</span><span class="p">,</span>
+        <span class="n">fallback_data_source_factory</span><span class="o">=</span><span class="n">make_fallback_data_source</span><span class="p">,</span>
+        <span class="n">repository_expire_time</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+
+<span class="nd">@jsondaora</span>
+<span class="k">class</span> <span class="nc">Playlist</span><span class="p">(</span><span class="n">SortedSetDictEntity</span><span class="p">):</span>
+    <span class="n">person_id</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="k">class</span> <span class="nc">PlaylistRepository</span><span class="p">(</span><span class="n">SortedSetRepository</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+    <span class="n">entity_cls</span> <span class="o">=</span> <span class="n">Playlist</span>
+    <span class="n">key_attrs</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;person_id&#39;</span><span class="p">,)</span>
+
+
+<span class="n">playlist_repository</span> <span class="o">=</span> <span class="n">PlaylistRepository</span><span class="p">(</span>
+    <span class="n">memory_data_source</span><span class="o">=</span><span class="n">DictMemoryDataSource</span><span class="p">(),</span>
+    <span class="n">fallback_data_source</span><span class="o">=</span><span class="n">DictFallbackDataSource</span><span class="p">(),</span>
+    <span class="n">expire_time</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">make_playlist</span><span class="p">(</span><span class="n">person_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">musics_ids</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Playlist</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Playlist</span><span class="p">(</span>
+        <span class="n">person_id</span><span class="o">=</span><span class="n">person_id</span><span class="p">,</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[(</span><span class="n">id_</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">id_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">musics_ids</span><span class="p">)],</span>
+    <span class="p">)</span>
+
+
+<span class="c1"># Application Layer</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">person</span> <span class="o">=</span> <span class="n">make_person</span><span class="p">(</span><span class="s1">&#39;John Doe&#39;</span><span class="p">,</span> <span class="mi">33</span><span class="p">)</span>
+    <span class="n">playlist</span> <span class="o">=</span> <span class="n">make_playlist</span><span class="p">(</span><span class="n">person</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="s1">&#39;m1&#39;</span><span class="p">,</span> <span class="s1">&#39;m2&#39;</span><span class="p">,</span> <span class="s1">&#39;m3&#39;</span><span class="p">)</span>
+
+    <span class="k">await</span> <span class="n">person_service</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">person</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">playlist_repository</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">playlist</span><span class="p">)</span>
+
+    <span class="n">goted_person</span> <span class="o">=</span> <span class="k">await</span> <span class="n">person_service</span><span class="o">.</span><span class="n">get_one</span><span class="p">(</span><span class="n">person</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span>
+    <span class="n">goted_playlist</span> <span class="o">=</span> <span class="k">await</span> <span class="n">playlist_repository</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">goted_person</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">entity</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">goted_person</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">goted_playlist</span><span class="p">)</span>
+
+
+<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </code></pre></div>
 
 
-<h2 id="running-the-integration-suite">Running the integration suite:</h2>
-<div class="codehilite"><pre><span></span><code>bake integration
+<div class="codehilite"><pre><span></span><code><span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;john_doe&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;John Doe&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">:</span> <span class="mi">33</span><span class="p">}</span>
+<span class="p">{</span><span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;m1&#39;</span><span class="p">,</span> <span class="s1">&#39;m2&#39;</span><span class="p">,</span> <span class="s1">&#39;m3&#39;</span><span class="p">],</span> <span class="s1">&#39;person_id&#39;</span><span class="p">:</span> <span class="s1">&#39;john_doe&#39;</span>
 </code></pre></div>
-
-
-<h2 id="other-bake-tasks">Other bake tasks:</h2>
-<div class="codehilite"><pre><span></span><code>bake check-code
-
-bake tests-docs
-
-bake serve-docs
-
-bake add-changelog <span class="nv">m</span><span class="o">=</span><span class="s2">&quot;Add my cool feature&quot;</span>
-</code></pre></div>
-
-
-<p>You can run <code>bake</code> to see all tasks available.</p>
                 
               
               
@@ -412,7 +413,7 @@ bake add-changelog <span class="nv">m</span><span class="o">=</span><span class=
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../typed-dict/" title="Typed Dict Entity" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../domain-model/simple/" title="Domain Model Example" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
             </div>
@@ -421,19 +422,19 @@ bake add-changelog <span class="nv">m</span><span class="o">=</span><span class=
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Typed Dict Entity
+                Domain Model Example
               </div>
             </div>
           </a>
         
         
-          <a href="../changelog/" title="Changelog" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../contributing/" title="Development - Contributing" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Changelog
+                Development - Contributing
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">

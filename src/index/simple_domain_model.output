@@ -1,2 +1,0 @@
-Person(id='john_doe', name='John Doe', age=33)
-PlayList(id='john_doe', data=['m1', 'm2', 'm3'])

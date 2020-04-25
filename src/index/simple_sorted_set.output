@@ -1,1 +1,1 @@
-PlayList(id='my_plalist', data=['m1', 'm2', 'm3'])
+Playlist(values=['m1', 'm2', 'm3'], id='my_plalist')

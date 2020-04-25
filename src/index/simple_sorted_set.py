@@ -1,4 +1,5 @@
 import asyncio
+from dataclasses import dataclass
 
 from dbdaora import (
     DictFallbackDataSource,
@@ -8,14 +9,14 @@ from dbdaora import (
 )
 
 
-class PlayList(SortedSetEntity):
-    ...
+@dataclass
+class Playlist(SortedSetEntity):
+    id: str
 
 
 class PlaylistRepository(SortedSetRepository[str]):
-    entity_name = 'playlist'
+    entity_cls = Playlist
     key_attrs = ('id',)
-    entity_cls = PlayList
 
 
 repository = PlaylistRepository(
@@ -23,8 +24,8 @@ repository = PlaylistRepository(
     fallback_data_source=DictFallbackDataSource(),
     expire_time=60,
 )
-data = [('m1', 1), ('m2', 2), ('m3', 3)]
-playlist = PlayList('my_plalist', data)
+values = [('m1', 1), ('m2', 2), ('m3', 3)]
+playlist = Playlist(id='my_plalist', values=values)
 asyncio.run(repository.add(playlist))
 
 geted_playlist = asyncio.run(repository.query(playlist.id).entity)
