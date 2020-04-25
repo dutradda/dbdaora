@@ -16,6 +16,8 @@ HashData = Dict[str, Any]
 
 
 class HashRepository(MemoryRepository[HashEntity, HashData, FallbackKey]):
+    __skip_cls_validation__ = ('HashRepository',)
+
     async def get_memory_data(  # type: ignore
         self, key: str, query: 'HashQuery[FallbackKey]',
     ) -> Optional[Union[HashData, Dict[bytes, Any]]]:

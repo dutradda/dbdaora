@@ -28,3 +28,7 @@ class InvalidKeyAttributeError(DBDaoraError):
 
 class InvalidEntityTypeError(DBDaoraError):
     ...
+
+
+class RequiredClassAttributeError(DBDaoraError):
+    ...

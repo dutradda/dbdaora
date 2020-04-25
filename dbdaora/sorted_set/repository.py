@@ -13,9 +13,10 @@ class FallbackSortedSetData(TypedDict):
 
 
 class SortedSetRepository(
-    MemoryRepository[SortedSetEntity, SortedSetData, FallbackKey]
+    MemoryRepository[SortedSetEntity, SortedSetData, FallbackKey],
+    entity_cls=SortedSetEntity,
 ):
-    entity_cls = SortedSetEntity
+    __skip_cls_validation__ = ('SortedSetRepository',)
 
     async def get_memory_data(  # type: ignore
         self, key: str, query: SortedSetQuery[FallbackKey],
@@ -51,12 +52,16 @@ class SortedSetRepository(
     def make_entity(  # type: ignore
         self, data: SortedSetData, query: SortedSetQuery[FallbackKey]
     ) -> SortedSetEntity:
-        return self.entity_cls(id=query.attribute_from_key('id'), data=data)
+        return self.get_entity_type(query)(
+            id=query.attribute_from_key('id'), data=data
+        )
 
     def make_entity_from_fallback(  # type: ignore
         self, data: SortedSetData, query: SortedSetQuery[FallbackKey]
     ) -> SortedSetEntity:
-        return self.entity_cls(id=query.attribute_from_key('id'), data=data)
+        return self.get_entity_type(query)(
+            id=query.attribute_from_key('id'), data=data
+        )
 
     async def add_memory_data(self, key: str, data: SortedSetData) -> None:
         await self.memory_data_source.zadd(key, *data)

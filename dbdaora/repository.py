@@ -16,6 +16,7 @@ from dbdaora.exceptions import (
     EntityNotFoundError,
     InvalidKeyAttributeError,
     InvalidQueryError,
+    RequiredClassAttributeError,
 )
 from dbdaora.keys import FallbackKey
 
@@ -31,6 +32,51 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     entity_cls: ClassVar[Type[Entity]]
     key_attrs: ClassVar[Sequence[str]]
     many_attr_names: ClassVar[Union[Sequence[str], str]]
+    __skip_cls_validation__: Sequence[str] = ()
+
+    def __init_subclass__(
+        cls,
+        entity_name: Optional[str] = None,
+        entity_cls: Optional[Type[Entity]] = None,
+        key_attrs: Optional[Sequence[str]] = None,
+        many_attr_names: Optional[Type[Entity]] = None,
+    ):
+        super().__init_subclass__()
+        entity_name = getattr(cls, 'entity_name', entity_name)
+        entity_cls = getattr(cls, 'entity_cls', entity_cls)
+        key_attrs = getattr(cls, 'key_attrs', key_attrs)
+        many_attr_names = getattr(cls, 'many_attr_names', many_attr_names)
+
+        if cls.__name__ not in cls.__skip_cls_validation__:
+            missing_attrs = []
+
+            for name, value in (
+                ('entity_name', entity_name),
+                ('entity_cls', entity_cls),
+                ('key_attrs', key_attrs),
+            ):
+                if value is None:
+                    if name == 'entity_cls':
+                        has_entity_type = any(
+                            [
+                                cls.get_entity_type != base.get_entity_type  # type: ignore
+                                for base in cls.__bases__
+                            ]
+                        )
+                        name = 'entity_cls or get_entity_type'
+                    else:
+                        has_entity_type = False
+
+                    if not has_entity_type:
+                        missing_attrs.append(name)
+
+            if missing_attrs:
+                raise RequiredClassAttributeError(cls.__name__, missing_attrs)
+
+        cls.entity_name = entity_name  # type: ignore
+        cls.entity_cls = entity_cls  # type: ignore
+        cls.key_attrs = key_attrs  # type: ignore
+        cls.many_attr_names = many_attr_names or key_attrs  # type: ignore
 
     async def get_memory_data(
         self,

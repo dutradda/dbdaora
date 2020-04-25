@@ -4,4 +4,4 @@ from . import HashRepository
 
 
 class DatastoreHashRepository(HashRepository[Key]):
-    ...
+    __skip_cls_validation__ = ('DatastoreHashRepository',)
