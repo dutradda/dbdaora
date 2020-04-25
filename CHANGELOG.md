@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.4.0 - 2020-04-25
 
  - Improve repositories interface
 
