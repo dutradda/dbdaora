@@ -1,5 +1,5 @@
 import dataclasses
-from typing import (
+from typing import (  # type: ignore
     Any,
     ClassVar,
     Generic,
@@ -8,6 +8,7 @@ from typing import (
     Sequence,
     Type,
     Union,
+    _TypedDictMeta,
 )
 
 from dbdaora import FallbackDataSource, MemoryDataSource
@@ -262,7 +263,12 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                 self.entity_name, *query.key_parts
             )
 
-        if isinstance(query, self.get_entity_type(query)):
+        elif isinstance(self.get_entity_type(query), _TypedDictMeta):
+            return self.memory_data_source.make_key(
+                self.entity_name, *self.key_parts(query)
+            )
+
+        elif isinstance(query, self.get_entity_type(query)):
             return self.memory_data_source.make_key(
                 self.entity_name, *self.key_parts(query)
             )
@@ -285,7 +291,12 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                 self.entity_name, *query.key_parts
             )
 
-        if isinstance(query, self.get_entity_type(query)):
+        elif isinstance(self.get_entity_type(query), _TypedDictMeta):
+            return self.fallback_data_source.make_key(
+                self.entity_name, *self.key_parts(query)
+            )
+
+        elif isinstance(query, self.get_entity_type(query)):
             return self.fallback_data_source.make_key(
                 self.entity_name, *self.key_parts(query)
             )
@@ -334,7 +345,12 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                 self.entity_name, 'not-found', *query.key_parts
             )
 
-        if isinstance(query, self.get_entity_type(query)):
+        elif isinstance(self.get_entity_type(query), _TypedDictMeta):
+            return self.memory_data_source.make_key(
+                self.entity_name, 'not-found', *self.key_parts(query)
+            )
+
+        elif isinstance(query, self.get_entity_type(query)):
             return self.memory_data_source.make_key(
                 self.entity_name, 'not-found', *self.key_parts(query)
             )

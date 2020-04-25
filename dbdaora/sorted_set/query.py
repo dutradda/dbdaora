@@ -4,11 +4,11 @@ from typing import Any, List, Optional
 from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
 
-from .entity import SortedSetData, SortedSetEntity
+from .entity import Entity, SortedSetData
 
 
 @dataclasses.dataclass
-class SortedSetQuery(Query[SortedSetEntity, SortedSetData, FallbackKey]):
+class SortedSetQuery(Query[Entity, SortedSetData, FallbackKey]):
     repository: 'SortedSetRepository[FallbackKey]'
     reverse: bool = False
     withscores: bool = False

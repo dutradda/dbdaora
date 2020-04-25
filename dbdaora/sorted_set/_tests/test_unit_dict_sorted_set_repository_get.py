@@ -62,10 +62,10 @@ async def test_should_get_from_fallback(
     repository, fake_entity_withscores, fake_entity
 ):
     repository.memory_data_source.zrange = asynctest.CoroutineMock(
-        side_effect=[None, fake_entity.data]
+        side_effect=[None, fake_entity.values]
     )
     repository.fallback_data_source.db['fake:fake'] = {
-        'data': fake_entity_withscores.data
+        'values': fake_entity_withscores.values
     }
     entity = await repository.query(fake_entity.id).entity
 
@@ -78,11 +78,11 @@ async def test_should_set_memory_after_got_fallback(
     repository, fake_entity_withscores, fake_entity, mocker
 ):
     repository.memory_data_source.zrange = asynctest.CoroutineMock(
-        side_effect=[None, fake_entity.data]
+        side_effect=[None, fake_entity.values]
     )
     repository.memory_data_source.zadd = asynctest.CoroutineMock()
     repository.fallback_data_source.db['fake:fake'] = {
-        'data': fake_entity_withscores.data
+        'values': fake_entity_withscores.values
     }
     entity = await repository.query(fake_entity.id).entity
 

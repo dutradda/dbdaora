@@ -1,11 +1,13 @@
 import asyncio
-from dataclasses import dataclass
+from typing import TypedDict
+
+from jsondaora import jsondaora
 
 from dbdaora import (
     DictFallbackDataSource,
     DictMemoryDataSource,
     HashRepository,
-    SortedSetEntity,
+    SortedSetDictEntity,
     SortedSetRepository,
     make_hash_service,
 )
@@ -25,15 +27,15 @@ async def make_fallback_data_source() -> DictFallbackDataSource:
 # Domain Layer
 
 
-@dataclass
-class Person:
+@jsondaora
+class Person(TypedDict):
     id: str
     name: str
     age: int
 
 
 def make_person(name: str, age: int) -> Person:
-    return Person(name.replace(' ', '_').lower(), name, age)
+    return Person(id=name.replace(' ', '_').lower(), name=name, age=age)
 
 
 class PersonRepository(HashRepository[str]):
@@ -52,13 +54,15 @@ person_service = asyncio.run(
 )
 
 
-class PlayList(SortedSetEntity):
-    ...
+@jsondaora
+class PlayList(SortedSetDictEntity):
+    person_id: str
 
 
 class PlaylistRepository(SortedSetRepository[str]):
     entity_name = 'playlist'
-    key_attrs = ('id',)
+    entity_id_name = 'person_id'
+    key_attrs = ('person_id',)
     entity_cls = PlayList
 
 
@@ -71,7 +75,8 @@ playlist_repository = PlaylistRepository(
 
 def make_playlist(person_id: str, *musics_ids: str) -> PlayList:
     return PlayList(
-        person_id, data=[(id_, i) for i, id_ in enumerate(musics_ids)]
+        person_id=person_id,
+        values=[(id_, i) for i, id_ in enumerate(musics_ids)],
     )
 
 
@@ -80,13 +85,13 @@ def make_playlist(person_id: str, *musics_ids: str) -> PlayList:
 
 async def main() -> None:
     person = make_person('John Doe', 33)
-    playlist = make_playlist(person.id, 'm1', 'm2', 'm3')
+    playlist = make_playlist(person['id'], 'm1', 'm2', 'm3')
 
     await person_service.add(person)
     await playlist_repository.add(playlist)
 
-    goted_person = await person_service.get_one(person.id)
-    goted_playlist = await playlist_repository.query(goted_person.id).entity
+    goted_person = await person_service.get_one(person['id'])
+    goted_playlist = await playlist_repository.query(goted_person['id']).entity
 
     print(goted_person)
     print(goted_playlist)

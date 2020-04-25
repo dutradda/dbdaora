@@ -2,6 +2,10 @@
 
 ### UNRELEASED
 
+ - Add support for TypedDict
+
+ - Improve sorted set entity
+
  - Improve coverage
 
 ### 0.3.0 - 2020-04-25

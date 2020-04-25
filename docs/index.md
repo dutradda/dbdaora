@@ -62,11 +62,19 @@ $ pip install dbdaora
 {!./src/index/simple_hash.py!}
 ```
 
+```bash
+{!./src/index/simple_hash.output!}
+```
+
 
 ## Simple redis sorted set example
 
 ```python
 {!./src/index/simple_sorted_set.py!}
+```
+
+```python
+{!./src/index/simple_sorted_set.output!}
 ```
 
 
@@ -81,10 +89,6 @@ It has an optional cache system too.
 {!./src/index/simple_service.py!}
 ```
 
-
-## Simple Domain Model Example
-
-
 ```python
-{!./src/index/simple_domain_model.py!}
+{!./src/index/simple_service.output!}
 ```

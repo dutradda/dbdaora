@@ -20,7 +20,11 @@ from dbdaora.hashring import HashRing
 from dbdaora.repository import MemoryRepository
 from dbdaora.service import Service
 from dbdaora.service.builder import build as build_service
-from dbdaora.sorted_set.entity import SortedSetEntity
+from dbdaora.sorted_set.entity import (
+    SortedSetData,
+    SortedSetDictEntity,
+    SortedSetEntity,
+)
 from dbdaora.sorted_set.query import SortedSetQuery
 from dbdaora.sorted_set.repository import SortedSetRepository
 
@@ -67,6 +71,8 @@ __all__ = [
     'EntityNotFoundError',
     'HashQueryMany',
     'make_hash_service',
+    'SortedSetData',
+    'SortedSetDictEntity',
 ]
 
 if AioRedisDataSource:

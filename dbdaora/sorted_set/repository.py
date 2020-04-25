@@ -1,22 +1,54 @@
 import itertools
-from typing import Any, Optional, Sequence, Tuple, TypedDict, Union
+from typing import (
+    Any,
+    ClassVar,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypedDict,
+    Union,
+)
 
+from dbdaora.exceptions import RequiredClassAttributeError
 from dbdaora.keys import FallbackKey
 from dbdaora.repository import MemoryRepository
 
-from .entity import SortedSetData, SortedSetEntity
+from .entity import Entity, SortedSetData
 from .query import SortedSetQuery
 
 
 class FallbackSortedSetData(TypedDict):
-    data: Sequence[Tuple[str, float]]
+    values: Sequence[Tuple[str, float]]
 
 
 class SortedSetRepository(
-    MemoryRepository[SortedSetEntity, SortedSetData, FallbackKey],
-    entity_cls=SortedSetEntity,
+    MemoryRepository[Entity, SortedSetData, FallbackKey],
 ):
+    entity_id_name: ClassVar[str]
     __skip_cls_validation__ = ('SortedSetRepository',)
+
+    def __init_subclass__(
+        cls,
+        entity_name: Optional[str] = None,
+        entity_cls: Optional[Type[Entity]] = None,
+        key_attrs: Optional[Sequence[str]] = None,
+        many_key_attrs: Optional[Type[Entity]] = None,
+        entity_id_name: Optional[Type[str]] = None,
+    ):
+        entity_id_name = getattr(cls, 'entity_id_name', entity_id_name)
+
+        if (
+            cls.__name__ not in cls.__skip_cls_validation__
+            and not entity_id_name
+        ):
+            raise RequiredClassAttributeError(cls.__name__, 'entity_id_name')
+        else:
+            cls.entity_id_name = entity_id_name  # type: ignore
+
+        super().__init_subclass__(
+            entity_name, entity_cls, key_attrs, many_key_attrs,
+        )
 
     async def get_memory_data(  # type: ignore
         self, key: str, query: SortedSetQuery[FallbackKey],
@@ -28,7 +60,7 @@ class SortedSetRepository(
 
     async def get_fallback_data(  # type: ignore
         self,
-        query: Union[SortedSetQuery[FallbackKey], SortedSetEntity],
+        query: Union[SortedSetQuery[FallbackKey], Entity],
         for_memory: bool = False,
     ) -> Optional[SortedSetData]:
         data: Optional[FallbackSortedSetData]
@@ -45,51 +77,60 @@ class SortedSetRepository(
             or isinstance(query, SortedSetQuery)
             and query.withscores
         ):
-            return data['data']
+            return data['values']
 
-        return [i[0] for i in data['data']]
+        return [i[0] for i in data['values']]
 
     def make_entity(  # type: ignore
         self, data: SortedSetData, query: SortedSetQuery[FallbackKey]
-    ) -> SortedSetEntity:
+    ) -> Entity:
         return self.get_entity_type(query)(
-            id=query.attribute_from_key('id'), data=data
+            values=data,
+            **{
+                self.entity_id_name: query.attribute_from_key(
+                    self.entity_id_name
+                )
+            },
         )
 
     def make_entity_from_fallback(  # type: ignore
         self, data: SortedSetData, query: SortedSetQuery[FallbackKey]
-    ) -> SortedSetEntity:
-        return self.get_entity_type(query)(
-            id=query.attribute_from_key('id'), data=data
-        )
+    ) -> Entity:
+        return self.make_entity(data, query)
 
     async def add_memory_data(self, key: str, data: SortedSetData) -> None:
         await self.memory_data_source.zadd(key, *data)
 
-    async def add_fallback(
-        self, entity: SortedSetEntity, *entities: SortedSetEntity
-    ) -> None:
+    async def add_fallback(self, entity: Entity, *entities: Entity) -> None:
         await self.fallback_data_source.put(
-            self.fallback_key(entity), {'data': entity.data}
+            self.fallback_key(entity),
+            {
+                'values': entity['values']  # type: ignore
+                if isinstance(entity, dict)
+                else entity.values
+            },
         )
 
     def fallback_not_found_key(  # type: ignore
-        self, query: Union[SortedSetQuery[FallbackKey], SortedSetEntity],
+        self, query: Union[SortedSetQuery[FallbackKey], Entity],
     ) -> str:
         if isinstance(query, SortedSetQuery):
             return self.memory_data_source.make_key(
                 self.entity_name, 'not-found', query.attribute_from_key('id')
             )
 
-        if isinstance(query, SortedSetEntity):
-            return self.memory_data_source.make_key(
-                self.entity_name, 'not-found', query.id
-            )
+        return self.memory_data_source.make_key(
+            self.entity_name,
+            'not-found',
+            query[self.entity_id_name]  # type: ignore
+            if isinstance(query, dict)
+            else getattr(query, self.entity_id_name),
+        )
 
     async def add_memory_data_from_fallback(  # type: ignore
         self,
         key: str,
-        query: Union[SortedSetQuery[FallbackKey], SortedSetEntity],
+        query: Union[SortedSetQuery[FallbackKey], Entity],
         data: Sequence[Tuple[str, float]],
     ) -> SortedSetData:
         await self.add_memory_data(key, self.format_memory_data(data))
@@ -104,10 +145,11 @@ class SortedSetRepository(
     ) -> SortedSetQuery[FallbackKey]:
         return SortedSetQuery(self, *args, **kwargs)
 
-    def make_memory_data_from_entity(
-        self, entity: SortedSetEntity
-    ) -> SortedSetData:
-        return self.format_memory_data(entity.data)
+    def make_memory_data_from_entity(self, entity: Entity) -> SortedSetData:
+        if isinstance(entity, dict):
+            return self.format_memory_data(entity['values'])
+
+        return self.format_memory_data(entity.values)
 
     def format_memory_data(self, data: SortedSetData) -> SortedSetData:
         data = list(itertools.chain(*data))
