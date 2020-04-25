@@ -50,6 +50,7 @@ aioredis = [
 [tool.flit.sdist]
 exclude = [
     "dbdaora/conftest.py",
+    "dbdaora/_tests",
     "dbdaora/*/_tests",
     "dbdaora/*/*/_tests",
     "Makefile",

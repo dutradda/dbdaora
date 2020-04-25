@@ -85,12 +85,12 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         *,
         many: bool = False,
     ) -> Optional[EntityData]:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     async def get_memory_many(
         self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
     ) -> List[Entity]:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     async def get_fallback_data(
         self,
@@ -99,29 +99,29 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         for_memory: bool = False,
         many: bool = False,
     ) -> Optional[EntityData]:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     async def get_fallback_many(
         self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
     ) -> List[Entity]:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     def make_entity(
         self,
         data: EntityData,
         query: 'BaseQuery[Entity, EntityData, FallbackKey]',
     ) -> Entity:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     def make_entity_from_fallback(
         self,
         data: EntityData,
         query: 'BaseQuery[Entity, EntityData, FallbackKey]',
     ) -> Entity:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     async def add_memory_data(self, key: str, data: EntityData) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     async def add_memory_data_from_fallback(
         self,
@@ -129,13 +129,13 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         query: Union['BaseQuery[Entity, EntityData, FallbackKey]', Entity],
         data: EntityData,
     ) -> EntityData:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     def make_memory_data(self, entity: Entity) -> EntityData:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     async def add_fallback(self, entity: Entity, *entities: Entity) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     async def entity(
         self, query: 'Query[Entity, EntityData, FallbackKey]',
