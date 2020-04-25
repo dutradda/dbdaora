@@ -108,28 +108,28 @@ class QueryMany(BaseQuery[Entity, EntityData, FallbackKey]):
             return
 
         self.many_key_parts = []
-        attr_names = (
-            (repository.many_attr_names,)
-            if isinstance(repository.many_attr_names, str)
-            else repository.many_attr_names
+        many_key_attrs = (
+            (repository.many_key_attrs,)
+            if isinstance(repository.many_key_attrs, str)
+            else repository.many_key_attrs
         )
 
         for many_input in many:
             kwargs_i = {}
 
             if isinstance(many_input, tuple):
-                start_index = len(attr_names) - len(many_input)
+                start_index = len(many_key_attrs) - len(many_input)
                 start_index = start_index if start_index >= 0 else 0
                 kwargs_i.update(
                     {
                         name: input_
                         for name, input_ in zip(
-                            attr_names[start_index:], many_input
+                            many_key_attrs[start_index:], many_input
                         )
                     }
                 )
             else:
-                kwargs_i[attr_names[-1]] = many_input
+                kwargs_i[many_key_attrs[-1]] = many_input
 
             self.many_key_parts.append(
                 self.make_key_parts(*args, **kwargs, **kwargs_i)

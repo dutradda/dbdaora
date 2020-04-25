@@ -70,7 +70,7 @@ class FakeEntity:
 
 class FakeHashRepository(HashRepository[str]):
     entity_name = 'fake'
-    key_attrs = many_attr_names = ('id',)
+    key_attrs = ('id',)
     entity_cls = FakeEntity
 
 

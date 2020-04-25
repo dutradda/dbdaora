@@ -31,7 +31,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     entity_name: ClassVar[str]
     entity_cls: ClassVar[Type[Entity]]
     key_attrs: ClassVar[Sequence[str]]
-    many_attr_names: ClassVar[Union[Sequence[str], str]]
+    many_key_attrs: ClassVar[Union[Sequence[str], str]]
     __skip_cls_validation__: Sequence[str] = ()
 
     def __init_subclass__(
@@ -39,13 +39,13 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         entity_name: Optional[str] = None,
         entity_cls: Optional[Type[Entity]] = None,
         key_attrs: Optional[Sequence[str]] = None,
-        many_attr_names: Optional[Type[Entity]] = None,
+        many_key_attrs: Optional[Type[Entity]] = None,
     ):
         super().__init_subclass__()
         entity_name = getattr(cls, 'entity_name', entity_name)
         entity_cls = getattr(cls, 'entity_cls', entity_cls)
         key_attrs = getattr(cls, 'key_attrs', key_attrs)
-        many_attr_names = getattr(cls, 'many_attr_names', many_attr_names)
+        many_key_attrs = getattr(cls, 'many_key_attrs', many_key_attrs)
 
         if cls.__name__ not in cls.__skip_cls_validation__:
             missing_attrs = []
@@ -76,7 +76,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         cls.entity_name = entity_name  # type: ignore
         cls.entity_cls = entity_cls  # type: ignore
         cls.key_attrs = key_attrs  # type: ignore
-        cls.many_attr_names = many_attr_names or key_attrs  # type: ignore
+        cls.many_key_attrs = many_key_attrs or key_attrs  # type: ignore
 
     async def get_memory_data(
         self,

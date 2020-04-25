@@ -77,7 +77,7 @@ def serialized_fake_entity2():
 class FakeDatastoreHashRepository(DatastoreHashRepository):
     entity_name = 'fake'
     key_attrs = ('other_id', 'id')
-    many_attr_names = ('id',)
+    many_key_attrs = ('id',)
     entity_cls = FakeDatastoreEntity
 
 
