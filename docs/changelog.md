@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.3.0 - 2020-04-25
 
  - Create new tests and fix some bugs
 
