@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.4.1 - 2020-04-25
 
  - Improve datastore repositories
 
