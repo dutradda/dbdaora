@@ -20,7 +20,6 @@ def make_person(name: str, age: int) -> Person:
 
 
 class PersonRepository(HashRepository[str]):
-    entity_name = 'person'
     entity_cls = Person
     key_attrs = ('id',)
 

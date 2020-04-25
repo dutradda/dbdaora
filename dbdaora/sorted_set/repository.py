@@ -36,19 +36,22 @@ class SortedSetRepository(
         many_key_attrs: Optional[Type[Entity]] = None,
         entity_id_name: Optional[Type[str]] = None,
     ):
+        super().__init_subclass__(
+            entity_name, entity_cls, key_attrs, many_key_attrs,
+        )
+
         entity_id_name = getattr(cls, 'entity_id_name', entity_id_name)
 
         if (
             cls.__name__ not in cls.__skip_cls_validation__
             and not entity_id_name
         ):
-            raise RequiredClassAttributeError(cls.__name__, 'entity_id_name')
-        else:
-            cls.entity_id_name = entity_id_name  # type: ignore
-
-        super().__init_subclass__(
-            entity_name, entity_cls, key_attrs, many_key_attrs,
-        )
+            if len(cls.key_attrs) == 1:
+                cls.entity_id_name = cls.key_attrs[0]
+            else:
+                raise RequiredClassAttributeError(
+                    cls.__name__, 'entity_id_name'
+                )
 
     async def get_memory_data(  # type: ignore
         self, key: str, query: SortedSetQuery[FallbackKey],

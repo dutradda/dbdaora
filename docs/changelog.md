@@ -2,6 +2,8 @@
 
 ### UNRELEASED
 
+ - Improve repositories interface
+
  - Add support for TypedDict
 
  - Improve sorted set entity

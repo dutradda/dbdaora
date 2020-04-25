@@ -10,11 +10,8 @@ class FakeEntity(SortedSetEntity):
     id: str
 
 
-class FakeRepository(SortedSetRepository[str]):
-    entity_name = 'fake'
-    entity_id_name = 'id'
+class FakeRepository(SortedSetRepository[str], entity_cls=FakeEntity):
     key_attrs = ('id',)
-    entity_cls = FakeEntity
 
 
 @pytest.fixture

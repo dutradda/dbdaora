@@ -1,4 +1,5 @@
 import dataclasses
+import re
 from typing import (  # type: ignore
     Any,
     ClassVar,
@@ -43,16 +44,21 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         many_key_attrs: Optional[Type[Entity]] = None,
     ):
         super().__init_subclass__()
-        entity_name = getattr(cls, 'entity_name', entity_name)
-        entity_cls = getattr(cls, 'entity_cls', entity_cls)
-        key_attrs = getattr(cls, 'key_attrs', key_attrs)
-        many_key_attrs = getattr(cls, 'many_key_attrs', many_key_attrs)
+        entity_name = getattr(cls, 'entity_name', None) or entity_name
+        entity_cls = getattr(cls, 'entity_cls', None) or entity_cls
+        key_attrs = getattr(cls, 'key_attrs', None) or key_attrs
+        many_key_attrs = getattr(cls, 'many_key_attrs', None) or many_key_attrs
 
         if cls.__name__ not in cls.__skip_cls_validation__:
+            if entity_name is None:
+                entity_name = re.sub(
+                    r'(?<!^)(?=[A-Z])', '_', cls.__name__
+                ).lower()
+                entity_name = entity_name.replace('_repository', '')
+
             missing_attrs = []
 
             for name, value in (
-                ('entity_name', entity_name),
                 ('entity_cls', entity_cls),
                 ('key_attrs', key_attrs),
             ):

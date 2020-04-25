@@ -38,9 +38,7 @@ def make_person(name: str, age: int) -> Person:
     return Person(id=name.replace(' ', '_').lower(), name=name, age=age)
 
 
-class PersonRepository(HashRepository[str]):
-    entity_name = 'person'
-    entity_cls = Person
+class PersonRepository(HashRepository[str], entity_cls=Person):
     key_attrs = ('id',)
 
 
@@ -55,15 +53,13 @@ person_service = asyncio.run(
 
 
 @jsondaora
-class PlayList(SortedSetDictEntity):
+class Playlist(SortedSetDictEntity):
     person_id: str
 
 
 class PlaylistRepository(SortedSetRepository[str]):
-    entity_name = 'playlist'
-    entity_id_name = 'person_id'
+    entity_cls = Playlist
     key_attrs = ('person_id',)
-    entity_cls = PlayList
 
 
 playlist_repository = PlaylistRepository(
@@ -73,8 +69,8 @@ playlist_repository = PlaylistRepository(
 )
 
 
-def make_playlist(person_id: str, *musics_ids: str) -> PlayList:
-    return PlayList(
+def make_playlist(person_id: str, *musics_ids: str) -> Playlist:
+    return Playlist(
         person_id=person_id,
         values=[(id_, i) for i, id_ in enumerate(musics_ids)],
     )

@@ -12,7 +12,7 @@ def test_should_raise_validation_error_without_attributes():
 
     assert exc_info.value.args == (
         'FakeRepository',
-        ['entity_name', 'entity_cls or get_entity_type', 'key_attrs'],
+        ['entity_cls or get_entity_type', 'key_attrs'],
     )
 
 

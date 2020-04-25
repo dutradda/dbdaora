@@ -10,15 +10,13 @@ from dbdaora import (
 
 
 @dataclass
-class PlayList(SortedSetEntity):
+class Playlist(SortedSetEntity):
     id: str
 
 
 class PlaylistRepository(SortedSetRepository[str]):
-    entity_name = 'playlist'
+    entity_cls = Playlist
     key_attrs = ('id',)
-    entity_cls = PlayList
-    entity_id_name = 'id'
 
 
 repository = PlaylistRepository(
@@ -27,7 +25,7 @@ repository = PlaylistRepository(
     expire_time=60,
 )
 values = [('m1', 1), ('m2', 2), ('m3', 3)]
-playlist = PlayList(id='my_plalist', values=values)
+playlist = Playlist(id='my_plalist', values=values)
 asyncio.run(repository.add(playlist))
 
 geted_playlist = asyncio.run(repository.query(playlist.id).entity)
