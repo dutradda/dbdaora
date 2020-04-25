@@ -93,15 +93,15 @@ async def test_should_set_memory_after_got_fallback(
     assert repository.memory_data_source.hmset.call_args_list == [
         mocker.call(
             'fake:fake',
-            'id',
+            b'id',
             'fake',
-            'integer',
+            b'integer',
             1,
-            'inner_entities',
+            b'inner_entities',
             b'[{"id":"inner1"},{"id":"inner2"}]',
-            'number',
+            b'number',
             0.1,
-            'boolean',
+            b'boolean',
             1,
         )
     ]

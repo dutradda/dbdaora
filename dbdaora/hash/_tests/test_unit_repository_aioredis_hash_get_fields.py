@@ -15,12 +15,8 @@ async def test_should_get_from_memory(
     await repository.memory_data_source.hmset(
         'fake:fake', *itertools.chain(*serialized_fake_entity.items())
     )
-    fake_entity.number = None
-    fake_entity.boolean = False
 
-    entity = await repository.query(
-        'fake', fields=['id', 'integer', 'inner_entities']
-    ).entity
+    entity = await repository.query('fake').entity
 
     assert entity == fake_entity
 
@@ -104,16 +100,30 @@ async def test_should_set_memory_after_got_fallback(
     assert repository.memory_data_source.hmset.call_args_list == [
         mocker.call(
             'fake:fake',
-            'id',
+            b'id',
             'fake',
-            'integer',
+            b'integer',
             1,
-            'inner_entities',
+            b'inner_entities',
             b'[{"id":"inner1"},{"id":"inner2"}]',
-            'number',
+            b'number',
             0.1,
-            'boolean',
+            b'boolean',
             1,
         )
     ]
+    assert entity == fake_entity
+
+
+@pytest.mark.asyncio
+async def test_should_get_fallback(repository, fake_entity):
+    repository.fallback_data_source.db['fake:fake'] = dataclasses.asdict(
+        fake_entity, dumps_value=True
+    )
+    fake_entity.number = None
+    fake_entity.boolean = False
+    fields = ['id', 'integer', 'inner_entities']
+
+    entity = await repository.query('fake', fields=fields, memory=False).entity
+
     assert entity == fake_entity

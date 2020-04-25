@@ -2,6 +2,8 @@
 
 ### UNRELEASED
 
+ - Create new tests and fix some bugs
+
  - Add subclass validation for MemoryRepository
 
 ### 0.2.1 - 2020-04-25

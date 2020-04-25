@@ -59,9 +59,7 @@ async def test_should_raise_not_found_error_when_already_raised_before(
 
 
 @pytest.mark.asyncio
-async def test_should_set_already_not_found_error(
-    repository, mocker
-):
+async def test_should_set_already_not_found_error(repository, mocker):
     fake_entity = 'fake'
     expected_query = HashQuery(repository, memory=True, id=fake_entity)
     repository.memory_data_source.hgetall = asynctest.CoroutineMock(
@@ -105,6 +103,7 @@ async def test_should_get_from_fallback(repository, fake_entity):
     entity = await repository.query(fake_entity.id).entity
 
     assert entity == fake_entity
+    assert repository.memory_data_source.exists('fake:fake')
 
 
 @pytest.mark.asyncio
@@ -124,15 +123,15 @@ async def test_should_set_memory_after_got_fallback(
     assert repository.memory_data_source.hmset.call_args_list == [
         mocker.call(
             'fake:fake',
-            'id',
+            b'id',
             'fake',
-            'integer',
+            b'integer',
             1,
-            'inner_entities',
+            b'inner_entities',
             b'[{"id":"inner1"},{"id":"inner2"}]',
-            'number',
+            b'number',
             0.1,
-            'boolean',
+            b'boolean',
             1,
         )
     ]

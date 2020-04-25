@@ -131,7 +131,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     ) -> EntityData:
         raise NotImplementedError()  # pragma: no cover
 
-    def make_memory_data(self, entity: Entity) -> EntityData:
+    def make_memory_data_from_entity(self, entity: Entity) -> EntityData:
         raise NotImplementedError()  # pragma: no cover
 
     async def add_fallback(self, entity: Entity, *entities: Entity) -> None:
@@ -158,9 +158,8 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     ) -> Entity:
         memory_key = self.memory_key(query)
         memory_data = await self.get_memory_data(memory_key, query)
-        from_fallback = False
 
-        if memory_data is None and not await self.already_got_not_found(query):
+        if not memory_data and not await self.already_got_not_found(query):
             fallback_data = await self.get_fallback_data(
                 query, for_memory=True
             )
@@ -171,16 +170,11 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                 memory_data = await self.add_memory_data_from_fallback(
                     memory_key, query, fallback_data
                 )
-                from_fallback = True
 
-        if memory_data is None:
+        if not memory_data:
             raise EntityNotFoundError(query)
 
-        return (
-            self.make_entity_from_fallback(memory_data, query)
-            if from_fallback
-            else self.make_entity(memory_data, query)
-        )
+        return self.make_entity(memory_data, query)
 
     async def get_fallback(
         self,
@@ -206,7 +200,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
 
     async def add_memory(self, entity: Entity, *entities: Entity) -> None:
         memory_key = self.memory_key(entity)
-        memory_data = self.make_memory_data(entity)
+        memory_data = self.make_memory_data_from_entity(entity)
         await self.add_memory_data(memory_key, memory_data)
         await self.set_expire_time(memory_key)
         await self.add_fallback(entity)

@@ -12,7 +12,9 @@ from dbdaora.repository import MemoryRepository
 from ..entity import HashEntity
 
 
-HashData = Dict[str, Any]
+HashData = Union[
+    Dict[str, Any], Dict[bytes, Any],
+]
 
 
 class HashRepository(MemoryRepository[HashEntity, HashData, FallbackKey]):
@@ -54,7 +56,7 @@ class HashRepository(MemoryRepository[HashEntity, HashData, FallbackKey]):
         if data is None:
             return None
 
-        if not for_memory and isinstance(query, HashQuery) and query.fields:
+        if not for_memory and query.fields:
             return self.make_fallback_data_fields(query, data)
 
         elif for_memory:
@@ -68,7 +70,14 @@ class HashRepository(MemoryRepository[HashEntity, HashData, FallbackKey]):
     def make_fallback_data_fields(
         self, query: 'HashQuery[FallbackKey]', data: HashData,
     ) -> HashData:
-        return {f: v for f, v in data.items() if f in query.fields}
+        return {f: v for f, v in data.items() if f in query.fields}  # type: ignore
+
+    def make_fallback_data_fields_with_bytes_keys(
+        self, query: 'HashQuery[FallbackKey]', data: HashData,
+    ) -> HashData:
+        return {
+            f: v for f, v in data.items() if f.decode() in query.fields  # type: ignore
+        }
 
     def make_entity(
         self,
@@ -77,7 +86,7 @@ class HashRepository(MemoryRepository[HashEntity, HashData, FallbackKey]):
     ) -> HashEntity:
         if dataclasses.is_dataclass(self.get_entity_type(query)):
             return jdataclasses.asdataclass(  # type: ignore
-                data, self.get_entity_type(query), encode_field_name=True
+                data, self.get_entity_type(query), has_bytes_keys=True
             )
 
         raise InvalidEntityTypeError(self.get_entity_type(query))
@@ -103,14 +112,26 @@ class HashRepository(MemoryRepository[HashEntity, HashData, FallbackKey]):
         query: Union[BaseQuery[HashEntity, HashData, FallbackKey], HashEntity],
         data: HashData,
     ) -> HashData:
+        data = self.make_memory_data_from_fallback(query, data)  # type: ignore
         await self.add_memory_data(key, data)
 
         if isinstance(query, HashQuery) and query.fields:
-            return self.make_fallback_data_fields(query, data)
+            return self.make_fallback_data_fields_with_bytes_keys(query, data)
 
         return data
 
-    def make_memory_data(self, entity: HashEntity) -> HashData:
+    def make_memory_data_from_fallback(
+        self,
+        query: Union[BaseQuery[HashEntity, HashData, FallbackKey], HashEntity],
+        data: Dict[str, Any],
+    ) -> Dict[bytes, Any]:
+        return {
+            k.encode(): int(v) if isinstance(v, bool) else v
+            for k, v in data.items()
+            if v is not None
+        }
+
+    def make_memory_data_from_entity(self, entity: HashEntity) -> HashData:
         return {
             k: int(v) if isinstance(v, bool) else v
             for k, v in jdataclasses.asdict(entity, dumps_value=True).items()
@@ -120,7 +141,7 @@ class HashRepository(MemoryRepository[HashEntity, HashData, FallbackKey]):
     async def get_memory_many(  # type: ignore
         self, query: 'HashQueryMany[FallbackKey]',
     ) -> List[HashEntity]:
-        memory_data: Sequence[Union[HashData, Dict[bytes, Any]]]
+        memory_data: Sequence[Optional[HashData]]
 
         keys = self.memory_keys(query)
 
@@ -136,7 +157,7 @@ class HashRepository(MemoryRepository[HashEntity, HashData, FallbackKey]):
 
         if query.fields:
             memory_data = [
-                self.make_hmget_dict(query.fields, data)
+                self.make_hmget_dict(query.fields, data) if data else None
                 for data in await pipeline.execute()
             ]
         else:
@@ -168,20 +189,37 @@ class HashRepository(MemoryRepository[HashEntity, HashData, FallbackKey]):
             )
             fb_data_index = 0
 
+            set_not_found_tasks = []
+            add_memory_data_from_fallback_tasks = []
+
             for i, data in enumerate(memory_data):
-                if data is None:
+                if not data:
                     fb_data = fallback_data[fb_data_index]
                     fb_data_index += 1
 
                     if fb_data is None:
-                        await self.set_fallback_not_found(queries[i])
+                        set_not_found_tasks.append(
+                            self.set_fallback_not_found(queries[i])
+                        )
 
                     else:
-                        memory_data[
-                            i
-                        ] = await self.add_memory_data_from_fallback(
-                            self.memory_key(queries[i]), query, fb_data
+                        add_memory_data_from_fallback_tasks.append(
+                            (
+                                i,
+                                self.add_memory_data_from_fallback(
+                                    self.memory_key(queries[i]),
+                                    query,
+                                    fb_data,
+                                ),
+                            )
                         )
+
+            for task in set_not_found_tasks:
+                await task
+
+            for i, task_ in add_memory_data_from_fallback_tasks:
+                data = await task_
+                memory_data[i] = data
 
         if not any(memory_data):
             raise EntityNotFoundError(query)

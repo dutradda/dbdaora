@@ -104,7 +104,9 @@ class SortedSetRepository(
     ) -> SortedSetQuery[FallbackKey]:
         return SortedSetQuery(self, *args, **kwargs)
 
-    def make_memory_data(self, entity: SortedSetEntity) -> SortedSetData:
+    def make_memory_data_from_entity(
+        self, entity: SortedSetEntity
+    ) -> SortedSetData:
         return self.format_memory_data(entity.data)
 
     def format_memory_data(self, data: SortedSetData) -> SortedSetData:
