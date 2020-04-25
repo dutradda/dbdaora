@@ -9,6 +9,7 @@ class Key:
 @dataclass
 class Entity(Dict[str, Any]):
     key: Key
+    exclude_from_indexes: Iterable[str] = ()
 
 
 class Client:

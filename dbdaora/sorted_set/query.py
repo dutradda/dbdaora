@@ -42,4 +42,4 @@ class SortedSetQuery(Query[Entity, SortedSetData, FallbackKey]):
         self.max = max
 
 
-from .repository import SortedSetRepository  # noqa isort:skip
+from .repositories import SortedSetRepository  # noqa isort:skip

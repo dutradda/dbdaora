@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Improve datastore repositories
+
 ### 0.4.0 - 2020-04-25
 
  - Improve repositories interface

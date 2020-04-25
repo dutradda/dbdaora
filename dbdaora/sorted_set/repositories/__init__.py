@@ -14,8 +14,8 @@ from dbdaora.exceptions import RequiredClassAttributeError
 from dbdaora.keys import FallbackKey
 from dbdaora.repository import MemoryRepository
 
-from .entity import Entity, SortedSetData
-from .query import SortedSetQuery
+from ..entity import Entity, SortedSetData
+from ..query import SortedSetQuery
 
 
 class FallbackSortedSetData(TypedDict):
@@ -104,7 +104,9 @@ class SortedSetRepository(
     async def add_memory_data(self, key: str, data: SortedSetData) -> None:
         await self.memory_data_source.zadd(key, *data)
 
-    async def add_fallback(self, entity: Entity, *entities: Entity) -> None:
+    async def add_fallback(
+        self, entity: Entity, *entities: Entity, **kwargs: Any
+    ) -> None:
         await self.fallback_data_source.put(
             self.fallback_key(entity),
             {
@@ -112,6 +114,7 @@ class SortedSetRepository(
                 if isinstance(entity, dict)
                 else entity.values
             },
+            **kwargs,
         )
 
     def fallback_not_found_key(  # type: ignore

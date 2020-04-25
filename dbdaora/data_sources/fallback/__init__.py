@@ -19,7 +19,9 @@ class FallbackDataSource(DataSource, Generic[FallbackKey]):
     ) -> Sequence[Optional[Dict[str, Any]]]:
         raise NotImplementedError()  # pragma: no cover
 
-    async def put(self, key: FallbackKey, data: Dict[str, Any]) -> None:
+    async def put(
+        self, key: FallbackKey, data: Dict[str, Any], **kwargs: Any
+    ) -> None:
         raise NotImplementedError()  # pragma: no cover
 
     async def delete(self, key: FallbackKey) -> None:

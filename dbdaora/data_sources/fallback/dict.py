@@ -15,7 +15,7 @@ class DictFallbackDataSource(FallbackDataSource[str]):
     async def get(self, key: str) -> Optional[Dict[str, Any]]:
         return self.db.get(key)
 
-    async def put(self, key: str, data: Dict[str, Any]) -> None:
+    async def put(self, key: str, data: Dict[str, Any], **kwargs: Any) -> None:
         self.db[key] = data
 
     async def delete(self, key: str) -> None:

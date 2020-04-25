@@ -256,10 +256,12 @@ class HashRepository(MemoryRepository[HashEntity, HashData, FallbackKey]):
         ]
 
     async def add_fallback(
-        self, entity: HashEntity, *entities: HashEntity
+        self, entity: HashEntity, *entities: HashEntity, **kwargs: Any
     ) -> None:
         data = jdataclasses.asdict(entity, dumps_value=True)
-        await self.fallback_data_source.put(self.fallback_key(entity), data)
+        await self.fallback_data_source.put(
+            self.fallback_key(entity), data, **kwargs
+        )
 
     def make_query(
         self, *args: Any, **kwargs: Any

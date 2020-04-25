@@ -24,9 +24,10 @@ class DatastoreDataSource(FallbackDataSource[Key]):
         self,
         key: Key,
         data: Dict[str, Any],
-        exclude_from_indexes: Iterable[str] = [],
+        exclude_from_indexes: Iterable[str] = (),
+        **kwargs: Any,
     ) -> None:
-        entity = Entity(key)
+        entity = Entity(key, exclude_from_indexes=exclude_from_indexes)
         entity.update(data)
         self.client.put(entity)
 

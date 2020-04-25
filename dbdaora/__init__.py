@@ -26,7 +26,7 @@ from dbdaora.sorted_set.entity import (
     SortedSetEntity,
 )
 from dbdaora.sorted_set.query import SortedSetQuery
-from dbdaora.sorted_set.repository import SortedSetRepository
+from dbdaora.sorted_set.repositories import SortedSetRepository
 
 
 try:
