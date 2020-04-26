@@ -20,10 +20,8 @@ def make_person(name: str, age: int) -> Person:
     return Person(name.replace(' ', '_').lower(), name, age)
 
 
-class PersonRepository(HashRepository[str]):
-    entity_name = 'person'
-    entity_cls = Person
-    key_attrs = ('id',)
+class PersonRepository(HashRepository[str], entity_cls=Person):
+    ...
 
 
 async def make_memory_data_source() -> DictMemoryDataSource:

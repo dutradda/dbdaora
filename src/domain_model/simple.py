@@ -5,7 +5,7 @@ from dbdaora import (
     DictFallbackDataSource,
     DictMemoryDataSource,
     HashRepository,
-    SortedSetEntity,
+    SortedSetData,
     SortedSetRepository,
     make_hash_service,
 )
@@ -36,10 +36,8 @@ def make_person(name: str, age: int) -> Person:
     return Person(name.replace(' ', '_').lower(), name, age)
 
 
-class PersonRepository(HashRepository[str]):
-    entity_name = 'person'
-    entity_cls = Person
-    key_attrs = ('id',)
+class PersonRepository(HashRepository[str], entity_cls=Person):
+    ...
 
 
 person_service = asyncio.run(
@@ -53,15 +51,15 @@ person_service = asyncio.run(
 
 
 @dataclass
-class PlayList(SortedSetEntity):
+class Playlist:
     person_id: str
+    values: SortedSetData
 
 
-class PlaylistRepository(SortedSetRepository[str]):
-    entity_name = 'playlist'
-    key_attrs = ('person_id',)
-    entity_cls = PlayList
-    entity_id_name = 'person_id'
+class PlaylistRepository(
+    SortedSetRepository[str], entity_cls=Playlist, id_name='person_id'
+):
+    ...
 
 
 playlist_repository = PlaylistRepository(
@@ -71,8 +69,8 @@ playlist_repository = PlaylistRepository(
 )
 
 
-def make_playlist(person_id: str, *musics_ids: str) -> PlayList:
-    return PlayList(
+def make_playlist(person_id: str, *musics_ids: str) -> Playlist:
+    return Playlist(
         person_id=person_id,
         values=[(id_, i) for i, id_ in enumerate(musics_ids)],
     )

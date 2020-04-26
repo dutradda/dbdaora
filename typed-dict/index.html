@@ -302,7 +302,7 @@ service patterns and python dataclasses
     <span class="n">DictFallbackDataSource</span><span class="p">,</span>
     <span class="n">DictMemoryDataSource</span><span class="p">,</span>
     <span class="n">HashRepository</span><span class="p">,</span>
-    <span class="n">SortedSetDictEntity</span><span class="p">,</span>
+    <span class="n">SortedSetData</span><span class="p">,</span>
     <span class="n">SortedSetRepository</span><span class="p">,</span>
     <span class="n">make_hash_service</span><span class="p">,</span>
 <span class="p">)</span>
@@ -334,7 +334,7 @@ service patterns and python dataclasses
 
 
 <span class="k">class</span> <span class="nc">PersonRepository</span><span class="p">(</span><span class="n">HashRepository</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">entity_cls</span><span class="o">=</span><span class="n">Person</span><span class="p">):</span>
-    <span class="n">key_attrs</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,)</span>
+    <span class="o">...</span>
 
 
 <span class="n">person_service</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
@@ -348,13 +348,14 @@ service patterns and python dataclasses
 
 
 <span class="nd">@jsondaora</span>
-<span class="k">class</span> <span class="nc">Playlist</span><span class="p">(</span><span class="n">SortedSetDictEntity</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Playlist</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
     <span class="n">person_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">values</span><span class="p">:</span> <span class="n">SortedSetData</span>
 
 
 <span class="k">class</span> <span class="nc">PlaylistRepository</span><span class="p">(</span><span class="n">SortedSetRepository</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
     <span class="n">entity_cls</span> <span class="o">=</span> <span class="n">Playlist</span>
-    <span class="n">key_attrs</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;person_id&#39;</span><span class="p">,)</span>
+    <span class="n">id_name</span> <span class="o">=</span> <span class="s1">&#39;person_id&#39;</span>
 
 
 <span class="n">playlist_repository</span> <span class="o">=</span> <span class="n">PlaylistRepository</span><span class="p">(</span>
