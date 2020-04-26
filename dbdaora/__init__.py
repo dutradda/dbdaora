@@ -11,7 +11,6 @@ from dbdaora.data_sources.fallback.dict import DictFallbackDataSource
 from dbdaora.data_sources.memory import MemoryDataSource
 from dbdaora.data_sources.memory.dict import DictMemoryDataSource
 from dbdaora.exceptions import EntityNotFoundError
-from dbdaora.hash.entity import HashEntity
 from dbdaora.hash.factory import make_service as make_hash_service
 from dbdaora.hash.query import HashQuery, HashQueryMany
 from dbdaora.hash.repositories import HashData, HashRepository
@@ -71,7 +70,6 @@ __all__ = [
     'build_service',
     'CacheType',
     'Service',
-    'HashEntity',
     'EntityNotFoundError',
     'HashQueryMany',
     'make_hash_service',

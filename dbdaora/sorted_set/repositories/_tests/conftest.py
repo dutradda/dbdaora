@@ -2,12 +2,13 @@ from dataclasses import dataclass
 
 import pytest
 
-from dbdaora import SortedSetEntity, SortedSetRepository
+from dbdaora import SortedSetData, SortedSetRepository
 
 
 @dataclass
-class FakeEntity(SortedSetEntity):
+class FakeEntity:
     id: str
+    values: SortedSetData
 
 
 class FakeRepository(SortedSetRepository[str], entity_cls=FakeEntity):

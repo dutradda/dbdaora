@@ -4,19 +4,19 @@ from dataclasses import dataclass
 from dbdaora import (
     DictFallbackDataSource,
     DictMemoryDataSource,
-    SortedSetEntity,
+    SortedSetData,
     SortedSetRepository,
 )
 
 
 @dataclass
-class Playlist(SortedSetEntity):
+class Playlist:
     id: str
+    values: SortedSetData
 
 
 class PlaylistRepository(SortedSetRepository[str]):
     entity_cls = Playlist
-    key_attrs = ('id',)
 
 
 repository = PlaylistRepository(

@@ -30,60 +30,56 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     memory_data_source: MemoryDataSource
     fallback_data_source: FallbackDataSource[FallbackKey]
     expire_time: int
-    entity_name: ClassVar[str]
     entity_cls: ClassVar[Type[Entity]]
+    name: ClassVar[str]
+    id_name: ClassVar[str]
     key_attrs: ClassVar[Sequence[str]]
-    many_key_attrs: ClassVar[Union[Sequence[str], str]]
+    many_key_attrs: ClassVar[Sequence[str]]
     __skip_cls_validation__: Sequence[str] = ()
 
     def __init_subclass__(
         cls,
-        entity_name: Optional[str] = None,
         entity_cls: Optional[Type[Entity]] = None,
+        name: Optional[str] = None,
+        id_name: Optional[str] = None,
         key_attrs: Optional[Sequence[str]] = None,
-        many_key_attrs: Optional[Type[Entity]] = None,
+        many_key_attrs: Optional[Sequence[str]] = None,
     ):
         super().__init_subclass__()
-        entity_name = getattr(cls, 'entity_name', None) or entity_name
-        entity_cls = getattr(cls, 'entity_cls', None) or entity_cls
-        key_attrs = getattr(cls, 'key_attrs', None) or key_attrs
-        many_key_attrs = getattr(cls, 'many_key_attrs', None) or many_key_attrs
 
         if cls.__name__ not in cls.__skip_cls_validation__:
-            if entity_name is None:
-                entity_name = re.sub(
-                    r'(?<!^)(?=[A-Z])', '_', cls.__name__
-                ).lower()
-                entity_name = entity_name.replace('_repository', '')
+            entity_cls = entity_cls or getattr(cls, 'entity_cls', None)
+            name = name or getattr(cls, 'name', None)
+            id_name = id_name or getattr(cls, 'id_name', 'id')
+            key_attrs = key_attrs or getattr(cls, 'key_attrs', None)
+            many_key_attrs = many_key_attrs or getattr(
+                cls, 'many_key_attrs', None
+            )
 
-            missing_attrs = []
+            if name is None:
+                name = re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__).lower()
+                name = name.replace('_repository', '')
 
-            for name, value in (
-                ('entity_cls', entity_cls),
-                ('key_attrs', key_attrs),
-            ):
-                if value is None:
-                    if name == 'entity_cls':
-                        has_entity_type = any(
-                            [
-                                cls.get_entity_type != base.get_entity_type  # type: ignore
-                                for base in cls.__bases__
-                            ]
-                        )
-                        name = 'entity_cls or get_entity_type'
-                    else:
-                        has_entity_type = False
+            if key_attrs is None:
+                key_attrs = (id_name,)
 
-                    if not has_entity_type:
-                        missing_attrs.append(name)
+            has_entity_type = any(
+                [
+                    cls.get_entity_type != base.get_entity_type  # type: ignore
+                    for base in cls.__bases__
+                ]
+            )
 
-            if missing_attrs:
-                raise RequiredClassAttributeError(cls.__name__, missing_attrs)
+            if not has_entity_type and not entity_cls:
+                raise RequiredClassAttributeError(
+                    cls.__name__, 'entity_cls or get_entity_type'
+                )
 
-        cls.entity_name = entity_name  # type: ignore
-        cls.entity_cls = entity_cls  # type: ignore
-        cls.key_attrs = key_attrs  # type: ignore
-        cls.many_key_attrs = many_key_attrs or key_attrs  # type: ignore
+            cls.entity_cls = entity_cls
+            cls.name = name
+            cls.id_name = id_name
+            cls.key_attrs = key_attrs
+            cls.many_key_attrs = many_key_attrs or cls.key_attrs
 
     async def get_memory_data(
         self,
@@ -266,17 +262,17 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     ) -> str:
         if isinstance(query, Query):
             return self.memory_data_source.make_key(
-                self.entity_name, *query.key_parts
+                self.name, *query.key_parts
             )
 
         elif isinstance(self.get_entity_type(query), _TypedDictMeta):
             return self.memory_data_source.make_key(
-                self.entity_name, *self.key_parts(query)
+                self.name, *self.key_parts(query)
             )
 
         elif isinstance(query, self.get_entity_type(query)):
             return self.memory_data_source.make_key(
-                self.entity_name, *self.key_parts(query)
+                self.name, *self.key_parts(query)
             )
 
         raise InvalidQueryError(query)
@@ -285,7 +281,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
     ) -> List[str]:
         return [
-            self.memory_data_source.make_key(self.entity_name, *key_parts)
+            self.memory_data_source.make_key(self.name, *key_parts)
             for key_parts in query.many_key_parts
         ]
 
@@ -294,17 +290,17 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     ) -> FallbackKey:
         if isinstance(query, Query):
             return self.fallback_data_source.make_key(
-                self.entity_name, *query.key_parts
+                self.name, *query.key_parts
             )
 
         elif isinstance(self.get_entity_type(query), _TypedDictMeta):
             return self.fallback_data_source.make_key(
-                self.entity_name, *self.key_parts(query)
+                self.name, *self.key_parts(query)
             )
 
         elif isinstance(query, self.get_entity_type(query)):
             return self.fallback_data_source.make_key(
-                self.entity_name, *self.key_parts(query)
+                self.name, *self.key_parts(query)
             )
 
         raise InvalidQueryError(query)
@@ -313,7 +309,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
     ) -> List[FallbackKey]:
         return [
-            self.fallback_data_source.make_key(self.entity_name, *key_parts)
+            self.fallback_data_source.make_key(self.name, *key_parts)
             for key_parts in query.many_key_parts
         ]
 
@@ -327,10 +323,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                 ]
             except KeyError as error:
                 raise InvalidKeyAttributeError(
-                    cls.__name__,
-                    cls.key_attrs,
-                    type(entity).__name__,
-                    *error.args,
+                    cls.__name__, cls.key_attrs, *error.args,
                 )
 
         try:
@@ -348,17 +341,17 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     ) -> str:
         if isinstance(query, Query):
             return self.memory_data_source.make_key(
-                self.entity_name, 'not-found', *query.key_parts
+                self.name, 'not-found', *query.key_parts
             )
 
         elif isinstance(self.get_entity_type(query), _TypedDictMeta):
             return self.memory_data_source.make_key(
-                self.entity_name, 'not-found', *self.key_parts(query)
+                self.name, 'not-found', *self.key_parts(query)
             )
 
         elif isinstance(query, self.get_entity_type(query)):
             return self.memory_data_source.make_key(
-                self.entity_name, 'not-found', *self.key_parts(query)
+                self.name, 'not-found', *self.key_parts(query)
             )
 
         raise InvalidQueryError(query)

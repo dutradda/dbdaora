@@ -2,7 +2,6 @@ from typing import Any, ClassVar, Optional, Sequence, Type, get_type_hints
 
 from google.cloud.datastore import Key
 
-from ..entity import HashEntity
 from . import HashRepository
 
 
@@ -13,13 +12,14 @@ class DatastoreHashRepository(HashRepository[Key]):
 
     def __init_subclass__(
         cls,
-        entity_name: Optional[str] = None,
-        entity_cls: Optional[Type[HashEntity]] = None,
+        entity_cls: Optional[Type[Any]] = None,
+        name: Optional[str] = None,
+        id_name: Optional[str] = None,
         key_attrs: Optional[Sequence[str]] = None,
-        many_key_attrs: Optional[Type[HashEntity]] = None,
+        many_key_attrs: Optional[Sequence[str]] = None,
     ):
         super().__init_subclass__(
-            entity_name, entity_cls, key_attrs, many_key_attrs,
+            entity_cls, name, id_name, key_attrs, many_key_attrs,
         )
 
         if cls.exclude_all_from_indexes:
@@ -28,7 +28,7 @@ class DatastoreHashRepository(HashRepository[Key]):
             )
 
     async def add_fallback(
-        self, entity: HashEntity, *entities: HashEntity, **kwargs: Any
+        self, entity: Any, *entities: Any, **kwargs: Any
     ) -> None:
         await super().add_fallback(
             entity, *entities, exclude_from_indexes=self.exclude_from_indexes

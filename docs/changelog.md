@@ -2,6 +2,8 @@
 
 ### UNRELEASED
 
+ - Improve repositories interface
+
  - Create tests for datastore repositories
 
 ### 0.4.1 - 2020-04-25

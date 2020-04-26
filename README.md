@@ -112,19 +112,19 @@ from dataclasses import dataclass
 from dbdaora import (
     DictFallbackDataSource,
     DictMemoryDataSource,
-    SortedSetEntity,
+    SortedSetData,
     SortedSetRepository,
 )
 
 
 @dataclass
-class Playlist(SortedSetEntity):
+class Playlist:
     id: str
+    values: SortedSetData
 
 
 class PlaylistRepository(SortedSetRepository[str]):
     entity_cls = Playlist
-    key_attrs = ('id',)
 
 
 repository = PlaylistRepository(
@@ -142,7 +142,7 @@ print(geted_playlist)
 ```
 
 ```python
-Playlist(values=['m1', 'm2', 'm3'], id='my_plalist')
+Playlist(id='my_plalist', values=['m1', 'm2', 'm3'])
 ```
 
 
@@ -176,10 +176,8 @@ def make_person(name: str, age: int) -> Person:
     return Person(name.replace(' ', '_').lower(), name, age)
 
 
-class PersonRepository(HashRepository[str]):
-    entity_name = 'person'
-    entity_cls = Person
-    key_attrs = ('id',)
+class PersonRepository(HashRepository[str], entity_cls=Person):
+    ...
 
 
 async def make_memory_data_source() -> DictMemoryDataSource:

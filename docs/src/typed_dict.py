@@ -7,7 +7,7 @@ from dbdaora import (
     DictFallbackDataSource,
     DictMemoryDataSource,
     HashRepository,
-    SortedSetDictEntity,
+    SortedSetData,
     SortedSetRepository,
     make_hash_service,
 )
@@ -39,7 +39,7 @@ def make_person(name: str, age: int) -> Person:
 
 
 class PersonRepository(HashRepository[str], entity_cls=Person):
-    key_attrs = ('id',)
+    ...
 
 
 person_service = asyncio.run(
@@ -53,13 +53,14 @@ person_service = asyncio.run(
 
 
 @jsondaora
-class Playlist(SortedSetDictEntity):
+class Playlist(TypedDict):
     person_id: str
+    values: SortedSetData
 
 
 class PlaylistRepository(SortedSetRepository[str]):
     entity_cls = Playlist
-    key_attrs = ('person_id',)
+    id_name = 'person_id'
 
 
 playlist_repository = PlaylistRepository(

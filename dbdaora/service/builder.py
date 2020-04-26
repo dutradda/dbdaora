@@ -32,7 +32,7 @@ async def build(
         repository_expire_time,
     )
     circuit_breaker = build_circuit_breaker(
-        repository_cls.entity_name,
+        repository_cls.name,
         cb_failure_threshold,
         cb_recovery_timeout,
         cb_expected_exception,

@@ -4,11 +4,9 @@ from typing import Any, List, Optional, Sequence, Tuple, Union
 from dbdaora.keys import FallbackKey
 from dbdaora.query import BaseQuery, Query, QueryMany
 
-from .entity import HashEntity
-
 
 @dataclasses.dataclass(init=False)
-class HashQuery(Query[HashEntity, 'HashData', FallbackKey]):
+class HashQuery(Query[Any, 'HashData', FallbackKey]):
     repository: 'HashRepository[FallbackKey]'
     fields: Sequence[str]
 
@@ -29,7 +27,7 @@ class HashQuery(Query[HashEntity, 'HashData', FallbackKey]):
 
 @dataclasses.dataclass(init=False)
 class HashQueryMany(
-    QueryMany[HashEntity, 'HashData', FallbackKey], HashQuery[FallbackKey]
+    QueryMany[Any, 'HashData', FallbackKey], HashQuery[FallbackKey]
 ):
     repository: 'HashRepository[FallbackKey]'
     fields: Sequence[str]
@@ -55,9 +53,7 @@ class HashQueryMany(
         self.fields = fields or []
 
 
-def make(
-    *args: Any, **kwargs: Any
-) -> BaseQuery[HashEntity, 'HashData', FallbackKey]:
+def make(*args: Any, **kwargs: Any) -> BaseQuery[Any, 'HashData', FallbackKey]:
     if kwargs.get('many') or kwargs.get('many_key_parts'):
         return HashQueryMany(*args, **kwargs)
 

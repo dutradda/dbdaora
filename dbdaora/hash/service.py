@@ -9,12 +9,11 @@ from dbdaora.service import Service
 
 from ..circuitbreaker import AsyncCircuitBreaker
 from ..keys import FallbackKey
-from .entity import HashEntity
 from .repositories import HashData, HashRepository
 
 
 @dataclass(init=False)
-class HashService(Service[HashEntity, HashData, FallbackKey]):
+class HashService(Service[Any, HashData, FallbackKey]):
     repository: HashRepository[FallbackKey]
     circuit_breaker: AsyncCircuitBreaker
     cache: Optional[Cache]
@@ -38,7 +37,7 @@ class HashService(Service[HashEntity, HashData, FallbackKey]):
 
     async def get_all(
         self, fields: Optional[Sequence[str]] = None
-    ) -> Sequence[HashEntity]:
+    ) -> Sequence[Any]:
         try:
             return await self.entities_circuit(
                 self.repository.query(all=True, fields=fields)
@@ -54,7 +53,7 @@ class HashService(Service[HashEntity, HashData, FallbackKey]):
         *ids: str,
         fields: Optional[Sequence[str]] = None,
         **filters: Any,
-    ) -> Sequence[HashEntity]:
+    ) -> Sequence[Any]:
         try:
             if self.cache is None:
                 return [
@@ -93,7 +92,7 @@ class HashService(Service[HashEntity, HashData, FallbackKey]):
         fields: Optional[Sequence[str]] = None,
         memory: bool = True,
         **filters: Any,
-    ) -> Sequence[HashEntity]:
+    ) -> Sequence[Any]:
         fields_key = ''.join(fields) if fields else None
         missed_ids = []
         entities = {
@@ -121,7 +120,10 @@ class HashService(Service[HashEntity, HashData, FallbackKey]):
                 ).entities
 
             missed_entities_map = {
-                entity.id: entity for entity in missed_entities
+                entity[self.repository.id_name]
+                if isinstance(entity, dict)
+                else getattr(entity, self.repository.id_name): entity
+                for entity in missed_entities
             }
 
             for id_, entity in entities.items():
@@ -132,16 +134,21 @@ class HashService(Service[HashEntity, HashData, FallbackKey]):
 
         for entity in entities.values():
             if entity is not None:
+                entity_id = (
+                    entity[self.repository.id_name]
+                    if isinstance(entity, dict)
+                    else getattr(entity, self.repository.id_name)
+                )
                 final_entities.append(entity)
                 cache[
-                    (entity.id, fields_key) if fields_key else entity.id
+                    (entity_id, fields_key) if fields_key else entity_id
                 ] = entity
 
         return final_entities
 
     async def get_one(
         self, id: str, fields: Optional[Sequence[str]] = None, **filters: Any
-    ) -> HashEntity:
+    ) -> Any:
         try:
             if self.cache is None:
                 return await self.entity_circuit(
@@ -170,7 +177,7 @@ class HashService(Service[HashEntity, HashData, FallbackKey]):
         fields: Optional[Sequence[str]] = None,
         memory: bool = True,
         **filters: Any,
-    ) -> HashEntity:
+    ) -> Any:
         cache_key = (id, ''.join(fields)) if fields else id
         entity = cache.get(cache_key)
 
@@ -188,7 +195,7 @@ class HashService(Service[HashEntity, HashData, FallbackKey]):
 
         return entity
 
-    async def add(self, entity: HashEntity, *entities: HashEntity) -> None:
+    async def add(self, entity: Any, *entities: Any) -> None:
         try:
             await self.add_circuit(entity, *entities)
 
