@@ -1,3 +1,5 @@
+import itertools
+
 import asynctest
 import pytest
 
@@ -65,7 +67,7 @@ async def test_should_get_from_fallback(
         side_effect=[None, fake_entity.values]
     )
     repository.fallback_data_source.db['fake:fake'] = {
-        'values': fake_entity_withscores.values
+        'values': tuple(itertools.chain(*fake_entity_withscores.values))
     }
     entity = await repository.query(fake_entity.id).entity
 
@@ -82,7 +84,7 @@ async def test_should_set_memory_after_got_fallback(
     )
     repository.memory_data_source.zadd = asynctest.CoroutineMock()
     repository.fallback_data_source.db['fake:fake'] = {
-        'values': fake_entity_withscores.values
+        'values': tuple(itertools.chain(*fake_entity_withscores.values))
     }
     entity = await repository.query(fake_entity.id).entity
 

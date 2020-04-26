@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Create tests for datastore repositories
+
 ### 0.4.1 - 2020-04-25
 
  - Improve datastore repositories

@@ -75,14 +75,15 @@ class SortedSetRepository(
         if data is None:
             return None
 
-        if (
-            for_memory
-            or isinstance(query, SortedSetQuery)
-            and query.withscores
+        elif for_memory or (
+            isinstance(query, SortedSetQuery) and query.withscores
         ):
-            return data['values']
+            return [  # type: ignore
+                (data['values'][i], data['values'][i + 1])
+                for i in range(0, len(data['values']), 2)
+            ]
 
-        return [i[0] for i in data['values']]
+        return [data['values'][i] for i in range(0, len(data['values']), 2)]
 
     def make_entity(  # type: ignore
         self, data: SortedSetData, query: SortedSetQuery[FallbackKey]
@@ -110,9 +111,9 @@ class SortedSetRepository(
         await self.fallback_data_source.put(
             self.fallback_key(entity),
             {
-                'values': entity['values']  # type: ignore
+                'values': list(itertools.chain(*entity['values']))  # type: ignore
                 if isinstance(entity, dict)
-                else entity.values
+                else list(itertools.chain(*entity.values))
             },
             **kwargs,
         )

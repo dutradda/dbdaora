@@ -32,9 +32,13 @@ from dbdaora.sorted_set.repositories import SortedSetRepository
 try:
     from dbdaora.data_sources.fallback.datastore import DatastoreDataSource
     from dbdaora.hash.repositories.datastore import DatastoreHashRepository
+    from dbdaora.sorted_set.repositories.datastore import (
+        DatastoreSortedSetRepository,
+    )
 except ImportError:
     DatastoreDataSource = None  # type: ignore
     DatastoreHashRepository = None  # type: ignore
+    DatastoreSortedSetRepository = None  # type: ignore
 
 
 try:
@@ -89,3 +93,6 @@ if DatastoreDataSource:
 
 if DatastoreHashRepository:
     __all__.append('DatastoreHashRepository')
+
+if DatastoreSortedSetRepository:
+    __all__.append('DatastoreSortedSetRepository')
