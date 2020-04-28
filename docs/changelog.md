@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Fix get_many from fallback
+
 ### 0.5.0 - 2020-04-26
 
  - Improve repositories interface

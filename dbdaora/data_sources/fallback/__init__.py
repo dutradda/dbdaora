@@ -15,7 +15,7 @@ class FallbackDataSource(DataSource, Generic[FallbackKey]):
         raise NotImplementedError()  # pragma: no cover
 
     async def get_many(
-        self, keys: Iterable[FallbackKey]
+        self, keys: Iterable[Optional[FallbackKey]]
     ) -> Sequence[Optional[Dict[str, Any]]]:
         raise NotImplementedError()  # pragma: no cover
 

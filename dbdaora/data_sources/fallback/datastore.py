@@ -35,10 +35,12 @@ class DatastoreDataSource(FallbackDataSource[Key]):
         self.client.delete(key)
 
     async def get_many(
-        self, keys: Iterable[Key]
+        self, keys: Iterable[Optional[Key]]
     ) -> Sequence[Optional[Dict[str, Any]]]:
-        entities = self.client.get_multi(keys)
-        goted_keys = {entity.key: entity for entity in entities}
+        entities = self.client.get_multi([k for k in keys if k is not None])
+        goted_keys: Dict[Optional[Key], Entity] = {
+            entity.key: entity for entity in entities
+        }
         return [goted_keys.get(key) for key in keys]
 
 

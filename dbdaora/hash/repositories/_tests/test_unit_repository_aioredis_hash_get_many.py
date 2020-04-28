@@ -54,3 +54,44 @@ async def test_should_get_many_from_fallback(repository, fake_entity):
 
     assert entities == [fake_entity]
     assert repository.memory_data_source.exists('fake:fake')
+
+
+@pytest.mark.asyncio
+async def test_should_get_many_with_one_item_already_not_found_from_fallback(
+    repository, fake_entity
+):
+    await repository.memory_data_source.delete('fake:fake')
+    await repository.memory_data_source.delete('fake:fake2')
+    await repository.memory_data_source.delete('fake:not-found:fake')
+    await repository.memory_data_source.set('fake:not-found:fake2', '1')
+    repository.fallback_data_source.db['fake:fake'] = dataclasses.asdict(
+        fake_entity, dumps_value=True
+    )
+
+    entities = await repository.query(many=[fake_entity.id, 'fake2']).entities
+
+    assert entities == [fake_entity]
+    assert repository.memory_data_source.exists('fake:fake')
+
+
+@pytest.mark.asyncio
+async def test_should_get_many_with_one_item_already_not_found_and_another_not_found_from_fallback(
+    repository, fake_entity
+):
+    await repository.memory_data_source.delete('fake:fake')
+    await repository.memory_data_source.delete('fake:fake2')
+    await repository.memory_data_source.delete('fake:fake3')
+    await repository.memory_data_source.delete('fake:not-found:fake')
+    await repository.memory_data_source.delete('fake:not-found:fake3')
+    await repository.memory_data_source.set('fake:not-found:fake2', '1')
+    repository.fallback_data_source.db['fake:fake'] = dataclasses.asdict(
+        fake_entity, dumps_value=True
+    )
+
+    entities = await repository.query(
+        many=[fake_entity.id, 'fake2', 'fake3']
+    ).entities
+
+    assert entities == [fake_entity]
+    assert repository.memory_data_source.exists('fake:fake')
+    assert repository.memory_data_source.exists('fake:not-found:fake3')

@@ -167,13 +167,16 @@ class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
             queries.append(single_query)
             pipeline.exists(self.fallback_not_found_key(single_query))
 
-        fallback_keys = []
+        fallback_keys: List[Optional[FallbackKey]] = []
+        fallback_not_found_keys = await pipeline.execute()
 
         for i, (already_not_found, data) in enumerate(
-            zip(await pipeline.execute(), memory_data)
+            zip(fallback_not_found_keys, memory_data)
         ):
             if not data and not already_not_found:
                 fallback_keys.append(self.fallback_key(queries[i]))
+            elif already_not_found:
+                fallback_keys.append(None)
 
         if fallback_keys:
             fallback_data = await self.fallback_data_source.get_many(
@@ -189,12 +192,12 @@ class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
                     fb_data = fallback_data[fb_data_index]
                     fb_data_index += 1
 
-                    if fb_data is None:
+                    if not fb_data and not fallback_not_found_keys[i]:
                         set_not_found_tasks.append(
                             self.set_fallback_not_found(queries[i])
                         )
 
-                    else:
+                    elif fb_data and not fallback_not_found_keys[i]:
                         add_memory_data_from_fallback_tasks.append(
                             (
                                 i,
@@ -219,7 +222,7 @@ class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
         return [
             self.make_entity(entity_data, query)
             for entity_data in memory_data
-            if entity_data is not None
+            if entity_data
         ]
 
     async def get_fallback_many(  # type: ignore
