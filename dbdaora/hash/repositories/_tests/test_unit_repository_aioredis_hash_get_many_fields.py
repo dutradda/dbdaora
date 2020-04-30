@@ -56,7 +56,7 @@ async def test_should_get_many_from_fallback_with_fields(
     await repository.memory_data_source.delete('fake:fake')
     await repository.memory_data_source.delete('fake:not-found:fake')
     repository.fallback_data_source.db['fake:fake'] = dataclasses.asdict(
-        fake_entity, dumps_value=True
+        fake_entity
     )
     fake_entity.number = None
     fake_entity.boolean = False

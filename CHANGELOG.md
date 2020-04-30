@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Improve hash fallback data
+
 ### 0.5.1 - 2020-04-28
 
  - Fix get_many from fallback

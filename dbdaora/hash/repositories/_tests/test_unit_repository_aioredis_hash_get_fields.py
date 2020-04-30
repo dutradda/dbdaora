@@ -87,7 +87,7 @@ async def test_should_set_memory_after_got_fallback(
     )
     repository.memory_data_source.hmset = asynctest.CoroutineMock()
     repository.fallback_data_source.db['fake:fake'] = dataclasses.asdict(
-        fake_entity, dumps_value=True
+        fake_entity
     )
     fake_entity.number = None
     fake_entity.boolean = False
@@ -118,7 +118,7 @@ async def test_should_set_memory_after_got_fallback(
 @pytest.mark.asyncio
 async def test_should_get_fallback(repository, fake_entity):
     repository.fallback_data_source.db['fake:fake'] = dataclasses.asdict(
-        fake_entity, dumps_value=True
+        fake_entity
     )
     fake_entity.number = None
     fake_entity.boolean = False

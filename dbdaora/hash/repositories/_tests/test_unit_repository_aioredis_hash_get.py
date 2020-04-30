@@ -98,7 +98,7 @@ async def test_should_get_from_fallback(repository, fake_entity):
     await repository.memory_data_source.delete('fake:fake')
     await repository.memory_data_source.delete('fake:not-found:fake')
     repository.fallback_data_source.db['fake:fake'] = dataclasses.asdict(
-        fake_entity, dumps_value=True
+        fake_entity
     )
     entity = await repository.query(fake_entity.id).entity
 
@@ -115,7 +115,7 @@ async def test_should_set_memory_after_got_fallback(
     )
     repository.memory_data_source.hmset = asynctest.CoroutineMock()
     repository.fallback_data_source.db['fake:fake'] = dataclasses.asdict(
-        fake_entity, dumps_value=True
+        fake_entity
     )
     entity = await repository.query(fake_entity.id).entity
 

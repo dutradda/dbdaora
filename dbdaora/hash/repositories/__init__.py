@@ -119,7 +119,7 @@ class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
     ) -> Dict[bytes, Any]:
         return {
             k.encode(): int(v) if isinstance(v, bool) else v
-            for k, v in data.items()
+            for k, v in jdataclasses.asdict(data, dumps_value=True).items()
             if v is not None
         }
 
@@ -253,7 +253,7 @@ class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
     async def add_fallback(
         self, entity: Any, *entities: Any, **kwargs: Any
     ) -> None:
-        data = jdataclasses.asdict(entity, dumps_value=True)
+        data = jdataclasses.asdict(entity)
         await self.fallback_data_source.put(
             self.fallback_key(entity), data, **kwargs
         )

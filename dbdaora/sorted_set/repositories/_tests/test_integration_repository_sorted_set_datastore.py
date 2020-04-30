@@ -38,7 +38,7 @@ async def test_should_exclude_all_attributes_from_indexes(repository):
     entity = datastore.Entity(key=key)
     entity.update({'values': values})
     client.put(entity)
-    time.sleep(0.2)
+    time.sleep(0.5)
     query = client.query(kind='fake')
     query.add_filter('values', '=', 'v1')
 
@@ -48,7 +48,7 @@ async def test_should_exclude_all_attributes_from_indexes(repository):
     values = [('v1', 1), ('v2', 2)]
     await repository.add(FakeEntity(id='fake', values=values))
 
-    time.sleep(0.2)
+    time.sleep(0.5)
     query = client.query(kind='fake')
     query.add_filter('values', '=', 'v1')
     entities = query.fetch()
