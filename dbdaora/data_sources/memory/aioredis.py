@@ -1,11 +1,11 @@
 import dataclasses
-from typing import Any, Dict, List, Optional, Sequence, Type, Union
+from typing import Dict, Optional, Sequence, Type, Union
 
 from aioredis import Redis, create_redis_pool
 
 from dbdaora.hashring import HashRing
 
-from . import MemoryDataSource, Pipeline, RangeOutput
+from . import MemoryDataSource, RangeOutput
 
 
 class AioRedisDataSource(Redis, MemoryDataSource):
@@ -66,9 +66,6 @@ class ShardsAioRedisDataSource(MemoryDataSource):
     async def hgetall(self, key: str) -> Dict[bytes, bytes]:
         return await self.get_client(key).hgetall(key)
 
-    def pipeline(self) -> 'Pipeline':
-        return ShardsPipeline(self.hashring)
-
     def close(self) -> None:
         for client in self.hashring.nodes:
             client.close()
@@ -76,41 +73,6 @@ class ShardsAioRedisDataSource(MemoryDataSource):
     async def wait_closed(self) -> None:
         for client in self.hashring.nodes:
             await client.wait_closed()
-
-
-@dataclasses.dataclass
-class ShardsPipeline(Pipeline):
-    hashring: HashRing[AioRedisDataSource]
-    tasks: List[Any] = dataclasses.field(default_factory=list)
-
-    def get_client(self, key: str) -> AioRedisDataSource:
-        return self.hashring.get_node(key)
-
-    async def execute(self, *, return_exceptions: bool = False) -> List[Any]:
-        results = []
-        for task in self.tasks:
-            try:
-                results.append(await task)
-            except Exception as error:
-                if return_exceptions:
-                    results.append(error)
-                else:
-                    raise
-
-        self.tasks = []
-
-        return results
-
-    def hmget(
-        self, key: str, field: Union[str, bytes], *fields: Union[str, bytes]
-    ) -> None:
-        self.tasks.append(self.get_client(key).hmget(key, field, *fields))
-
-    def hgetall(self, key: str) -> None:
-        self.tasks.append(self.get_client(key).hgetall(key))
-
-    def exists(self, key: str) -> None:
-        self.tasks.append(self.get_client(key).exists(key))
 
 
 async def make(

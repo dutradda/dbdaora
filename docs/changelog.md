@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Simplify get_many
+
 ### 0.5.2 - 2020-04-30
 
  - Improve hash fallback data

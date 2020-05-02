@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, Generic, List, Optional, Tuple, Union
+from typing import Any, ClassVar, Generic, List, Optional, Tuple, Type, Union
 
 from dbdaora.entity import Entity, EntityData
 from dbdaora.exceptions import RequiredKeyAttributeError
@@ -34,8 +34,8 @@ class BaseQuery(Generic[Entity, EntityData, FallbackKey]):
         except KeyError:
             raise RequiredKeyAttributeError(
                 type(self.repository).__name__,
-                self.repository.key_attrs,
                 attr_name,
+                self.repository.key_attrs,
             )
 
         return key_parts
@@ -89,7 +89,10 @@ class Query(BaseQuery[Entity, EntityData, FallbackKey]):
 
 
 class QueryMany(BaseQuery[Entity, EntityData, FallbackKey]):
-    many_key_parts: List[List[Any]]
+    query_cls: ClassVar[Type[Query[Entity, EntityData, FallbackKey]]] = Query[
+        Entity, EntityData, FallbackKey
+    ]
+    queries: List[Query[Entity, EntityData, FallbackKey]]
 
     def __init__(
         self,
@@ -100,40 +103,42 @@ class QueryMany(BaseQuery[Entity, EntityData, FallbackKey]):
         many_key_parts: Optional[List[List[Any]]] = None,
         **kwargs: Any,
     ):
-        self.repository = repository
         self.memory = memory
+        self.repository = repository
 
-        if many_key_parts:
-            self.many_key_parts = many_key_parts
-            return
-
-        self.many_key_parts = []
-        many_key_attrs = (
-            (repository.many_key_attrs,)
-            if isinstance(repository.many_key_attrs, str)
-            else repository.many_key_attrs
-        )
-
-        for many_input in many:
-            kwargs_i = {}
-
-            if isinstance(many_input, tuple):
-                start_index = len(many_key_attrs) - len(many_input)
-                start_index = start_index if start_index >= 0 else 0
-                kwargs_i.update(
-                    {
-                        name: input_
-                        for name, input_ in zip(
-                            many_key_attrs[start_index:], many_input
-                        )
-                    }
-                )
-            else:
-                kwargs_i[many_key_attrs[-1]] = many_input
-
-            self.many_key_parts.append(
-                self.make_key_parts(*args, **kwargs, **kwargs_i)
+        if many_key_parts is None:
+            many_key_parts = []
+            many_key_attrs = (
+                (repository.many_key_attrs,)
+                if isinstance(repository.many_key_attrs, str)
+                else repository.many_key_attrs
             )
+
+            for many_input in many:
+                kwargs_i = {}
+
+                if isinstance(many_input, tuple):
+                    start_index = len(many_key_attrs) - len(many_input)
+                    start_index = start_index if start_index >= 0 else 0
+                    kwargs_i.update(
+                        {
+                            name: input_
+                            for name, input_ in zip(
+                                many_key_attrs[start_index:], many_input
+                            )
+                        }
+                    )
+                else:
+                    kwargs_i[many_key_attrs[-1]] = many_input
+
+                many_key_parts.append(
+                    self.make_key_parts(*args, **kwargs, **kwargs_i)
+                )
+
+        self.queries = [
+            self.query_cls(repository, memory=memory, key_parts=key_parts)
+            for key_parts in many_key_parts
+        ]
 
     @property
     async def entities(self) -> List[Entity]:

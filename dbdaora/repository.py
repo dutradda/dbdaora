@@ -1,3 +1,4 @@
+import asyncio
 import dataclasses
 import re
 from typing import (  # type: ignore
@@ -82,17 +83,8 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
             cls.many_key_attrs = many_key_attrs or cls.key_attrs
 
     async def get_memory_data(
-        self,
-        key: str,
-        query: 'BaseQuery[Entity, EntityData, FallbackKey]',
-        *,
-        many: bool = False,
+        self, key: str, query: 'BaseQuery[Entity, EntityData, FallbackKey]',
     ) -> Optional[EntityData]:
-        raise NotImplementedError()  # pragma: no cover
-
-    async def get_memory_many(
-        self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
-    ) -> List[Entity]:
         raise NotImplementedError()  # pragma: no cover
 
     async def get_fallback_data(
@@ -100,13 +92,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         query: Union['BaseQuery[Entity, EntityData, FallbackKey]', Entity],
         *,
         for_memory: bool = False,
-        many: bool = False,
     ) -> Optional[EntityData]:
-        raise NotImplementedError()  # pragma: no cover
-
-    async def get_fallback_many(
-        self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
-    ) -> List[Entity]:
         raise NotImplementedError()  # pragma: no cover
 
     def make_entity(
@@ -151,10 +137,30 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     async def entities(
         self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
     ) -> List[Entity]:
+        tasks = []
+        entities = []
+
         if query.memory:
-            return await self.get_memory_many(query)
+            for query_ in query.queries:
+                task = asyncio.create_task(self.get_memory(query_))
+                task.add_done_callback(task_done_callback)
+                tasks.append(task)
         else:
-            return await self.get_fallback_many(query)
+            for query_ in query.queries:
+                task = asyncio.create_task(self.get_fallback(query_))
+                task.add_done_callback(task_done_callback)
+                tasks.append(task)
+
+        for t in tasks:
+            try:
+                entities.append(await t)
+            except EntityNotFoundError:
+                continue
+
+        if not entities:
+            raise EntityNotFoundError(query)
+
+        return entities
 
     async def get_memory(
         self, query: 'Query[Entity, EntityData, FallbackKey]',
@@ -173,6 +179,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                 memory_data = await self.add_memory_data_from_fallback(
                     memory_key, query, fallback_data
                 )
+                await self.set_expire_time(memory_key)
 
         if not memory_data:
             raise EntityNotFoundError(query)
@@ -277,14 +284,6 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
 
         raise InvalidQueryError(query)
 
-    def memory_keys(
-        self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
-    ) -> List[str]:
-        return [
-            self.memory_data_source.make_key(self.name, *key_parts)
-            for key_parts in query.many_key_parts
-        ]
-
     def fallback_key(
         self, query: 'Union[Query[Entity, EntityData, FallbackKey], Entity]',
     ) -> FallbackKey:
@@ -304,14 +303,6 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
             )
 
         raise InvalidQueryError(query)
-
-    def fallback_keys(
-        self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
-    ) -> List[FallbackKey]:
-        return [
-            self.fallback_data_source.make_key(self.name, *key_parts)
-            for key_parts in query.many_key_parts
-        ]
 
     @classmethod
     def key_parts(cls, entity: Entity) -> List[Any]:
@@ -361,6 +352,10 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         query: 'Union[BaseQuery[Entity, EntityData, FallbackKey], Entity]',
     ) -> Type[Entity]:
         return self.entity_cls
+
+
+def task_done_callback(f: Any) -> None:
+    f.result()
 
 
 from .query import BaseQuery, Query, QueryMany  # noqa isort:skip

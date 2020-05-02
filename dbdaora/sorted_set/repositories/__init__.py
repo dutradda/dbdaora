@@ -23,7 +23,7 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey],):
 
         return await self.memory_data_source.zrange(key)
 
-    async def get_fallback_data(  # type: ignore
+    async def get_fallback_data(
         self,
         query: Union[SortedSetQuery[FallbackKey], Any],
         for_memory: bool = False,

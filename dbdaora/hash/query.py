@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, List, Optional, Sequence, Tuple, Union
+from typing import Any, ClassVar, List, Optional, Sequence, Tuple, Type, Union
 
 from dbdaora.keys import FallbackKey
 from dbdaora.query import BaseQuery, Query, QueryMany
@@ -8,7 +8,7 @@ from dbdaora.query import BaseQuery, Query, QueryMany
 @dataclasses.dataclass(init=False)
 class HashQuery(Query[Any, 'HashData', FallbackKey]):
     repository: 'HashRepository[FallbackKey]'
-    fields: Sequence[str]
+    fields: Optional[Sequence[str]]
 
     def __init__(
         self,
@@ -22,15 +22,15 @@ class HashQuery(Query[Any, 'HashData', FallbackKey]):
         super().__init__(
             repository, memory=memory, key_parts=key_parts, *args, **kwargs,
         )
-        self.fields = fields or []
+        self.fields = fields
 
 
 @dataclasses.dataclass(init=False)
-class HashQueryMany(
-    QueryMany[Any, 'HashData', FallbackKey], HashQuery[FallbackKey]
-):
+class HashQueryMany(QueryMany[Any, 'HashData', FallbackKey]):
+    query_cls: ClassVar[Type[HashQuery[FallbackKey]]] = HashQuery[FallbackKey]
+    queries: Sequence[HashQuery[FallbackKey]]  # type: ignore
     repository: 'HashRepository[FallbackKey]'
-    fields: Sequence[str]
+    fields: Optional[Sequence[str]]
 
     def __init__(
         self,
@@ -50,7 +50,10 @@ class HashQueryMany(
             *args,
             **kwargs,
         )
-        self.fields = fields or []
+        self.fields = fields
+
+        for query in self.queries:
+            query.fields = fields
 
 
 def make(*args: Any, **kwargs: Any) -> BaseQuery[Any, 'HashData', FallbackKey]:

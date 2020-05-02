@@ -1,14 +1,4 @@
-from typing import (
-    Any,
-    ClassVar,
-    Dict,
-    List,
-    Optional,
-    Protocol,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import ClassVar, Dict, Optional, Sequence, Tuple, Union
 
 from .. import DataSource
 
@@ -73,27 +63,8 @@ class MemoryDataSource(DataSource):
     async def hgetall(self, key: str) -> Dict[bytes, bytes]:
         raise NotImplementedError()  # pragma: no cover
 
-    def pipeline(self) -> 'Pipeline':
-        raise NotImplementedError()  # pragma: no cover
-
     def close(self) -> None:
         raise NotImplementedError()  # pragma: no cover
 
     async def wait_closed(self) -> None:
-        raise NotImplementedError()  # pragma: no cover
-
-
-class Pipeline(Protocol):
-    async def execute(self, *, return_exceptions: bool = False) -> List[Any]:
-        raise NotImplementedError()  # pragma: no cover
-
-    def hmget(
-        self, key: str, field: Union[str, bytes], *fields: Union[str, bytes]
-    ) -> None:
-        raise NotImplementedError()  # pragma: no cover
-
-    def hgetall(self, key: str) -> None:
-        raise NotImplementedError()  # pragma: no cover
-
-    def exists(self, key: str) -> None:
         raise NotImplementedError()  # pragma: no cover

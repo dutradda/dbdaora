@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Dict, Generic, Iterable, Optional, Sequence
+from typing import Any, ClassVar, Dict, Generic, Optional
 
 from dbdaora.keys import FallbackKey
 
@@ -12,11 +12,6 @@ class FallbackDataSource(DataSource, Generic[FallbackKey]):
         raise NotImplementedError()  # pragma: no cover
 
     async def get(self, key: FallbackKey) -> Optional[Dict[str, Any]]:
-        raise NotImplementedError()  # pragma: no cover
-
-    async def get_many(
-        self, keys: Iterable[Optional[FallbackKey]]
-    ) -> Sequence[Optional[Dict[str, Any]]]:
         raise NotImplementedError()  # pragma: no cover
 
     async def put(

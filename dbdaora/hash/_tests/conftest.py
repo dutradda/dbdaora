@@ -33,7 +33,7 @@ async def fake_service(mocker, fallback_data_source, fake_hash_repository_cls):
         repository_expire_time=1,
         cache_type=CacheType.TTL,
         cache_ttl=1,
-        cache_max_size=1,
+        cache_max_size=2,
         cb_failure_threshold=0,
         cb_recovery_timeout=10,
         cb_expected_exception=RedisError,

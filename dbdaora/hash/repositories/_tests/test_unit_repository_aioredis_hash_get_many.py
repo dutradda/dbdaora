@@ -11,14 +11,17 @@ async def test_should_set_already_not_found_error_when_get_many(
     repository, mocker
 ):
     fake_entity = 'fake'
-    expected_query = HashQueryMany(repository, memory=True, many=[fake_entity])
-    pipeline = repository.memory_data_source.pipeline = mocker.MagicMock()
-    pipeline.return_value.execute = asynctest.CoroutineMock(
-        return_value=[None]
+    expected_query = HashQueryMany(
+        repository, fake_entity, memory=True, many=[fake_entity]
     )
-    pipeline.exists = asynctest.CoroutineMock(side_effect=[False])
-    repository.fallback_data_source.get_many = asynctest.CoroutineMock(
-        return_value=[None]
+    repository.memory_data_source.hgetall = asynctest.CoroutineMock(
+        return_value=None
+    )
+    repository.memory_data_source.exists = asynctest.CoroutineMock(
+        side_effect=[False]
+    )
+    repository.fallback_data_source.get = asynctest.CoroutineMock(
+        return_value=None
     )
     repository.memory_data_source.set = asynctest.CoroutineMock()
     repository.memory_data_source.hmset = asynctest.CoroutineMock()
@@ -27,14 +30,14 @@ async def test_should_set_already_not_found_error_when_get_many(
         await repository.query(many=[fake_entity]).entities
 
     assert exc_info.value.args == (expected_query,)
-    assert pipeline.return_value.hgetall.call_args_list == [
+    assert repository.memory_data_source.hgetall.call_args_list == [
         mocker.call('fake:fake'),
     ]
-    assert pipeline.return_value.exists.call_args_list == [
+    assert repository.memory_data_source.exists.call_args_list == [
         mocker.call('fake:not-found:fake')
     ]
-    assert repository.fallback_data_source.get_many.call_args_list == [
-        mocker.call(['fake:fake'])
+    assert repository.fallback_data_source.get.call_args_list == [
+        mocker.call('fake:fake')
     ]
     assert repository.memory_data_source.set.call_args_list == [
         mocker.call('fake:not-found:fake', '1')

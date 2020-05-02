@@ -1,8 +1,12 @@
 from typing import Any, ClassVar, Optional, Sequence, Type, get_type_hints
 
-from google.cloud.datastore import Key
+from google.cloud.datastore import Entity, Key
+from jsondaora.serializers import OrjsonDefaultTypes
 
 from . import HashRepository
+
+
+OrjsonDefaultTypes.types_default_map[Entity] = lambda e: dict(**e)
 
 
 class DatastoreHashRepository(HashRepository[Key]):
