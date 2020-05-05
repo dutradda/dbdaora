@@ -1,5 +1,11 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Fix sorted set fallback key
+
+ - Fix hash service cache
+
 ### 0.6.1 - 2020-05-04
 
  - Fix repository task_done_callback
