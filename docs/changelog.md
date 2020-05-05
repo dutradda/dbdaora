@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.6.1 - 2020-05-04
 
  - Fix repository task_done_callback
 
