@@ -355,7 +355,10 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
 
 
 def task_done_callback(f: Any) -> None:
-    f.result()
+    try:
+        f.result()
+    except EntityNotFoundError:
+        ...
 
 
 from .query import BaseQuery, Query, QueryMany  # noqa isort:skip

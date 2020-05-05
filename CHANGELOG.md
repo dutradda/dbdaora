@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Fix repository task_done_callback
+
 ### 0.6.0 - 2020-05-02
 
  - Simplify get_many
