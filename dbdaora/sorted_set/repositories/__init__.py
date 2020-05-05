@@ -76,22 +76,6 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey],):
             **kwargs,
         )
 
-    def fallback_not_found_key(
-        self, query: Union[SortedSetQuery[FallbackKey], Any],
-    ) -> str:
-        if isinstance(query, SortedSetQuery):
-            return self.memory_data_source.make_key(
-                self.name, 'not-found', query.attribute_from_key('id')
-            )
-
-        return self.memory_data_source.make_key(
-            self.name,
-            'not-found',
-            query[self.id_name]
-            if isinstance(query, dict)
-            else getattr(query, self.id_name),
-        )
-
     async def add_memory_data_from_fallback(  # type: ignore
         self,
         key: str,

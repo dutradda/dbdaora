@@ -5,6 +5,7 @@ from typing import Any, Optional, Sequence
 from cachetools import Cache
 from circuitbreaker import CircuitBreakerError
 
+from dbdaora.exceptions import EntityNotFoundError
 from dbdaora.service import Service
 
 from ..circuitbreaker import AsyncCircuitBreaker
@@ -108,16 +109,19 @@ class HashService(Service[Any, HashData, FallbackKey]):
         }
 
         if missed_ids:
-            if memory:
-                missed_entities = await self.entities_circuit(
-                    self.repository.query(
-                        many=missed_ids, fields=fields, **filters
+            try:
+                if memory:
+                    missed_entities = await self.entities_circuit(
+                        self.repository.query(
+                            many=missed_ids, fields=fields, **filters
+                        )
                     )
-                )
-            else:
-                missed_entities = await self.repository.query(
-                    many=missed_ids, fields=fields, memory=False, **filters
-                ).entities
+                else:
+                    missed_entities = await self.repository.query(
+                        many=missed_ids, fields=fields, memory=False, **filters
+                    ).entities
+            except EntityNotFoundError:
+                missed_entities = []
 
             missed_entities_map = {
                 entity[self.repository.id_name]
@@ -143,6 +147,9 @@ class HashService(Service[Any, HashData, FallbackKey]):
                 cache[
                     (entity_id, fields_key) if fields_key else entity_id
                 ] = entity
+
+        if not final_entities:
+            raise EntityNotFoundError(ids)
 
         return final_entities
 

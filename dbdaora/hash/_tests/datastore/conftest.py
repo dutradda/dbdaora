@@ -42,7 +42,19 @@ def fake_entity():
 def fake_entity2():
     return FakeDatastoreEntity(
         id='fake2',
-        other_id='other_fake2',
+        other_id='other_fake',
+        inner_entities=[FakeInnerEntity('inner3'), FakeInnerEntity('inner4')],
+        integer=2,
+        number=0.2,
+        boolean=False,
+    )
+
+
+@pytest.fixture
+def fake_entity3():
+    return FakeDatastoreEntity(
+        id='fake3',
+        other_id='other_fake',
         inner_entities=[FakeInnerEntity('inner3'), FakeInnerEntity('inner4')],
         integer=2,
         number=0.2,
@@ -66,7 +78,19 @@ def serialized_fake_entity():
 def serialized_fake_entity2():
     return {
         b'id': b'fake2',
-        b'other_id': b'other_fake2',
+        b'other_id': b'other_fake',
+        b'integer': b'2',
+        b'number': b'0.2',
+        b'boolean': b'0',
+        b'inner_entities': b'[{"id":"inner3"},{"id":"inner4"}]',
+    }
+
+
+@pytest.fixture
+def serialized_fake_entity3():
+    return {
+        b'id': b'fake3',
+        b'other_id': b'other_fake',
         b'integer': b'2',
         b'number': b'0.2',
         b'boolean': b'0',

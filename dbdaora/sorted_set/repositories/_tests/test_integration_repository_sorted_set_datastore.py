@@ -46,9 +46,9 @@ async def test_should_exclude_all_attributes_from_indexes(repository):
     assert tuple(entities) == (entity,)
 
     values = [('v1', 1), ('v2', 2)]
+    client.delete(key)
     await repository.add(FakeEntity(id='fake', values=values))
 
-    time.sleep(1)
     query = client.query(kind='fake')
     query.add_filter('values', '=', 'v1')
     entities = query.fetch()

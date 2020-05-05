@@ -210,9 +210,12 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
 
     async def add_memory(self, entity: Entity, *entities: Entity) -> None:
         memory_key = self.memory_key(entity)
-        memory_data = self.make_memory_data_from_entity(entity)
-        await self.add_memory_data(memory_key, memory_data)
-        await self.set_expire_time(memory_key)
+
+        if await self.memory_data_source.exists(memory_key):
+            memory_data = self.make_memory_data_from_entity(entity)
+            await self.add_memory_data(memory_key, memory_data)
+            await self.set_expire_time(memory_key)
+
         await self.add_fallback(entity)
         await self.delete_fallback_not_found(entity)
 

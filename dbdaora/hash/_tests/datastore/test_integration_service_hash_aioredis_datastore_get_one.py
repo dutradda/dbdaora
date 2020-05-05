@@ -11,7 +11,8 @@ async def test_should_get_one(
     fake_service, serialized_fake_entity, fake_entity
 ):
     await fake_service.repository.memory_data_source.hmset(
-        'fake:fake', *itertools.chain(*serialized_fake_entity.items())
+        'fake:other_fake:fake',
+        *itertools.chain(*serialized_fake_entity.items()),
     )
 
     entity = await fake_service.get_one('fake', other_id='other_fake')
