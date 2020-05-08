@@ -1,15 +1,75 @@
+import asyncio
 import dataclasses
-from typing import Dict, Optional, Sequence, Type, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Type, Union
 
 from aioredis import Redis, create_redis_pool
+from aioredis.commands.transaction import MultiExec
 
 from dbdaora.hashring import HashRing
 
-from . import MemoryDataSource, RangeOutput
+from . import MemoryDataSource, MemoryMultiExec, RangeOutput
 
 
 class AioRedisDataSource(Redis, MemoryDataSource):
     ...
+
+
+class AioRedisMultiExec(MultiExec):
+    ...
+
+
+@dataclasses.dataclass
+class ShardsAioRedisMultiExec(MemoryMultiExec):
+    hashring: HashRing[AioRedisMultiExec]
+    futures: List[Any] = dataclasses.field(default_factory=list)
+    clients_to_execute: Set[AioRedisMultiExec] = dataclasses.field(
+        default_factory=set
+    )
+
+    def get_client(self, key: str) -> AioRedisMultiExec:
+        return self.hashring.get_node(key)
+
+    def delete(self, key: str) -> Any:
+        client = self.get_client(key)
+        future = client.delete(key)
+        self.clients_to_execute.add(client)
+        self.futures.append(future)
+        return future
+
+    def hmset(
+        self,
+        key: str,
+        field: Union[str, bytes],
+        value: Union[str, bytes],
+        *pairs: Union[str, bytes],
+    ) -> Any:
+        client = self.get_client(key)
+        future = client.hmset(key, field, value, *pairs)
+        self.clients_to_execute.add(client)
+        self.futures.append(future)
+        return future
+
+    def zadd(
+        self, key: str, score: float, member: str, *pairs: Union[float, str]
+    ) -> Any:
+        client = self.get_client(key)
+        future = client.zadd(key, score, member, *pairs)
+        self.clients_to_execute.add(client)
+        self.futures.append(future)
+        return future
+
+    async def execute(self, *, return_exceptions: bool = False) -> Any:
+        await asyncio.gather(
+            *[
+                client.execute(return_exceptions=return_exceptions)
+                for client in self.clients_to_execute
+            ]
+        )
+        self.clients_to_execute.clear()
+
+        results = await asyncio.gather(*self.futures)
+        self.futures.clear()
+        return results
 
 
 @dataclasses.dataclass
@@ -73,6 +133,16 @@ class ShardsAioRedisDataSource(MemoryDataSource):
     async def wait_closed(self) -> None:
         for client in self.hashring.nodes:
             await client.wait_closed()
+
+    def multi_exec(self) -> MemoryMultiExec:
+        hashring = type(self.hashring)(
+            [
+                AioRedisMultiExec(node._pool_or_conn, node.__class__)  # type: ignore
+                for node in self.hashring.nodes
+            ],
+            self.hashring.nodes_size,
+        )
+        return ShardsAioRedisMultiExec(hashring)  # type: ignore
 
 
 async def make(

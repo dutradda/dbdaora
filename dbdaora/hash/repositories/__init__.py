@@ -95,8 +95,10 @@ class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
     async def add_memory_data(
         self, key: str, data: HashData, from_fallback: bool = False
     ) -> None:
-        input_data = itertools.chain(*data.items())
-        await self.memory_data_source.hmset(key, *input_data)
+        transaction = self.memory_data_source.multi_exec()
+        transaction.delete(key)
+        transaction.hmset(key, *itertools.chain(*data.items()))
+        await transaction.execute()
 
     async def add_memory_data_from_fallback(
         self,
@@ -105,7 +107,9 @@ class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
         data: HashData,
     ) -> HashData:
         data = self.make_memory_data_from_fallback(query, data)  # type: ignore
-        await self.add_memory_data(key, data)
+        await self.memory_data_source.hmset(
+            key, *itertools.chain(*data.items())  # type: ignore
+        )
 
         if isinstance(query, HashQuery) and query.fields:
             return self.make_fallback_data_fields_with_bytes_keys(query, data)

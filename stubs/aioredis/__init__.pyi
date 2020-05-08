@@ -6,8 +6,13 @@ rangeWithScoresOutput = Sequence[Tuple[bytes, float]]
 SortedSetData = Union[rangeOutput, rangeWithScoresOutput]
 
 
+class ConnectionsPool:
+    ...
+
+
 class Redis:
     key_separator: ClassVar[str] = ':'
+    _pool_or_conn: ConnectionsPool
 
     def make_key(self, *key_parts: str) -> str: ...
 

@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Improve add entity on repositories
+
 ### 0.7.1 - 2020-05-08
 
  - Fix requires

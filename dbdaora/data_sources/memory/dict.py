@@ -1,7 +1,42 @@
+import asyncio
 import dataclasses
-from typing import Any, Dict, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
-from . import MemoryDataSource, RangeOutput
+from . import MemoryDataSource, MemoryMultiExec, RangeOutput
+
+
+@dataclasses.dataclass
+class DictMultiExec(MemoryMultiExec):
+    client: 'DictMemoryDataSource'
+    futures: List[Any] = dataclasses.field(default_factory=list)
+
+    def delete(self, key: str) -> Any:
+        future = self.client.delete(key)
+        self.futures.append(future)
+        return future
+
+    def hmset(
+        self,
+        key: str,
+        field: Union[str, bytes],
+        value: Union[str, bytes],
+        *pairs: Union[str, bytes],
+    ) -> Any:
+        future = self.client.hmset(key, field, value, *pairs)
+        self.futures.append(future)
+        return future
+
+    def zadd(
+        self, key: str, score: float, member: str, *pairs: Union[float, str]
+    ) -> Any:
+        future = self.client.zadd(key, score, member, *pairs)
+        self.futures.append(future)
+        return future
+
+    async def execute(self, *, return_exceptions: bool = False) -> Any:
+        results = await asyncio.gather(*self.futures)
+        self.futures.clear()
+        return results
 
 
 @dataclasses.dataclass
@@ -109,3 +144,6 @@ class DictMemoryDataSource(MemoryDataSource):
             )
             for f, d in self.db.get(key, {}).items()
         }
+
+    def multi_exec(self) -> MemoryMultiExec:
+        return DictMultiExec(self)

@@ -61,7 +61,10 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey],):
         return self.make_entity(data, query)
 
     async def add_memory_data(self, key: str, data: SortedSetData) -> None:
-        await self.memory_data_source.zadd(key, *data)
+        transaction = self.memory_data_source.multi_exec()
+        transaction.delete(key)
+        transaction.zadd(key, *data)
+        await transaction.execute()
 
     async def add_fallback(
         self, entity: Any, *entities: Any, **kwargs: Any
@@ -82,7 +85,7 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey],):
         query: Union[SortedSetQuery[FallbackKey], Any],
         data: Sequence[Tuple[str, float]],
     ) -> SortedSetData:
-        await self.add_memory_data(key, self.format_memory_data(data))
+        await self.memory_data_source.zadd(key, *self.format_memory_data(data))
 
         if isinstance(query, SortedSetQuery) and query.withscores:
             return data

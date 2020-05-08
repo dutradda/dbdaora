@@ -1,4 +1,4 @@
-from typing import ClassVar, Dict, Optional, Sequence, Tuple, Union
+from typing import Any, ClassVar, Dict, Optional, Sequence, Tuple, Union
 
 from .. import DataSource
 
@@ -8,6 +8,28 @@ RangeOutput = Union[
     Sequence[Tuple[bytes, float]],
     Sequence[Union[bytes, str]],
 ]
+
+
+class MemoryMultiExec:
+    def delete(self, key: str) -> Any:
+        raise NotImplementedError()  # pragma: no cover
+
+    def hmset(
+        self,
+        key: str,
+        field: Union[str, bytes],
+        value: Union[str, bytes],
+        *pairs: Union[str, bytes],
+    ) -> Any:
+        raise NotImplementedError()  # pragma: no cover
+
+    def zadd(
+        self, key: str, score: float, member: str, *pairs: Union[float, str]
+    ) -> Any:
+        raise NotImplementedError()  # pragma: no cover
+
+    async def execute(self, *, return_exceptions: bool = False) -> Any:
+        raise NotImplementedError()  # pragma: no cover
 
 
 class MemoryDataSource(DataSource):
@@ -67,4 +89,7 @@ class MemoryDataSource(DataSource):
         raise NotImplementedError()  # pragma: no cover
 
     async def wait_closed(self) -> None:
+        raise NotImplementedError()  # pragma: no cover
+
+    def multi_exec(self) -> MemoryMultiExec:
         raise NotImplementedError()  # pragma: no cover
