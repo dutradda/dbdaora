@@ -17,6 +17,7 @@ classifiers = [
 requires = [
     'circuitbreaker',
     'cachetools',
+    'jsondaora',
 ]
 description-file = 'README.md'
 requires-python = '>=3.8'
