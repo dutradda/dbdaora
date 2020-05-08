@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.7.1 - 2020-05-08
 
  - Fix requires
 
