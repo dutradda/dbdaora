@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.7.0 - 2020-05-07
 
  - Improve hash service cache
 
