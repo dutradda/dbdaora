@@ -1,4 +1,3 @@
-import time
 from typing import TypedDict
 
 import pytest
@@ -30,26 +29,17 @@ async def repository(mocker, dict_repository_cls):
 
 
 @pytest.mark.asyncio
-async def test_should_exclude_all_attributes_from_indexes(repository):
+async def test_should_exclude_values_attributes_from_indexes(repository):
     client = repository.fallback_data_source.client
     values = ['v1', 1, 'v2', 2]
     key = client.key('fake', 'fake')
-    client.delete(key)
     entity = datastore.Entity(key=key)
     entity.update({'values': values})
     client.put(entity)
-    time.sleep(1)
-    query = client.query(kind='fake')
-    query.add_filter('values', '=', 'v1')
 
-    entities = query.fetch()
-    assert tuple(entities) == (entity,)
+    assert not client.get(key).exclude_from_indexes
 
     values = [('v1', 1), ('v2', 2)]
-    client.delete(key)
     await repository.add(FakeEntity(id='fake', values=values))
 
-    query = client.query(kind='fake')
-    query.add_filter('values', '=', 'v1')
-    entities = query.fetch()
-    assert tuple(entities) == tuple()
+    assert client.get(key).exclude_from_indexes == set(['values'])

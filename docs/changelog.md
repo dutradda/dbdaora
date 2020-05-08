@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Improve hash service cache
+
 ### 0.6.2 - 2020-05-05
 
  - Fix sorted set fallback key

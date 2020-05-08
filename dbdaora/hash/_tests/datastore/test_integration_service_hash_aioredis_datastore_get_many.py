@@ -38,8 +38,8 @@ async def test_should_get_many_from_cache(
     fake_service.repository.memory_data_source.hgetall = (
         asynctest.CoroutineMock()
     )
-    fake_service.cache['fake'] = fake_entity
-    fake_service.cache['fake2'] = fake_entity2
+    fake_service.cache['fakeother_idother_fake'] = fake_entity
+    fake_service.cache['fake2other_idother_fake'] = fake_entity2
     entities = await fake_service.get_many(
         'fake', 'fake2', other_id='other_fake'
     )
@@ -196,8 +196,12 @@ async def test_should_get_many_from_cache_with_fields(
     fake_service.repository.memory_data_source.hgetall = (
         asynctest.CoroutineMock()
     )
-    fake_service.cache['fake'] = fake_entity
-    fake_service.cache['fake2'] = fake_entity2
+    fake_service.cache[
+        'fakeidother_idintegerinner_entitiesother_idother_fake'
+    ] = fake_entity
+    fake_service.cache[
+        'fake2idother_idintegerinner_entitiesother_idother_fake'
+    ] = fake_entity2
     entities = await fake_service.get_many(
         'fake',
         'fake2',
@@ -327,4 +331,8 @@ async def test_should_raise_entity_not_found_error_when_get_many(fake_service):
             'fake', 'fake2', 'fake3', other_id='other_fake'
         )
 
-    assert exc_info.value.args == (('fake', 'fake2', 'fake3'),)
+    assert exc_info.value.args == (
+        ('fake', 'fake2', 'fake3'),
+        None,
+        {'other_id': 'other_fake'},
+    )

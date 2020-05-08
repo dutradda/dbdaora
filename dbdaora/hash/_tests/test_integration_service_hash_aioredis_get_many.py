@@ -26,6 +26,26 @@ async def test_should_get_many(
 
 
 @pytest.mark.asyncio
+async def test_should_get_many_without_cache(
+    fake_service,
+    serialized_fake_entity,
+    fake_entity,
+    serialized_fake_entity2,
+    fake_entity2,
+):
+    fake_service.cache = None
+    await fake_service.repository.memory_data_source.hmset(
+        'fake:fake', *itertools.chain(*serialized_fake_entity.items())
+    )
+    await fake_service.repository.memory_data_source.hmset(
+        'fake:fake2', *itertools.chain(*serialized_fake_entity2.items())
+    )
+    entities = await fake_service.get_many('fake', 'fake2')
+
+    assert entities == [fake_entity, fake_entity2]
+
+
+@pytest.mark.asyncio
 async def test_should_get_many_from_cache(
     fake_service, serialized_fake_entity, fake_entity, fake_entity2
 ):
@@ -44,6 +64,27 @@ async def test_should_get_many_from_cache(
 async def test_should_get_many_from_fallback_after_open_circuit_breaker(
     fake_service, fake_entity, fake_entity2, mocker
 ):
+    fake_service.repository.memory_data_source.hgetall = asynctest.CoroutineMock(
+        side_effect=RedisError
+    )
+    fake_service.repository.fallback_data_source.db[
+        'fake:fake'
+    ] = dataclasses.asdict(fake_entity)
+    fake_service.repository.fallback_data_source.db[
+        'fake:fake2'
+    ] = dataclasses.asdict(fake_entity2)
+
+    entities = await fake_service.get_many('fake', 'fake2')
+
+    assert entities == [fake_entity, fake_entity2]
+    assert fake_service.logger.warning.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_should_get_many_from_fallback_after_open_circuit_breaker_without_cache(
+    fake_service, fake_entity, fake_entity2, mocker
+):
+    fake_service.cache = None
     fake_service.repository.memory_data_source.hgetall = asynctest.CoroutineMock(
         side_effect=RedisError
     )
@@ -92,8 +133,8 @@ async def test_should_get_many_from_cache_with_fields(
     fake_service.repository.memory_data_source.hgetall = (
         asynctest.CoroutineMock()
     )
-    fake_service.cache['fake'] = fake_entity
-    fake_service.cache['fake2'] = fake_entity2
+    fake_service.cache['fakeidintegerinner_entities'] = fake_entity
+    fake_service.cache['fake2idintegerinner_entities'] = fake_entity2
     entities = await fake_service.get_many(
         'fake', 'fake2', fields=['id', 'integer', 'inner_entities']
     )

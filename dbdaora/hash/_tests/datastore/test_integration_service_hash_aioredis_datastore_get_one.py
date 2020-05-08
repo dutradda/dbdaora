@@ -47,7 +47,7 @@ async def test_should_get_one_from_cache(
     fake_service.repository.memory_data_source.hgetall = (
         asynctest.CoroutineMock()
     )
-    fake_service.cache['fake'] = fake_entity
+    fake_service.cache['fakeother_idother_fake'] = fake_entity
 
     entity = await fake_service.get_one('fake', other_id='other_fake')
 

@@ -42,8 +42,7 @@ async def fake_service(mocker, fallback_data_source, fake_hash_repository_cls):
 
     yield service
 
-    service.repository.memory_data_source.close()
-    await service.repository.memory_data_source.wait_closed()
+    await service.shutdown()
 
 
 @pytest.fixture

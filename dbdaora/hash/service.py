@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from logging import Logger, getLogger
-from typing import Any, Optional, Sequence
+from typing import Any, Dict, Optional, Sequence
 
 from cachetools import Cache
 from circuitbreaker import CircuitBreakerError
@@ -36,19 +36,6 @@ class HashService(Service[Any, HashData, FallbackKey]):
         self.delete_circuit = self.circuit_breaker(self.repository.delete)
         self.logger = logger
 
-    async def get_all(
-        self, fields: Optional[Sequence[str]] = None
-    ) -> Sequence[Any]:
-        try:
-            return await self.entities_circuit(
-                self.repository.query(all=True, fields=fields)
-            )
-        except CircuitBreakerError as error:
-            self.logger.warning(error)
-            return await self.repository.query(
-                all=True, fields=fields, memory=False
-            ).entities
-
     async def get_many(
         self,
         *ids: str,
@@ -73,7 +60,7 @@ class HashService(Service[Any, HashData, FallbackKey]):
 
         except CircuitBreakerError as error:
             self.logger.warning(error)
-            if self.cache:
+            if self.cache is not None:
                 return await self.get_many_cached(
                     ids, self.cache, fields=fields, memory=False, **filters
                 )
@@ -94,19 +81,17 @@ class HashService(Service[Any, HashData, FallbackKey]):
         memory: bool = True,
         **filters: Any,
     ) -> Sequence[Any]:
-        fields_key = ''.join(fields) if fields else None
+        key_suffix = cache_key_suffix(fields, filters)
         missed_ids = []
-        entities = {
-            id_: missed_ids.append(id_)  # type: ignore
-            if (
-                entity := cache.get(  # noqa
-                    (id_, fields_key) if fields_key else id_
-                )
-            )
-            is None
-            else entity
-            for id_ in ids
-        }
+        entities = {}
+
+        for id_ in ids:
+            key = f'{id_}{key_suffix}'
+            entity = cache.get(key)
+            if entity is None:
+                missed_ids.append(id_)
+
+            entities[key] = entity
 
         if missed_ids:
             try:
@@ -123,33 +108,26 @@ class HashService(Service[Any, HashData, FallbackKey]):
             except EntityNotFoundError:
                 missed_entities = []
 
-            missed_entities_map = {
-                entity[self.repository.id_name]
-                if isinstance(entity, dict)
-                else getattr(entity, self.repository.id_name): entity
-                for entity in missed_entities
-            }
-
-            for id_, entity in entities.items():
-                if entity is None:
-                    entities[id_] = missed_entities_map.get(id_)
-
-        final_entities = []
-
-        for entity in entities.values():
-            if entity is not None:
-                entity_id = (
+            for entity in missed_entities:
+                id_ = (
                     entity[self.repository.id_name]
                     if isinstance(entity, dict)
                     else getattr(entity, self.repository.id_name)
                 )
+                entities[f'{id_}{key_suffix}'] = entity
+
+        final_entities = []
+
+        for key, entity in entities.items():
+            if entity is not None and entity is not CACHE_ALREADY_NOT_FOUND:
                 final_entities.append(entity)
-                cache[
-                    (entity_id, fields_key) if fields_key else entity_id
-                ] = entity
+                cache[key] = entity
+
+            elif entity is None:
+                cache[key] = CACHE_ALREADY_NOT_FOUND
 
         if not final_entities:
-            raise EntityNotFoundError(ids)
+            raise EntityNotFoundError(ids, fields, filters)
 
         return final_entities
 
@@ -168,7 +146,7 @@ class HashService(Service[Any, HashData, FallbackKey]):
 
         except CircuitBreakerError as error:
             self.logger.warning(error)
-            if self.cache:
+            if self.cache is not None:
                 return await self.get_one_cached(
                     id, self.cache, fields=fields, memory=False, **filters
                 )
@@ -185,20 +163,28 @@ class HashService(Service[Any, HashData, FallbackKey]):
         memory: bool = True,
         **filters: Any,
     ) -> Any:
-        cache_key = (id, ''.join(fields)) if fields else id
+        cache_key = f'{id}{cache_key_suffix(fields, filters)}'
         entity = cache.get(cache_key)
 
         if entity is None:
-            if memory:
-                entity = await self.entity_circuit(
-                    self.repository.query(id=id, fields=fields, **filters)
-                )
-            else:
-                entity = await self.repository.query(
-                    id=id, fields=fields, memory=False, **filters
-                ).entity
+            try:
+                if memory:
+                    entity = await self.entity_circuit(
+                        self.repository.query(id=id, fields=fields, **filters)
+                    )
+                else:
+                    entity = await self.repository.query(
+                        id=id, fields=fields, memory=False, **filters
+                    ).entity
 
-            cache[cache_key] = entity
+                cache[cache_key] = entity
+
+            except EntityNotFoundError as error:
+                cache[cache_key] = error
+                raise
+
+        elif isinstance(entity, EntityNotFoundError):
+            raise entity
 
         return entity
 
@@ -211,13 +197,6 @@ class HashService(Service[Any, HashData, FallbackKey]):
             await self.repository.add(entity, *entities, memory=False)
 
     async def delete(self, entity_id: str, **filters: Any) -> None:
-        if self.cache:
-            self.cache.pop(entity_id)
-
-            for id_, fields_key in tuple(self.cache.keys()):
-                if id_ == entity_id:
-                    self.cache.pop((id_, fields_key))
-
         try:
             await self.delete_circuit(
                 self.repository.query(id=entity_id, **filters)
@@ -232,3 +211,20 @@ class HashService(Service[Any, HashData, FallbackKey]):
     async def shutdown(self) -> None:
         self.repository.memory_data_source.close()
         await self.repository.memory_data_source.wait_closed()
+
+
+def cache_key_suffix(
+    fields: Optional[Sequence[str]], filters: Dict[str, Any],
+) -> str:
+    fields_key = ''.join(fields) if fields else ''
+    filters_key = (
+        ''.join(f'{f}{v}' for f, v in filters.items()) if filters else ''
+    )
+    return f'{fields_key}{filters_key}'
+
+
+class CacheAlreadyNotFound:
+    ...
+
+
+CACHE_ALREADY_NOT_FOUND = CacheAlreadyNotFound()

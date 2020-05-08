@@ -15,6 +15,7 @@ async def test_should_delete(
     assert await fake_service.get_one('fake')
 
     await fake_service.delete(fake_entity.id)
+    fake_service.cache.clear()
 
     with pytest.raises(EntityNotFoundError):
         await fake_service.get_one('fake')
@@ -39,6 +40,7 @@ async def test_should_delete_from_fallback_after_open_circuit_breaker(
     )
 
     await fake_service.delete(fake_entity.id)
+    fake_service.cache.clear()
 
     with pytest.raises(EntityNotFoundError):
         await fake_service.get_one('fake')

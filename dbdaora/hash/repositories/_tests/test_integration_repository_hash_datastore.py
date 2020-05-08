@@ -1,4 +1,3 @@
-import time
 from dataclasses import dataclass
 
 import pytest
@@ -33,21 +32,12 @@ async def repository():
 async def test_should_exclude_all_attributes_from_indexes(repository):
     client = repository.fallback_data_source.client
     key = client.key('fake', 'fake')
-    client.delete(key)
     entity = datastore.Entity(key=key)
     entity.update({'id': 'fake', 'fake_int': 1})
     client.put(entity)
-    time.sleep(1)
-    query = client.query(kind='fake')
-    query.add_filter('fake_int', '=', 1)
 
-    entities = query.fetch()
-    assert tuple(entities) == (entity,)
+    assert not client.get(key).exclude_from_indexes
 
     await repository.add(FakeEntity(id='fake', fake_int=1))
 
-    time.sleep(1)
-    query = client.query(kind='fake')
-    query.add_filter('values', '=', 1)
-    entities = query.fetch()
-    assert tuple(entities) == tuple()
+    assert client.get(key).exclude_from_indexes == set(['id', 'fake_int'])
