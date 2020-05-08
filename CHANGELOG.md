@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.8.0 - 2020-05-08
 
  - Improve add entity on repositories
 
