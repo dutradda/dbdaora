@@ -63,6 +63,9 @@ async def test_should_get_one_from_fallback_when_not_found_on_memory(
     await fake_service.repository.memory_data_source.delete(
         'fake:other_fake:fake'
     )
+    await fake_service.repository.memory_data_source.delete(
+        'fake:not-found:other_fake:fake'
+    )
     await fake_service.repository.fallback_data_source.put(
         client.key('fake', 'other_fake:fake'), dataclasses.asdict(fake_entity)
     )
