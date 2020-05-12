@@ -97,12 +97,12 @@ class ShardsAioRedisDataSource(MemoryDataSource):
     async def zrevrange(
         self, key: str, withscores: bool = False
     ) -> Optional[RangeOutput]:
-        return await self.get_client(key).zrevrange(key, withscores)
+        return await self.get_client(key).zrevrange(key, withscores=withscores)
 
     async def zrange(
         self, key: str, withscores: bool = False
     ) -> Optional[RangeOutput]:
-        return await self.get_client(key).zrange(key, withscores)
+        return await self.get_client(key).zrange(key, withscores=withscores)
 
     async def zadd(
         self, key: str, score: float, member: str, *pairs: Union[float, str]

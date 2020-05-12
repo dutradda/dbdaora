@@ -3,8 +3,8 @@ from typing import Any
 from dbdaora.service import Service
 
 from ..keys import FallbackKey
-from .repositories import HashData
+from .entity import SortedSetData
 
 
-class HashService(Service[Any, HashData, FallbackKey]):
+class SortedSetService(Service[Any, SortedSetData, FallbackKey]):
     ...

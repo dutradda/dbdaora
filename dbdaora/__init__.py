@@ -27,6 +27,7 @@ from dbdaora.sorted_set.entity import (
 )
 from dbdaora.sorted_set.query import SortedSetQuery
 from dbdaora.sorted_set.repositories import SortedSetRepository
+from dbdaora.sorted_set.service import SortedSetService
 
 
 try:
@@ -76,6 +77,7 @@ __all__ = [
     'make_hash_service',
     'SortedSetData',
     'SortedSetDictEntity',
+    'SortedSetService',
     'TTLDaoraCache',
     'build_cache',
 ]

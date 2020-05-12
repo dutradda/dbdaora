@@ -2,7 +2,7 @@ import asynctest
 import pytest
 
 from dbdaora import EntityNotFoundError, HashService
-from dbdaora.hash.service import CACHE_ALREADY_NOT_FOUND
+from dbdaora.service import CACHE_ALREADY_NOT_FOUND
 
 
 @pytest.fixture
