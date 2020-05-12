@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.9.0 - 2020-05-12
 
  - Create simple ttl cache class
 
