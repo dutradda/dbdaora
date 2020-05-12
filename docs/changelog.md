@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Create simple ttl cache class
+
 ### 0.8.0 - 2020-05-08
 
  - Improve add entity on repositories

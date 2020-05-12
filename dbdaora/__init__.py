@@ -4,7 +4,7 @@
 __version__ = '0.8.0'
 
 
-from dbdaora.cache import CacheType
+from dbdaora.cache import CacheType, TTLDaoraCache
 from dbdaora.circuitbreaker import AsyncCircuitBreaker
 from dbdaora.data_sources.fallback import FallbackDataSource
 from dbdaora.data_sources.fallback.dict import DictFallbackDataSource
@@ -75,6 +75,7 @@ __all__ = [
     'make_hash_service',
     'SortedSetData',
     'SortedSetDictEntity',
+    'TTLDaoraCache',
 ]
 
 if AioRedisDataSource:
