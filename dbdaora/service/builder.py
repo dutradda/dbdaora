@@ -24,6 +24,7 @@ async def build(
     cb_recovery_timeout: Optional[int] = None,
     cb_expected_exception: Optional[Type[Exception]] = None,
     logger: Logger = getLogger(__name__),
+    cache_ttl_failure_threshold: int = 0,
 ) -> Service[Entity, EntityData, FallbackKey]:
     repository = await build_repository(
         repository_cls,
@@ -37,7 +38,9 @@ async def build(
         cb_recovery_timeout,
         cb_expected_exception,
     )
-    cache = build_cache(cache_type, cache_ttl, cache_max_size)
+    cache = build_cache(
+        cache_type, cache_ttl, cache_max_size, cache_ttl_failure_threshold
+    )
     return service_cls(repository, circuit_breaker, cache, logger)
 
 
@@ -58,16 +61,21 @@ def build_cache(
     cache_type: Optional[CacheType] = None,
     ttl: Optional[int] = None,
     max_size: Optional[int] = None,
+    ttl_failure_threshold: int = 0,
 ) -> Optional[Cache]:
     if cache_type:
         if max_size is None:
             raise Exception()
 
-        if cache_type == CacheType.TTL:
+        if cache_type == CacheType.TTL or cache_type == CacheType.TTLDAORA:
             if ttl is None:
                 raise Exception()
 
-            return cache_type.value(max_size, ttl)
+            if cache_type == CacheType.TTL:
+                return cache_type.value(max_size, ttl)
+
+            if cache_type == CacheType.TTLDAORA:
+                return cache_type.value(max_size, ttl, ttl_failure_threshold)
 
         else:
             return cache_type.value(max_size)
