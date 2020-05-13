@@ -188,7 +188,12 @@ class HashService(Service[Any, HashData, FallbackKey]):
 
         return entity
 
-    async def add(self, entity: Any, *entities: Any) -> None:
+    async def add(
+        self, entity: Any, *entities: Any, memory: bool = True
+    ) -> None:
+        if not memory:
+            await self.repository.add(entity, *entities, memory=False)
+
         try:
             await self.add_circuit(entity, *entities)
 

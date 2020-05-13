@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Improve service add method
+
 ### 0.9.1 - 2020-05-12
 
  - Add ttl daora cache to service builder
