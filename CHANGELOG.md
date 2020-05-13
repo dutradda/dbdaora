@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.9.2 - 2020-05-13
 
  - Improve service add method
 
