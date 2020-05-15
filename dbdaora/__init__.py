@@ -1,7 +1,7 @@
 """Communicates with databases using repository pattern and service patterns"""
 
 
-__version__ = '0.9.3'
+__version__ = '0.9.4'
 
 
 from dbdaora.cache import CacheType, TTLDaoraCache
