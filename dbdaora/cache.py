@@ -18,18 +18,13 @@ class TTLDaoraCache:
 
     def __setitem__(self, key: str, data: Any) -> None:
         if len(self.cache) < self.maxsize:
-            self.cache[key] = (data, time.time())
+            self.cache[key] = (data, time.time() - self.ttl_threshold)
 
     def get(self, key: str, default: Any = None) -> Any:
         data = self.cache.get(key)
 
         if data is not None:
-            threshold = 0
-
-            if self.ttl_failure_threshold:
-                threshold = random.randint(0, self.ttl_failure_threshold)
-
-            if data[1] + self.ttl - threshold >= time.time():
+            if data[1] + self.ttl >= time.time():
                 return data[0]
 
             else:
@@ -37,6 +32,13 @@ class TTLDaoraCache:
                 return default
 
         return default
+
+    @property
+    def ttl_threshold(self) -> int:
+        if self.ttl_failure_threshold:
+            return random.randint(0, self.ttl_failure_threshold)
+
+        return 0
 
 
 class CacheType(Enum):
