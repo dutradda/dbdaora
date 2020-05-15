@@ -193,6 +193,7 @@ class HashService(Service[Any, HashData, FallbackKey]):
     ) -> None:
         if not memory:
             await self.repository.add(entity, *entities, memory=False)
+            return
 
         try:
             await self.add_circuit(entity, *entities)

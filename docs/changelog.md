@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Fix hash service add method
+
 ### 0.9.3 - 2020-05-15
 
  - Improve ttldaora cache
