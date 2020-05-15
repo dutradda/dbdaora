@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.9.3 - 2020-05-15
 
  - Improve ttldaora cache
 
