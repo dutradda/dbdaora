@@ -2,6 +2,8 @@
 
 ### UNRELEASED
 
+ - Remove redis transaction from hash repository
+
  - Fix hash service add method
 
 ### 0.9.3 - 2020-05-15

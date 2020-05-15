@@ -95,10 +95,12 @@ class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
     async def add_memory_data(
         self, key: str, data: HashData, from_fallback: bool = False
     ) -> None:
-        transaction = self.memory_data_source.multi_exec()
-        transaction.delete(key)
-        transaction.hmset(key, *itertools.chain(*data.items()))
-        await transaction.execute()
+        delete_future = self.memory_data_source.delete(key)
+        hmset_future = self.memory_data_source.hmset(
+            key, *itertools.chain(*data.items())
+        )
+        await delete_future
+        await hmset_future
 
     async def add_memory_data_from_fallback(
         self,

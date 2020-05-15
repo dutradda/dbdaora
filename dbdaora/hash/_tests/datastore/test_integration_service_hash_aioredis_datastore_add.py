@@ -1,3 +1,4 @@
+import asynctest
 import pytest
 from aioredis import RedisError
 
@@ -13,11 +14,10 @@ async def test_should_add(fake_service, fake_entity):
 
 @pytest.mark.asyncio
 async def test_should_add_to_fallback_after_open_circuit_breaker(
-    fake_service, fake_entity, mocker
+    fake_service, fake_entity
 ):
-    fake_multi_exec = mocker.MagicMock()
-    fake_multi_exec.return_value.execute.side_effect = RedisError
-    fake_service.repository.memory_data_source.multi_exec = fake_multi_exec
+    fake_exists = asynctest.CoroutineMock(side_effect=RedisError)
+    fake_service.repository.memory_data_source.exists = fake_exists
     await fake_service.add(fake_entity)
 
     entity = await fake_service.get_one('fake', other_id='other_fake')
