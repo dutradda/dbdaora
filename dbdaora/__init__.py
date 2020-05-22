@@ -19,6 +19,7 @@ from dbdaora.hashring import HashRing
 from dbdaora.repository import MemoryRepository
 from dbdaora.service import Service
 from dbdaora.service.builder import build as build_service
+from dbdaora.service.builder import build_cache
 from dbdaora.sorted_set.entity import (
     SortedSetData,
     SortedSetDictEntity,
@@ -76,6 +77,7 @@ __all__ = [
     'SortedSetData',
     'SortedSetDictEntity',
     'TTLDaoraCache',
+    'build_cache',
 ]
 
 if AioRedisDataSource:

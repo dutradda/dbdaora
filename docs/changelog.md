@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Adding sync repository. Experimental feature (WIP)
+
 ### 0.9.4 - 2020-05-15
 
  - Remove redis transaction from hash repository
