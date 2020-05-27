@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.9.6 - 2020-05-26
 
  - Remove experimental sync repository
 
