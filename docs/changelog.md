@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.10.0 - 2020-05-27
 
  - Create BooleanReposity and service
 
