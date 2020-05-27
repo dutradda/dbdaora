@@ -5,6 +5,7 @@ omit =
     */test_*.py
     *conftest.py
     *venv*
+    dbdaora/__init__.py
 
 [report]
 show_missing = True
