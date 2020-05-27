@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Remove experimental sync repository
+
 ### 0.9.5 - 2020-05-22
 
  - Adding sync repository. Experimental feature (WIP)
