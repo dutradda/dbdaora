@@ -3,7 +3,6 @@
 
 __version__ = '0.9.6'
 
-
 from dbdaora.cache import CacheType, TTLDaoraCache
 from dbdaora.circuitbreaker import AsyncCircuitBreaker
 from dbdaora.data_sources.fallback import FallbackDataSource
@@ -16,6 +15,7 @@ from dbdaora.hash.query import HashQuery, HashQueryMany
 from dbdaora.hash.repositories import HashData, HashRepository
 from dbdaora.hash.service import HashService
 from dbdaora.hashring import HashRing
+from dbdaora.query import Query, QueryMany
 from dbdaora.repository import MemoryRepository
 from dbdaora.service import Service
 from dbdaora.service.builder import build as build_service
@@ -28,6 +28,12 @@ from dbdaora.sorted_set.entity import (
 from dbdaora.sorted_set.query import SortedSetQuery
 from dbdaora.sorted_set.repositories import SortedSetRepository
 
+
+from dbdaora.boolean.repositories import BooleanRepository  # noqa isort:skip
+from dbdaora.boolean.service import BooleanService  # noqa isort:skip
+from dbdaora.boolean.repositories.datastore import (  # noqa isort:skip
+    DatastoreBooleanRepository,
+)
 
 try:
     from dbdaora.data_sources.fallback.datastore import DatastoreDataSource
@@ -78,6 +84,11 @@ __all__ = [
     'SortedSetDictEntity',
     'TTLDaoraCache',
     'build_cache',
+    'BooleanRepository',
+    'DatastoreBooleanRepository',
+    'BooleanService',
+    'Query',
+    'QueryMany',
 ]
 
 if AioRedisDataSource:

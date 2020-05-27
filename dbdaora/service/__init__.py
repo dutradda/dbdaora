@@ -112,6 +112,8 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
                 id_ = (
                     entity[self.repository.id_name]
                     if isinstance(entity, dict)
+                    else entity
+                    if isinstance(entity, str)
                     else getattr(entity, self.repository.id_name)
                 )
                 entities[f'{id_}{key_suffix}'] = entity
