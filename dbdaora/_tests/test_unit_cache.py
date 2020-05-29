@@ -19,13 +19,14 @@ def test_should_not_get_data(cache):
     assert cache.get('fake') is None
 
 
-def test_should_not_get_data_when_expired(cache):
+def test_should_not_get_data_after_expired(cache):
     cache['fake'] = 'faked'
 
     assert cache.get('fake') == 'faked'
 
     time.sleep(2)
 
+    assert cache.get('fake') == 'faked'
     assert cache.get('fake') is None
 
 
@@ -37,3 +38,16 @@ def test_should_not_set_data_when_reach_maxsize(cache):
     assert cache.get('fake') == 'faked'
     assert cache.get('fake2') == 'faked2'
     assert cache.get('fake3') is None
+
+
+def test_should_set_data_when_reach_maxsize_and_expires_some_key(cache):
+    cache['fake'] = 'faked'
+    cache['fake2'] = 'faked2'
+
+    time.sleep(2)
+
+    cache['fake3'] = 'faked3'
+
+    assert cache.get('fake') is None
+    assert cache.get('fake2') == 'faked2'
+    assert cache.get('fake3') == 'faked3'
