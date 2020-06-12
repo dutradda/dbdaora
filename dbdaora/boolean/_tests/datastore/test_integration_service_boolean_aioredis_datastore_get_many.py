@@ -30,9 +30,7 @@ async def test_should_get_many(
 async def test_should_get_many_from_cache(
     fake_service, serialized_fake_entity, fake_entity, fake_entity2
 ):
-    fake_service.repository.memory_data_source.exists = (
-        asynctest.CoroutineMock()
-    )
+    fake_service.repository.memory_data_source.get = asynctest.CoroutineMock()
     fake_service.cache['fakeother_idother_fake'] = fake_entity.id
     fake_service.cache['fake2other_idother_fake'] = fake_entity2.id
     entities = await fake_service.get_many(
@@ -40,7 +38,7 @@ async def test_should_get_many_from_cache(
     )
 
     assert entities == [fake_entity.id, fake_entity2.id]
-    assert not fake_service.repository.memory_data_source.exists.called
+    assert not fake_service.repository.memory_data_source.get.called
 
 
 @pytest.mark.asyncio
@@ -72,11 +70,17 @@ async def test_should_get_many_from_fallback_when_not_found_on_memory(
     )
 
     assert entities == [fake_entity.id, fake_entity2.id]
-    assert fake_service.repository.memory_data_source.exists(
-        'fake:other_fake:fake'
+    assert (
+        await fake_service.repository.memory_data_source.get(
+            'fake:other_fake:fake'
+        )
+        == b'1'
     )
-    assert fake_service.repository.memory_data_source.exists(
-        'fake:other_fake:fake2'
+    assert (
+        await fake_service.repository.memory_data_source.get(
+            'fake:other_fake:fake2'
+        )
+        == b'1'
     )
 
 
@@ -84,7 +88,7 @@ async def test_should_get_many_from_fallback_when_not_found_on_memory(
 async def test_should_get_many_from_fallback_after_open_circuit_breaker(
     fake_service, fake_entity, fake_entity2, mocker
 ):
-    fake_service.repository.memory_data_source.exists = asynctest.CoroutineMock(
+    fake_service.repository.memory_data_source.get = asynctest.CoroutineMock(
         side_effect=RedisError
     )
     key = fake_service.repository.fallback_data_source.make_key(
@@ -125,14 +129,23 @@ async def test_should_get_many_from_cache_memory_and_fallback(
     await fake_service.add(fake_entity2)
     await fake_service.add(fake_entity3)
 
-    assert not await fake_service.repository.memory_data_source.exists(
-        'fake:other_fake:fake'
+    assert (
+        await fake_service.repository.memory_data_source.get(
+            'fake:other_fake:fake'
+        )
+        == b'1'
     )
-    assert not await fake_service.repository.memory_data_source.exists(
-        'fake:other_fake:fake2'
+    assert (
+        await fake_service.repository.memory_data_source.get(
+            'fake:other_fake:fake2'
+        )
+        == b'1'
     )
-    assert not await fake_service.repository.memory_data_source.exists(
-        'fake:other_fake:fake3'
+    assert (
+        await fake_service.repository.memory_data_source.get(
+            'fake:other_fake:fake3'
+        )
+        == b'1'
     )
 
     entities = await fake_service.get_many('fake', other_id='other_fake')
@@ -148,16 +161,6 @@ async def test_should_get_many_from_cache_memory_and_fallback(
     )
 
     assert entities == [fake_entity.id, fake_entity2.id, fake_entity3.id]
-
-    assert await fake_service.repository.memory_data_source.exists(
-        'fake:other_fake:fake'
-    )
-    assert await fake_service.repository.memory_data_source.exists(
-        'fake:other_fake:fake2'
-    )
-    assert await fake_service.repository.memory_data_source.exists(
-        'fake:other_fake:fake3'
-    )
 
 
 @pytest.mark.asyncio

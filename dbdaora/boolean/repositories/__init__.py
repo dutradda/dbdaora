@@ -1,5 +1,6 @@
 from typing import Any, Optional, Union
 
+from dbdaora import EntityNotFoundError
 from dbdaora.keys import FallbackKey
 from dbdaora.query import BaseQuery, Query
 from dbdaora.query import make as query_factory
@@ -12,7 +13,8 @@ class BooleanRepository(MemoryRepository[Any, bool, FallbackKey]):
     async def get_memory_data(
         self, key: str, query: BaseQuery[Any, bool, FallbackKey],
     ) -> Optional[bool]:
-        return bool(await self.memory_data_source.exists(key)) or None
+        value = await self.memory_data_source.get(key)
+        return None if value is None else bool(int(value))
 
     async def get_fallback_data(
         self,
@@ -65,3 +67,46 @@ class BooleanRepository(MemoryRepository[Any, bool, FallbackKey]):
         self, *args: Any, **kwargs: Any
     ) -> BaseQuery[Any, bool, FallbackKey]:
         return query_factory(self, *args, **kwargs)
+
+    async def add_memory(self, entity: Any, *entities: Any) -> None:
+        memory_key = self.memory_key(entity)
+        memory_data = self.make_memory_data_from_entity(entity)
+
+        await self.add_memory_data(memory_key, memory_data)
+        await self.set_expire_time(memory_key)
+        await self.add_fallback(entity)
+
+    async def set_fallback_not_found(
+        self, query: Union[BaseQuery[Any, bool, FallbackKey], Any],
+    ) -> None:
+        memory_key = self.memory_key(query)
+        await self.memory_data_source.set(memory_key, '0')
+        await self.set_expire_time(memory_key)
+
+    async def get_memory(self, query: Query[Any, bool, FallbackKey]) -> Any:
+        memory_key = self.memory_key(query)
+        memory_data = await self.get_memory_data(memory_key, query)
+
+        if memory_data is None:
+            fallback_data = await self.get_fallback_data(
+                query, for_memory=True
+            )
+
+            if fallback_data is None:
+                await self.set_fallback_not_found(query)
+            else:
+                memory_data = await self.add_memory_data_from_fallback(
+                    memory_key, query, fallback_data
+                )
+                await self.set_expire_time(memory_key)
+
+        if not memory_data:
+            raise EntityNotFoundError(query)
+
+        return self.make_entity(memory_data, query)
+
+    async def delete(self, query: Query[Any, bool, FallbackKey],) -> None:
+        if query.memory:
+            await self.set_fallback_not_found(query)
+
+        await self.fallback_data_source.delete(self.fallback_key(query))

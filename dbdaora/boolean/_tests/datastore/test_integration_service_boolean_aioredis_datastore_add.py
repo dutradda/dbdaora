@@ -16,11 +16,11 @@ async def test_should_add(fake_service, fake_entity):
 async def test_should_add_to_fallback_after_open_circuit_breaker(
     fake_service, fake_entity
 ):
-    fake_exists = asynctest.CoroutineMock(side_effect=RedisError)
-    fake_service.repository.memory_data_source.exists = fake_exists
+    fake_get = asynctest.CoroutineMock(side_effect=RedisError)
+    fake_service.repository.memory_data_source.get = fake_get
     await fake_service.add(fake_entity)
 
     entity = await fake_service.get_one('fake', other_id='other_fake')
 
     assert entity == fake_entity.id
-    assert fake_service.logger.warning.call_count == 2
+    assert fake_service.logger.warning.call_count == 1

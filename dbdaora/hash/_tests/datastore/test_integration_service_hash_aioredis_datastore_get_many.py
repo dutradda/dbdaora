@@ -16,6 +16,12 @@ async def test_should_get_many(
     serialized_fake_entity2,
     fake_entity2,
 ):
+    await fake_service.repository.memory_data_source.delete(
+        'fake:other_fake:fake'
+    )
+    await fake_service.repository.memory_data_source.delete(
+        'fake:other_fake:fake2'
+    )
     await fake_service.repository.memory_data_source.hmset(
         'fake:other_fake:fake',
         *itertools.chain(*serialized_fake_entity.items()),

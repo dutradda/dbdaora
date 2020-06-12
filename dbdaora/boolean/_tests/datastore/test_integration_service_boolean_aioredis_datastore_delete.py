@@ -39,7 +39,7 @@ async def test_should_delete_from_fallback_after_open_circuit_breaker(
 
     assert await fake_service.get_one('fake', other_id='other_fake')
 
-    fake_service.repository.memory_data_source.delete = asynctest.CoroutineMock(
+    fake_service.repository.memory_data_source.set = asynctest.CoroutineMock(
         side_effect=RedisError
     )
 

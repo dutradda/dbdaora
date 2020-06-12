@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Improve boolean repository
+
 ### 0.10.1 - 2020-05-29
 
  - Improve DaoraCache

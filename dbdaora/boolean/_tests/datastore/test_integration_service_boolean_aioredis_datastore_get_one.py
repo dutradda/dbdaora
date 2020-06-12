@@ -39,15 +39,13 @@ async def test_should_get_one_with_fields(
 async def test_should_get_one_from_cache(
     fake_service, serialized_fake_entity, fake_entity
 ):
-    fake_service.repository.memory_data_source.exists = (
-        asynctest.CoroutineMock()
-    )
+    fake_service.repository.memory_data_source.get = asynctest.CoroutineMock()
     fake_service.cache['fakeother_idother_fake'] = fake_entity.id
 
     entity = await fake_service.get_one('fake', other_id='other_fake')
 
     assert entity == fake_entity.id
-    assert not fake_service.repository.memory_data_source.exists.called
+    assert not fake_service.repository.memory_data_source.get.called
 
 
 @pytest.mark.asyncio
@@ -68,8 +66,11 @@ async def test_should_get_one_from_fallback_when_not_found_on_memory(
     entity = await fake_service.get_one('fake', other_id='other_fake')
 
     assert entity == fake_entity.id
-    assert fake_service.repository.memory_data_source.exists(
-        'fake:other_fake:fake'
+    assert (
+        await fake_service.repository.memory_data_source.get(
+            'fake:other_fake:fake'
+        )
+        == b'1'
     )
 
 
@@ -94,8 +95,11 @@ async def test_should_get_one_from_fallback_when_not_found_on_memory_with_fields
     )
 
     assert entity == fake_entity.id
-    assert fake_service.repository.memory_data_source.exists(
-        'fake:other_fake:fake'
+    assert (
+        await fake_service.repository.memory_data_source.get(
+            'fake:other_fake:fake'
+        )
+        == b'1'
     )
 
 
@@ -103,7 +107,7 @@ async def test_should_get_one_from_fallback_when_not_found_on_memory_with_fields
 async def test_should_get_one_from_fallback_after_open_circuit_breaker(
     fake_service, fake_entity, mocker
 ):
-    fake_service.repository.memory_data_source.exists = asynctest.CoroutineMock(
+    fake_service.repository.memory_data_source.get = asynctest.CoroutineMock(
         side_effect=RedisError
     )
     key = fake_service.repository.fallback_data_source.make_key(
