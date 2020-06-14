@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.12.0 - 2020-06-14
 
  - Improve service cache
 
