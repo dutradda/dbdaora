@@ -26,7 +26,7 @@ async def test_should_set_cache_entity_not_found_when_getting_one(service):
         await service.get_one('fake')
 
     assert exc_info.value == error
-    assert service.cache['fake'] == error
+    assert service.cache['fake'] == CACHE_ALREADY_NOT_FOUND
 
 
 @pytest.mark.asyncio

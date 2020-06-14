@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Improve service cache
+
 ### 0.11.0 - 2020-06-12
 
  - Improve boolean repository

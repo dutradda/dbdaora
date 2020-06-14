@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from logging import Logger, getLogger
-from typing import Any, Dict, Generic, Optional, Sequence
+from typing import Any, Generic, List, Optional, Sequence, Union
 
 from cachetools import Cache
 from circuitbreaker import CircuitBreakerError
@@ -81,17 +81,17 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         memory: bool = True,
         **filters: Any,
     ) -> Sequence[Any]:
-        key_suffix = cache_key_suffix(fields, filters)
-        missed_ids = []
+        missed_ids: List[str] = []
         entities = {}
+        cache_key_suffix = self.cache_key_suffix(**filters)
 
         for id_ in ids:
-            key = f'{id_}{key_suffix}'
-            entity = cache.get(key)
+            entity = self.get_cached_entity(id_, cache_key_suffix, fields)
+
             if entity is None:
                 missed_ids.append(id_)
 
-            entities[key] = entity
+            entities[id_] = entity
 
         if missed_ids:
             try:
@@ -116,22 +116,64 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
                     if isinstance(entity, str)
                     else getattr(entity, self.repository.id_name)
                 )
-                entities[f'{id_}{key_suffix}'] = entity
+                entities[id_] = entity
 
         final_entities = []
 
-        for key, entity in entities.items():
+        for id_, entity in entities.items():
             if entity is not None and entity is not CACHE_ALREADY_NOT_FOUND:
                 final_entities.append(entity)
-                cache[key] = entity
+                self.set_cached_entity(id_, cache_key_suffix, entity)
 
             elif entity is None:
-                cache[key] = CACHE_ALREADY_NOT_FOUND
+                self.set_cached_entity(
+                    id_, cache_key_suffix, CACHE_ALREADY_NOT_FOUND
+                )
 
         if not final_entities:
             raise EntityNotFoundError(ids, fields, filters)
 
         return final_entities
+
+    def get_cached_entity(
+        self, id: str, key_suffix: str, fields: Optional[Sequence[str]] = None,
+    ) -> Any:
+        if self.cache is None:
+            return None
+
+        entity = self.cache.get(self.cache_key(id, key_suffix))
+
+        if fields is None:
+            return entity
+
+        if isinstance(entity, dict):
+            for field in fields:
+                if field not in entity:
+                    return None
+
+        else:
+            for field in fields:
+                if hasattr(entity, field):
+                    return None
+
+        return entity
+
+    def cache_key(self, id: str, suffix: str) -> str:
+        return f'{id}{suffix}'
+
+    def set_cached_entity(
+        self,
+        id: str,
+        key_suffix: str,
+        entity: Union[Entity, 'CacheAlreadyNotFound'],
+    ) -> None:
+        if self.cache is not None:
+            self.cache[self.cache_key(id, key_suffix)] = entity
+
+    def cache_key_suffix(self, **filters: Any) -> str:
+        return (
+            ''.join(f'{f}{v}' for f, v in filters.items()) if filters else ''
+        )
 
     async def get_one(
         self, id: str, fields: Optional[Sequence[str]] = None, **filters: Any
@@ -165,8 +207,8 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         memory: bool = True,
         **filters: Any,
     ) -> Any:
-        cache_key = f'{id}{cache_key_suffix(fields, filters)}'
-        entity = cache.get(cache_key)
+        cache_key_suffix = self.cache_key_suffix(**filters)
+        entity = self.get_cached_entity(id, cache_key_suffix, fields)
 
         if entity is None:
             try:
@@ -179,10 +221,12 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
                         id=id, fields=fields, memory=False, **filters
                     ).entity
 
-                cache[cache_key] = entity
+                self.set_cached_entity(id, cache_key_suffix, entity)
 
-            except EntityNotFoundError as error:
-                cache[cache_key] = error
+            except EntityNotFoundError:
+                self.set_cached_entity(
+                    id, cache_key_suffix, CACHE_ALREADY_NOT_FOUND
+                )
                 raise
 
         elif isinstance(entity, EntityNotFoundError):
@@ -219,16 +263,6 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
     async def shutdown(self) -> None:
         self.repository.memory_data_source.close()
         await self.repository.memory_data_source.wait_closed()
-
-
-def cache_key_suffix(
-    fields: Optional[Sequence[str]], filters: Dict[str, Any],
-) -> str:
-    fields_key = ''.join(fields) if fields else ''
-    filters_key = (
-        ''.join(f'{f}{v}' for f, v in filters.items()) if filters else ''
-    )
-    return f'{fields_key}{filters_key}'
 
 
 class CacheAlreadyNotFound:
