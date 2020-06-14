@@ -241,6 +241,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     ) -> None:
         if query.memory:
             await self.memory_data_source.delete(self.memory_key(query))
+            await self.set_fallback_not_found(query)
 
         await self.fallback_data_source.delete(self.fallback_key(query))
 
