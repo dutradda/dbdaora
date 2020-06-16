@@ -229,7 +229,7 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
                 )
                 raise
 
-        elif isinstance(entity, EntityNotFoundError):
+        elif entity == CACHE_ALREADY_NOT_FOUND:
             raise EntityNotFoundError(id)
 
         return entity

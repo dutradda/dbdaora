@@ -31,14 +31,13 @@ async def test_should_set_cache_entity_not_found_when_getting_one(service):
 
 @pytest.mark.asyncio
 async def test_should_get_already_not_found_when_getting_one(service):
-    error = EntityNotFoundError()
-    service.cache['fake'] = error
+    service.cache['fake'] = CACHE_ALREADY_NOT_FOUND
 
     with pytest.raises(EntityNotFoundError) as exc_info:
         await service.get_one('fake')
 
     assert not service.entity_circuit.called
-    assert exc_info.value == error
+    assert exc_info.value.args == ('fake',)
 
 
 @pytest.mark.asyncio
