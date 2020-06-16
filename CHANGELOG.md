@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Fix service
+
 ### 0.13.0 - 2020-06-14
 
  - Improve delete method of base repository

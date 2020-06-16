@@ -230,7 +230,7 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
                 raise
 
         elif isinstance(entity, EntityNotFoundError):
-            raise entity
+            raise EntityNotFoundError(id)
 
         return entity
 
