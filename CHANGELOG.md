@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.13.2 - 2020-06-16
 
  - Fix base service
 
