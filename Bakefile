@@ -4,7 +4,7 @@ export MYPYPATH=./stubs
 export PYTHONPATH=.
 export PROJECT_NAME=dbdaora
 
-deploy: //check-virtualenv @confirm:secure deploy-docs release-pypi
+deploy: //check-virtualenv @confirm:secure deploy-docs release-pypi push-release
 
 setup-dbdaora: //check-virtualenv
     pip install --force-reinstall git+https://github.com/pycqa/pyflakes
