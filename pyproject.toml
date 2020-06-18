@@ -47,6 +47,9 @@ datastore = [
 aioredis = [
     'aioredis'
 ]
+mongodb = [
+    'motor'
+]
 
 [tool.flit.sdist]
 exclude = [

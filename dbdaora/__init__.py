@@ -46,7 +46,6 @@ except ImportError:
     DatastoreHashRepository = None  # type: ignore
     DatastoreSortedSetRepository = None  # type: ignore
 
-
 try:
     from dbdaora.data_sources.memory.aioredis import (
         AioRedisDataSource,
@@ -57,6 +56,11 @@ except ImportError:
     AioRedisDataSource = None  # type: ignore
     ShardsAioRedisDataSource = None  # type: ignore
     make_aioredis_data_source = None  # type: ignore
+
+try:
+    from dbdaora.data_sources.fallback.mongodb import MongoDataSource
+except ImportError:
+    MongoDataSource = None  # type: ignore
 
 
 __all__ = [
@@ -108,3 +112,6 @@ if DatastoreHashRepository:
 
 if DatastoreSortedSetRepository:
     __all__.append('DatastoreSortedSetRepository')
+
+if MongoDataSource:
+    __all__.append('MongoDataSource')
