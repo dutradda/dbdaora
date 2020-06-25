@@ -53,7 +53,7 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
             )
         except asyncio.TimeoutError:
             self.logger.warning(
-                f'Timeout for {self.repository.name} with id={id}'
+                f'Timeout get entity for {self.repository.name} with id={id}'
             )
             raise EntityNotFoundError(id)
 
@@ -205,6 +205,17 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
 
     async def exists(self, id: str, **filters: Any) -> bool:
         try:
+            return await asyncio.wait_for(
+                self._exists(id, **filters), self.get_entity_timeout,
+            )
+        except asyncio.TimeoutError:
+            self.logger.warning(
+                f'Timeout exists for {self.repository.name} with id={id}'
+            )
+            return False
+
+    async def _exists(self, id: str, **filters: Any) -> bool:
+        try:
             if self.exists_cache is None:
                 return await self.exists_circuit(
                     self.repository.query(id=id, **filters)
@@ -222,6 +233,19 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
             return await self.repository.query(
                 id=id, memory=False, **filters
             ).exists
+
+    async def exists_many(
+        self, *ids: str, **filters: Any,
+    ) -> AsyncGenerator[Any, None]:
+        tasks = []
+
+        for id_ in ids:
+            task = asyncio.create_task(self.exists(id_, **filters))
+            task.add_done_callback(task_callback)
+            tasks.append(task)
+
+        for task in tasks:
+            yield await task
 
     async def exists_cached(
         self, id: str, cache: Cache, memory: bool = True, **filters: Any,

@@ -2,6 +2,8 @@
 
 ### UNRELEASED
 
+ - Create Service.exists_many method
+
  - Improve service get_many
 
 ### 0.15.0 - 2020-06-25
