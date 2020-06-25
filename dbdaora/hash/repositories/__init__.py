@@ -150,5 +150,5 @@ class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
         return query_factory(self, *args, **kwargs)
 
 
-from ..query import HashQuery, HashQueryMany  # noqa isort:skip
+from ..query import HashQuery  # noqa isort:skip
 from ..query import make as query_factory  # noqa isort:skip

@@ -10,6 +10,7 @@ def service():
     s = HashService(
         repository=asynctest.MagicMock(),
         circuit_breaker=asynctest.MagicMock(),
+        get_entity_timeout=1,
         cache={},
     )
     s.entity_circuit = asynctest.CoroutineMock()
@@ -43,10 +44,14 @@ async def test_should_get_already_not_found_when_getting_one(service):
 @pytest.mark.asyncio
 async def test_should_set_cache_entities_not_found_when_getting_many(service):
     fake_entity = {'id': 'fake'}
-    service.entities_circuit.return_value = [fake_entity]
+    service.entity_circuit.side_effect = [
+        fake_entity,
+        EntityNotFoundError,
+        EntityNotFoundError,
+    ]
     service.repository.id_name = 'id'
 
-    entities = await service.get_many('fake', 'fake2', 'fake3')
+    entities = [e async for e in service.get_many('fake', 'fake2', 'fake3')]
 
     assert entities == [fake_entity]
     assert service.cache['fake2'] == CACHE_ALREADY_NOT_FOUND
@@ -60,7 +65,7 @@ async def test_should_get_already_not_found_when_getting_many(service):
     service.cache['fake2'] = CACHE_ALREADY_NOT_FOUND
     service.cache['fake3'] = CACHE_ALREADY_NOT_FOUND
 
-    entities = await service.get_many('fake', 'fake2', 'fake3')
+    entities = [e async for e in service.get_many('fake', 'fake2', 'fake3')]
 
     assert not service.entities_circuit.called
     assert entities == [fake_entity]

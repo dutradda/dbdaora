@@ -22,7 +22,7 @@ async def test_should_get_many(
     await fake_service.repository.memory_data_source.hmset(
         'fake:fake2', *itertools.chain(*serialized_fake_entity2.items())
     )
-    entities = await fake_service.get_many('fake', 'fake2')
+    entities = [e async for e in fake_service.get_many('fake', 'fake2')]
 
     assert entities == [fake_entity, fake_entity2]
 
@@ -42,7 +42,7 @@ async def test_should_get_many_without_cache(
     await fake_service.repository.memory_data_source.hmset(
         'fake:fake2', *itertools.chain(*serialized_fake_entity2.items())
     )
-    entities = await fake_service.get_many('fake', 'fake2')
+    entities = [e async for e in fake_service.get_many('fake', 'fake2')]
 
     assert entities == [fake_entity, fake_entity2]
 
@@ -56,7 +56,7 @@ async def test_should_get_many_from_cache(
     )
     fake_service.cache['fake'] = fake_entity
     fake_service.cache['fake2'] = fake_entity2
-    entities = await fake_service.get_many('fake', 'fake2')
+    entities = [e async for e in fake_service.get_many('fake', 'fake2')]
 
     assert entities == [fake_entity, fake_entity2]
     assert not fake_service.repository.memory_data_source.hgetall.called
@@ -76,10 +76,10 @@ async def test_should_get_many_from_fallback_after_open_circuit_breaker(
         'fake:fake2'
     ] = dataclasses.asdict(fake_entity2)
 
-    entities = await fake_service.get_many('fake', 'fake2')
+    entities = [e async for e in fake_service.get_many('fake', 'fake2')]
 
     assert entities == [fake_entity, fake_entity2]
-    assert fake_service.logger.warning.call_count == 1
+    assert fake_service.logger.warning.call_count == 2
 
 
 @pytest.mark.asyncio
@@ -97,10 +97,10 @@ async def test_should_get_many_from_fallback_after_open_circuit_breaker_without_
         'fake:fake2'
     ] = dataclasses.asdict(fake_entity2)
 
-    entities = await fake_service.get_many('fake', 'fake2')
+    entities = [e async for e in fake_service.get_many('fake', 'fake2')]
 
     assert entities == [fake_entity, fake_entity2]
-    assert fake_service.logger.warning.call_count == 1
+    assert fake_service.logger.warning.call_count == 2
 
 
 @pytest.mark.asyncio
@@ -117,9 +117,12 @@ async def test_should_get_many_with_fields(
     await fake_service.repository.memory_data_source.hmset(
         'fake:fake2', *itertools.chain(*serialized_fake_entity2.items())
     )
-    entities = await fake_service.get_many(
-        'fake', 'fake2', fields=['id', 'integer', 'inner_entities']
-    )
+    entities = [
+        e
+        async for e in fake_service.get_many(
+            'fake', 'fake2', fields=['id', 'integer', 'inner_entities']
+        )
+    ]
     fake_entity.number = None
     fake_entity.boolean = False
     fake_entity2.number = None
@@ -137,9 +140,12 @@ async def test_should_get_many_from_cache_with_fields(
     )
     fake_service.cache['fakeidintegerinner_entities'] = fake_entity
     fake_service.cache['fake2idintegerinner_entities'] = fake_entity2
-    entities = await fake_service.get_many(
-        'fake', 'fake2', fields=['id', 'integer', 'inner_entities']
-    )
+    entities = [
+        e
+        async for e in fake_service.get_many(
+            'fake', 'fake2', fields=['id', 'integer', 'inner_entities']
+        )
+    ]
     fake_entity.number = None
     fake_entity.boolean = False
     fake_entity2.number = None
@@ -167,9 +173,12 @@ async def test_should_get_many_from_fallback_after_open_circuit_breaker_with_fie
     fake_entity2.number = None
     fake_entity2.boolean = False
 
-    entities = await fake_service.get_many(
-        'fake', 'fake2', fields=['id', 'integer', 'inner_entities']
-    )
+    entities = [
+        e
+        async for e in fake_service.get_many(
+            'fake', 'fake2', fields=['id', 'integer', 'inner_entities']
+        )
+    ]
 
     assert entities == [fake_entity, fake_entity2]
-    assert fake_service.logger.warning.call_count == 1
+    assert fake_service.logger.warning.call_count == 2

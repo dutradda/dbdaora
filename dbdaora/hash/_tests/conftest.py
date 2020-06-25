@@ -30,6 +30,7 @@ async def fake_service(mocker, fallback_data_source, fake_hash_repository_cls):
         fake_hash_repository_cls,
         memory_data_source_factory,
         fallback_data_source_factory,
+        get_entity_timeout=1,
         repository_expire_time=1,
         cache_type=CacheType.TTL,
         cache_ttl=1,

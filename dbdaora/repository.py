@@ -1,4 +1,3 @@
-import asyncio
 import dataclasses
 import re
 from typing import (  # type: ignore
@@ -135,32 +134,9 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
             return await self.get_fallback(query)
 
     async def entities(
-        self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
+        self, query: 'BaseQuery[Entity, EntityData, FallbackKey]',
     ) -> List[Entity]:
-        tasks = []
-        entities = []
-
-        if query.memory:
-            for query_ in query.queries:
-                task = asyncio.create_task(self.get_memory(query_))
-                task.add_done_callback(task_done_callback)
-                tasks.append(task)
-        else:
-            for query_ in query.queries:
-                task = asyncio.create_task(self.get_fallback(query_))
-                task.add_done_callback(task_done_callback)
-                tasks.append(task)
-
-        for t in tasks:
-            try:
-                entities.append(await t)
-            except EntityNotFoundError:
-                continue
-
-        if not entities:
-            raise EntityNotFoundError(query)
-
-        return entities
+        raise NotImplementedError()  # pragma: no cover
 
     async def get_memory(
         self, query: 'Query[Entity, EntityData, FallbackKey]',
@@ -389,5 +365,5 @@ def task_done_callback(f: Any) -> None:
         ...
 
 
-from .query import BaseQuery, Query, QueryMany  # noqa isort:skip
+from .query import BaseQuery, Query  # noqa isort:skip
 from .query import make as query_factory  # noqa isort:skip

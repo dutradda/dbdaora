@@ -11,11 +11,11 @@ from dbdaora.data_sources.memory import MemoryDataSource
 from dbdaora.data_sources.memory.dict import DictMemoryDataSource
 from dbdaora.exceptions import EntityNotFoundError
 from dbdaora.hash.factory import make_service as make_hash_service
-from dbdaora.hash.query import HashQuery, HashQueryMany
+from dbdaora.hash.query import HashQuery
 from dbdaora.hash.repositories import HashData, HashRepository
 from dbdaora.hash.service import HashService
 from dbdaora.hashring import HashRing
-from dbdaora.query import Query, QueryMany
+from dbdaora.query import Query
 from dbdaora.repository import MemoryRepository
 from dbdaora.service import Service
 from dbdaora.service.builder import build as build_service
@@ -82,7 +82,6 @@ __all__ = [
     'CacheType',
     'Service',
     'EntityNotFoundError',
-    'HashQueryMany',
     'make_hash_service',
     'SortedSetData',
     'SortedSetDictEntity',
@@ -92,7 +91,6 @@ __all__ = [
     'DatastoreBooleanRepository',
     'BooleanService',
     'Query',
-    'QueryMany',
 ]
 
 if AioRedisDataSource:

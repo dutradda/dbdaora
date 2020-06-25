@@ -17,6 +17,7 @@ async def build(
     memory_data_source_factory: Any,
     fallback_data_source_factory: Any,
     repository_expire_time: int,
+    get_entity_timeout: float,
     cache_type: Optional[CacheType] = None,
     cache_ttl: Optional[int] = None,
     cache_max_size: Optional[int] = None,
@@ -45,7 +46,12 @@ async def build(
         cache_type, cache_ttl, cache_max_size, cache_ttl_failure_threshold
     )
     return service_cls(
-        repository, circuit_breaker, cache, exists_cache, logger
+        repository,
+        circuit_breaker,
+        get_entity_timeout,
+        cache,
+        exists_cache,
+        logger,
     )
 
 
