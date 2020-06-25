@@ -287,4 +287,7 @@ CACHE_ALREADY_NOT_FOUND = CacheAlreadyNotFound()
 
 
 def task_callback(future: Any) -> None:
-    future.result()
+    try:
+        future.result()
+    except EntityNotFoundError:
+        ...
