@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.16.1 - 2020-06-25
 
  - Fix Service.get_one
 
