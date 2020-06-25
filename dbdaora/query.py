@@ -52,6 +52,10 @@ class BaseQuery(Generic[Entity, EntityData, FallbackKey]):
     async def delete(self) -> None:
         raise NotImplementedError()  # pragma: no cover
 
+    @property
+    async def exists(self) -> bool:
+        raise NotImplementedError()  # pragma: no cover
+
 
 class Query(BaseQuery[Entity, EntityData, FallbackKey]):
     key_parts: List[Any]
@@ -86,6 +90,10 @@ class Query(BaseQuery[Entity, EntityData, FallbackKey]):
     @property
     async def entity(self) -> Entity:
         return await self.repository.entity(self)
+
+    @property
+    async def exists(self) -> bool:
+        return await self.repository.exists(self)
 
 
 class QueryMany(BaseQuery[Entity, EntityData, FallbackKey]):

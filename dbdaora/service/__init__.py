@@ -25,15 +25,18 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         repository: MemoryRepository[Entity, EntityData, FallbackKey],
         circuit_breaker: AsyncCircuitBreaker,
         cache: Optional[Cache] = None,
+        exists_cache: Optional[Cache] = None,
         logger: Logger = getLogger(__name__),
     ):
         self.repository = repository
         self.circuit_breaker = circuit_breaker
         self.cache = cache
+        self.exists_cache = exists_cache
         self.entity_circuit = self.circuit_breaker(self.repository.entity)
         self.entities_circuit = self.circuit_breaker(self.repository.entities)
         self.add_circuit = self.circuit_breaker(self.repository.add)
         self.delete_circuit = self.circuit_breaker(self.repository.delete)
+        self.exists_circuit = self.circuit_breaker(self.repository.exists)
         self.logger = logger
 
     async def get_many(
@@ -259,6 +262,53 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
             await self.repository.query(
                 id=entity_id, memory=False, **filters
             ).delete
+
+    async def exists(self, id: str, **filters: Any) -> bool:
+        try:
+            if self.exists_cache is None:
+                return await self.exists_circuit(
+                    self.repository.query(id=id, **filters)
+                )
+
+            return await self.exists_cached(id, self.exists_cache, **filters)
+
+        except CircuitBreakerError as error:
+            self.logger.warning(error)
+            if self.exists_cache is not None:
+                return await self.exists_cached(
+                    id, self.exists_cache, memory=False, **filters,
+                )
+
+            return await self.repository.query(
+                id=id, memory=False, **filters
+            ).exists
+
+    async def exists_cached(
+        self, id: str, cache: Cache, memory: bool = True, **filters: Any,
+    ) -> bool:
+        cache_key = self.cache_key(id, self.cache_key_suffix(**filters))
+        entity_exists = cache.get(cache_key)
+
+        if entity_exists is None:
+            if memory:
+                entity_exists = await self.exists_circuit(
+                    self.repository.query(id=id, **filters)
+                )
+            else:
+                entity_exists = await self.repository.query(
+                    id=id, memory=False, **filters
+                ).exists
+
+            if not entity_exists:
+                cache[cache_key] = CACHE_ALREADY_NOT_FOUND
+                return False
+            else:
+                cache[cache_key] = True
+
+        elif entity_exists == CACHE_ALREADY_NOT_FOUND:
+            return False
+
+        return True
 
     async def shutdown(self) -> None:
         self.repository.memory_data_source.close()

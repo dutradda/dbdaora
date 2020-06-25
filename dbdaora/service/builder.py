@@ -41,7 +41,12 @@ async def build(
     cache = build_cache(
         cache_type, cache_ttl, cache_max_size, cache_ttl_failure_threshold
     )
-    return service_cls(repository, circuit_breaker, cache, logger)
+    exists_cache = build_cache(
+        cache_type, cache_ttl, cache_max_size, cache_ttl_failure_threshold
+    )
+    return service_cls(
+        repository, circuit_breaker, cache, exists_cache, logger
+    )
 
 
 async def build_repository(

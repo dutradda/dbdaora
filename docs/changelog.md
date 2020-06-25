@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Create exists method service and repository
+
 ### 0.14.0 - 2020-06-18
 
  - Create mongodb fallback data source

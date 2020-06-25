@@ -245,6 +245,30 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
 
         await self.fallback_data_source.delete(self.fallback_key(query))
 
+    async def exists(
+        self, query: 'Query[Entity, EntityData, FallbackKey]',
+    ) -> bool:
+        if query.memory:
+            memory_key = self.memory_key(query)
+            entity_exists = await self.memory_data_source.exists(memory_key)
+
+            if not entity_exists:
+                if not await self.already_got_not_found(query):
+                    try:
+                        await self.get_memory(query)
+                    except EntityNotFoundError:
+                        return False
+                else:
+                    return False
+
+        else:
+            try:
+                await self.get_fallback(query)
+            except EntityNotFoundError:
+                return False
+
+        return True
+
     async def already_got_not_found(
         self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
     ) -> bool:
