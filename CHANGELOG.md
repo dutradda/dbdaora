@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.16.0 - 2020-06-25
 
  - Create Service.exists_many method
 
