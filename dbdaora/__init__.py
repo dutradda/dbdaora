@@ -58,9 +58,15 @@ except ImportError:
     make_aioredis_data_source = None  # type: ignore
 
 try:
-    from dbdaora.data_sources.fallback.mongodb import MongoDataSource
+    from dbdaora.data_sources.fallback.mongodb import (
+        MongoDataSource,
+        Key as MongoKey,
+    )
+    from dbdaora.hash.repositories.mongodb import MongodbHashRepository
+    from dbdaora.hash.service import MongoHashService
 except ImportError:
     MongoDataSource = None  # type: ignore
+    MongodbHashRepository = None  # type: ignore
 
 
 __all__ = [
@@ -115,3 +121,12 @@ if DatastoreSortedSetRepository:
 
 if MongoDataSource:
     __all__.append('MongoDataSource')
+
+if MongodbHashRepository:
+    __all__.append('MongodbHashRepository')
+
+if MongoHashService:
+    __all__.append('MongoHashService')
+
+if MongoKey:
+    __all__.append('MongoKey')

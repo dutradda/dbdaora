@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Improve type hints
+
 ### 0.15.0 - 2020-06-25
 
  - Create exists method service and repository
