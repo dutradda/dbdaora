@@ -38,7 +38,6 @@ service = asyncio.run(
         memory_data_source_factory=make_memory_data_source,
         fallback_data_source_factory=make_fallback_data_source,
         repository_expire_time=60,
-        get_entity_timeout=1,
     )
 )
 person = make_person('John Doe', 33)
