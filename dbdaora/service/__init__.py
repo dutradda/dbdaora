@@ -5,7 +5,7 @@ from typing import Any, Generic, List, Optional, Sequence, Union
 from cachetools import Cache
 from circuitbreaker import CircuitBreakerError
 
-from dbdaora.exceptions import EntityNotFoundError
+from dbdaora.exceptions import EntityNotFoundError, RequiredKeyAttributeError
 
 from ..circuitbreaker import AsyncCircuitBreaker
 from ..entity import Entity, EntityData
@@ -184,10 +184,8 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         fields: Optional[Sequence[str]] = None,
         **filters: Any,
     ) -> Any:
-        if id is None:
-            filters['id'] = filters.get(self.repository.id_name)
-        else:
-            filters[self.repository.id_name] = id
+        if id is not None:
+            filters['id'] = id
 
         try:
             if self.cache is None:
@@ -212,17 +210,26 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
 
     async def get_one_cached(
         self,
-        id: str,
         cache: Cache,
         fields: Optional[Sequence[str]] = None,
         memory: bool = True,
         **filters: Any,
     ) -> Any:
+        id = filters.pop(self.repository.id_name, None)
+
+        if id is None:
+            raise RequiredKeyAttributeError(
+                type(self.repository).__name__,
+                self.repository.id_name,
+                self.repository.key_attrs,
+            )
+
         cache_key_suffix = self.cache_key_suffix(**filters)
         entity = self.get_cached_entity(id, cache_key_suffix, fields)
-        filters[self.repository.id_name] = id
 
         if entity is None:
+            filters[self.repository.id_name] = id
+
             try:
                 if memory:
                     entity = await self.entity_circuit(
