@@ -8,7 +8,7 @@ from dbdaora.query import BaseQuery, Query, QueryMany
 @dataclasses.dataclass(init=False)
 class HashQuery(Query[Any, 'HashData', FallbackKey]):
     repository: 'HashRepository[FallbackKey]'
-    fields: Optional[Sequence[str]]
+    fields: Optional[Sequence[str]] = None
 
     def __init__(
         self,
@@ -30,7 +30,7 @@ class HashQueryMany(QueryMany[Any, 'HashData', FallbackKey]):
     query_cls: ClassVar[Type[HashQuery[FallbackKey]]] = HashQuery[FallbackKey]
     queries: Sequence[HashQuery[FallbackKey]]  # type: ignore
     repository: 'HashRepository[FallbackKey]'
-    fields: Optional[Sequence[str]]
+    fields: Optional[Sequence[str]] = None
 
     def __init__(
         self,
