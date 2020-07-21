@@ -21,7 +21,7 @@ async def test_should_get_from_memory(
         'fake:fake', *itertools.chain(*serialized_fake_entity.items())
     )
     fake_entity.number = None
-    fake_entity.boolean = False
+    fake_entity.boolean = None
 
     entity = await repository.query(
         'fake', fields=['id', 'integer', 'inner_entities']
@@ -80,7 +80,7 @@ async def test_should_get_from_fallback(repository, fake_entity):
         fake_entity
     )
     fake_entity.number = None
-    fake_entity.boolean = False
+    fake_entity.boolean = None
 
     entity = await repository.query('fake', fields=fields).entity
 
@@ -100,7 +100,7 @@ async def test_should_set_memory_after_got_fallback(
         fake_entity
     )
     fake_entity.number = None
-    fake_entity.boolean = False
+    fake_entity.boolean = None
 
     entity = await repository.query(
         'fake', fields=['id', 'integer', 'inner_entities']

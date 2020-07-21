@@ -8,7 +8,7 @@ from dbdaora.service import CACHE_ALREADY_NOT_FOUND
 @pytest.fixture
 def service():
     s = HashService(
-        repository=asynctest.MagicMock(),
+        repository=asynctest.MagicMock(id_name='id'),
         circuit_breaker=asynctest.MagicMock(),
         cache={},
     )

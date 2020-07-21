@@ -117,9 +117,9 @@ async def test_should_get_many_from_fallback_when_not_found_on_memory_with_field
         dataclasses.asdict(fake_entity2),
     )
     fake_entity.number = None
-    fake_entity.boolean = False
+    fake_entity.boolean = None
     fake_entity2.number = None
-    fake_entity2.boolean = False
+    fake_entity2.boolean = None
 
     entities = await fake_service.get_many(
         'fake',
@@ -188,9 +188,9 @@ async def test_should_get_many_with_fields(
         other_id='other_fake',
     )
     fake_entity.number = None
-    fake_entity.boolean = False
+    fake_entity.boolean = None
     fake_entity2.number = None
-    fake_entity2.boolean = False
+    fake_entity2.boolean = None
 
     assert entities == [fake_entity, fake_entity2]
 
@@ -215,9 +215,9 @@ async def test_should_get_many_from_cache_with_fields(
         other_id='other_fake',
     )
     fake_entity.number = None
-    fake_entity.boolean = False
+    fake_entity.boolean = None
     fake_entity2.number = None
-    fake_entity2.boolean = False
+    fake_entity2.boolean = None
 
     assert entities == [fake_entity, fake_entity2]
     assert not fake_service.repository.memory_data_source.hgetall.called
@@ -241,9 +241,9 @@ async def test_should_get_many_from_fallback_after_open_circuit_breaker_with_fie
         key, dataclasses.asdict(fake_entity2)
     )
     fake_entity.number = None
-    fake_entity.boolean = False
+    fake_entity.boolean = None
     fake_entity2.number = None
-    fake_entity2.boolean = False
+    fake_entity2.boolean = None
 
     entities = await fake_service.get_many(
         'fake',

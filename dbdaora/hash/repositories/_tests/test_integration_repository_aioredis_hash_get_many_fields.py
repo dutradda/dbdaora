@@ -60,7 +60,7 @@ async def test_should_get_many_from_fallback_with_fields(
         fake_entity
     )
     fake_entity.number = None
-    fake_entity.boolean = False
+    fake_entity.boolean = None
 
     entities = await repository.query(
         many=[fake_entity.id], fields=['id', 'integer', 'inner_entities']

@@ -31,7 +31,7 @@ async def test_should_get_one_with_fields(
         *itertools.chain(*serialized_fake_entity.items()),
     )
     fake_entity.number = None
-    fake_entity.boolean = False
+    fake_entity.boolean = None
 
     entity = await fake_service.get_one(
         'fake',
@@ -90,7 +90,7 @@ async def test_should_get_one_from_fallback_when_not_found_on_memory_with_fields
         Key('fake', 'other_fake:fake'), dataclasses.asdict(fake_entity)
     )
     fake_entity.number = None
-    fake_entity.boolean = False
+    fake_entity.boolean = None
 
     entity = await fake_service.get_one(
         'fake',
