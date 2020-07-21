@@ -181,25 +181,27 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
     async def get_one(
         self, id: str, fields: Optional[Sequence[str]] = None, **filters: Any
     ) -> Any:
+        filters[self.repository.id_name] = id
+
         try:
             if self.cache is None:
                 return await self.entity_circuit(
-                    self.repository.query(id=id, fields=fields, **filters)
+                    self.repository.query(fields=fields, **filters)
                 )
 
             return await self.get_one_cached(
-                id, self.cache, fields=fields, **filters
+                cache=self.cache, fields=fields, **filters
             )
 
         except CircuitBreakerError as error:
             self.logger.warning(error)
             if self.cache is not None:
                 return await self.get_one_cached(
-                    id, self.cache, fields=fields, memory=False, **filters
+                    cache=self.cache, fields=fields, memory=False, **filters
                 )
 
             return await self.repository.query(
-                id=id, fields=fields, memory=False, **filters
+                fields=fields, memory=False, **filters
             ).entity
 
     async def get_one_cached(
@@ -212,16 +214,17 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
     ) -> Any:
         cache_key_suffix = self.cache_key_suffix(**filters)
         entity = self.get_cached_entity(id, cache_key_suffix, fields)
+        filters[self.repository.id_name] = id
 
         if entity is None:
             try:
                 if memory:
                     entity = await self.entity_circuit(
-                        self.repository.query(id=id, fields=fields, **filters)
+                        self.repository.query(fields=fields, **filters)
                     )
                 else:
                     entity = await self.repository.query(
-                        id=id, fields=fields, memory=False, **filters
+                        fields=fields, memory=False, **filters
                     ).entity
 
                 self.set_cached_entity(id, cache_key_suffix, entity)
