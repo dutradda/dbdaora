@@ -179,9 +179,15 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         )
 
     async def get_one(
-        self, id: str, fields: Optional[Sequence[str]] = None, **filters: Any
+        self,
+        id: Optional[str] = None,
+        fields: Optional[Sequence[str]] = None,
+        **filters: Any,
     ) -> Any:
-        filters[self.repository.id_name] = id
+        if id is None:
+            filters['id'] = filters.get(self.repository.id_name)
+        else:
+            filters[self.repository.id_name] = id
 
         try:
             if self.cache is None:
