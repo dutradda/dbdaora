@@ -41,10 +41,12 @@ try:
     from dbdaora.sorted_set.repositories.datastore import (
         DatastoreSortedSetRepository,
     )
+    from dbdaora.hash.service.datastore import DatastoreHashService
 except ImportError:
     DatastoreDataSource = None  # type: ignore
     DatastoreHashRepository = None  # type: ignore
     DatastoreSortedSetRepository = None  # type: ignore
+    DatastoreHashService = None  # type: ignore
 
 try:
     from dbdaora.data_sources.memory.aioredis import (
@@ -63,10 +65,11 @@ try:
         Key as MongoKey,
     )
     from dbdaora.hash.repositories.mongodb import MongodbHashRepository
-    from dbdaora.hash.service import MongoHashService
+    from dbdaora.hash.service.mongodb import MongoHashService
 except ImportError:
     MongoDataSource = None  # type: ignore
     MongodbHashRepository = None  # type: ignore
+    MongoHashService = None  # type: ignore
 
 
 __all__ = [
@@ -127,6 +130,9 @@ if MongodbHashRepository:
 
 if MongoHashService:
     __all__.append('MongoHashService')
+
+if DatastoreHashService:
+    __all__.append('DatastoreHashService')
 
 if MongoKey:
     __all__.append('MongoKey')
