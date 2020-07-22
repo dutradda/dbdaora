@@ -39,39 +39,30 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         self.exists_circuit = self.circuit_breaker(self.repository.exists)
         self.logger = logger
 
-    async def get_many(
-        self,
-        *ids: str,
-        fields: Optional[Sequence[str]] = None,
-        **filters: Any,
-    ) -> Sequence[Any]:
+    async def get_many(self, *ids: str, **filters: Any,) -> Sequence[Any]:
         try:
             if self.cache is None:
                 return [
                     entity
                     for entity in await self.entities_circuit(
-                        self.repository.query(
-                            many=ids, fields=fields, **filters
-                        )
+                        self.repository.query(many=ids, **filters)
                     )
                     if entity is not None
                 ]
 
-            return await self.get_many_cached(
-                ids, self.cache, fields=fields, **filters
-            )
+            return await self.get_many_cached(ids, self.cache, **filters)
 
         except CircuitBreakerError as error:
             self.logger.warning(error)
             if self.cache is not None:
                 return await self.get_many_cached(
-                    ids, self.cache, fields=fields, memory=False, **filters
+                    ids, self.cache, memory=False, **filters
                 )
 
             return [
                 entity
                 for entity in await self.repository.query(
-                    many=ids, fields=fields, memory=False, **filters
+                    many=ids, memory=False, **filters
                 ).entities
                 if entity is not None
             ]
@@ -80,7 +71,6 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         self,
         ids: Sequence[str],
         cache: Cache,
-        fields: Optional[Sequence[str]] = None,
         memory: bool = True,
         **filters: Any,
     ) -> Sequence[Any]:
@@ -89,7 +79,7 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         cache_key_suffix = self.cache_key_suffix(**filters)
 
         for id_ in ids:
-            entity = self.get_cached_entity(id_, cache_key_suffix, fields)
+            entity = self.get_cached_entity(id_, cache_key_suffix, **filters)
 
             if entity is None:
                 missed_ids.append(id_)
@@ -100,13 +90,11 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
             try:
                 if memory:
                     missed_entities = await self.entities_circuit(
-                        self.repository.query(
-                            many=missed_ids, fields=fields, **filters
-                        )
+                        self.repository.query(many=missed_ids, **filters)
                     )
                 else:
                     missed_entities = await self.repository.query(
-                        many=missed_ids, fields=fields, memory=False, **filters
+                        many=missed_ids, memory=False, **filters
                     ).entities
             except EntityNotFoundError:
                 missed_entities = []
@@ -134,32 +122,17 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
                 )
 
         if not final_entities:
-            raise EntityNotFoundError(ids, fields, filters)
+            raise EntityNotFoundError(ids, filters)
 
         return final_entities
 
     def get_cached_entity(
-        self, id: str, key_suffix: str, fields: Optional[Sequence[str]] = None,
+        self, id: str, key_suffix: str, **filters: Any,
     ) -> Any:
         if self.cache is None:
             return None
 
-        entity = self.cache.get(self.cache_key(id, key_suffix))
-
-        if fields is None:
-            return entity
-
-        if isinstance(entity, dict):
-            for field in fields:
-                if field not in entity:
-                    return None
-
-        else:
-            for field in fields:
-                if hasattr(entity, field):
-                    return None
-
-        return entity
+        return self.cache.get(self.cache_key(id, key_suffix))
 
     def cache_key(self, id: str, suffix: str) -> str:
         return f'{id}{suffix}'
@@ -178,42 +151,29 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
             ''.join(f'{f}{v}' for f, v in filters.items()) if filters else ''
         )
 
-    async def get_one(
-        self,
-        id: Optional[str] = None,
-        fields: Optional[Sequence[str]] = None,
-        **filters: Any,
-    ) -> Any:
+    async def get_one(self, id: Optional[str] = None, **filters: Any,) -> Any:
         if id is not None:
             filters['id'] = id
 
         try:
             if self.cache is None:
                 return await self.entity_circuit(
-                    self.repository.query(fields=fields, **filters)
+                    self.repository.query(**filters)
                 )
 
-            return await self.get_one_cached(
-                cache=self.cache, fields=fields, **filters
-            )
+            return await self.get_one_cached(cache=self.cache, **filters)
 
         except CircuitBreakerError as error:
             self.logger.warning(error)
             if self.cache is not None:
                 return await self.get_one_cached(
-                    cache=self.cache, fields=fields, memory=False, **filters
+                    cache=self.cache, memory=False, **filters
                 )
 
-            return await self.repository.query(
-                fields=fields, memory=False, **filters
-            ).entity
+            return await self.repository.query(memory=False, **filters).entity
 
     async def get_one_cached(
-        self,
-        cache: Cache,
-        fields: Optional[Sequence[str]] = None,
-        memory: bool = True,
-        **filters: Any,
+        self, cache: Cache, memory: bool = True, **filters: Any,
     ) -> Any:
         id = filters.pop(self.repository.id_name, None)
 
@@ -225,7 +185,7 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
             )
 
         cache_key_suffix = self.cache_key_suffix(**filters)
-        entity = self.get_cached_entity(id, cache_key_suffix, fields)
+        entity = self.get_cached_entity(id, cache_key_suffix, **filters)
 
         if entity is None:
             filters[self.repository.id_name] = id
@@ -233,11 +193,11 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
             try:
                 if memory:
                     entity = await self.entity_circuit(
-                        self.repository.query(fields=fields, **filters)
+                        self.repository.query(**filters)
                     )
                 else:
                     entity = await self.repository.query(
-                        fields=fields, memory=False, **filters
+                        memory=False, **filters
                     ).entity
 
                 self.set_cached_entity(id, cache_key_suffix, entity)

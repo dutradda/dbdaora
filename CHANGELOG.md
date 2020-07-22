@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Fix Service class to be generic
+
 ### 0.17.2 - 2020-07-21
 
  - Fix service

@@ -336,6 +336,5 @@ async def test_should_raise_entity_not_found_error_when_get_many(fake_service):
 
     assert exc_info.value.args == (
         ('fake', 'fake2', 'fake3'),
-        None,
         {'other_id': 'other_fake'},
     )
