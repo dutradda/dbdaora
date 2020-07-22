@@ -42,11 +42,17 @@ try:
         DatastoreSortedSetRepository,
     )
     from dbdaora.hash.service.datastore import DatastoreHashService
+    from dbdaora.geospatial.service.datastore import DatastoreGeoSpatialService
+    from dbdaora.geospatial.repositories.datastore import (
+        DatastoreGeoSpatialRepository,
+    )
 except ImportError:
     DatastoreDataSource = None  # type: ignore
     DatastoreHashRepository = None  # type: ignore
     DatastoreSortedSetRepository = None  # type: ignore
     DatastoreHashService = None  # type: ignore
+    DatastoreGeoSpatialService = None  # type: ignore
+    DatastoreGeoSpatialRepository = None  # type: ignore
 
 try:
     from dbdaora.data_sources.memory.aioredis import (
@@ -66,9 +72,15 @@ try:
     )
     from dbdaora.hash.repositories.mongodb import MongodbHashRepository
     from dbdaora.hash.service.mongodb import MongoHashService
+    from dbdaora.geospatial.service.mongodb import MongoGeoSpatialService
+    from dbdaora.geospatial.repositories.mongodb import (
+        MongodbGeoSpatialRepository,
+    )
 except ImportError:
     MongoDataSource = None  # type: ignore
     MongodbHashRepository = None  # type: ignore
+    MongoGeoSpatialService = None  # type: ignore
+    MongodbGeoSpatialRepository = None  # type: ignore
     MongoHashService = None  # type: ignore
 
 
@@ -136,3 +148,15 @@ if DatastoreHashService:
 
 if MongoKey:
     __all__.append('MongoKey')
+
+if MongodbGeoSpatialRepository:
+    __all__.append('MongodbGeoSpatialRepository')
+
+if MongoGeoSpatialService:
+    __all__.append('MongoGeoSpatialService')
+
+if DatastoreGeoSpatialRepository:
+    __all__.append('DatastoreGeoSpatialRepository')
+
+if DatastoreGeoSpatialService:
+    __all__.append('DatastoreGeoSpatialService')
