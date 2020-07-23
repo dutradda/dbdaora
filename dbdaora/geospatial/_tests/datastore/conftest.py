@@ -1,11 +1,11 @@
 import pytest
 
-from dbdaora import DatastoreDataSource, DatastoreGeoSpatialRepository
+from dbdaora import DatastoreGeoSpatialRepository, KindKeyDatastoreDataSource
 
 
 @pytest.fixture
 def fallback_data_source():
-    return DatastoreDataSource()
+    return KindKeyDatastoreDataSource()
 
 
 @pytest.fixture

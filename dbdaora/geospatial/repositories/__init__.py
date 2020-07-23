@@ -1,6 +1,15 @@
-from typing import Any, ClassVar, Dict, Optional, Sequence, Type, Union
+from typing import (  # type: ignore
+    Any,
+    ClassVar,
+    Dict,
+    Optional,
+    Sequence,
+    Type,
+    Union,
+    _TypedDictMeta,
+)
 
-from dbdaora.data_sources.memory import GeoMember, GeoRadiusOutput
+from dbdaora.data_sources.memory import GeoMember
 from dbdaora.exceptions import (
     EntityNotFoundError,
     InvalidGeoSpatialDataError,
@@ -10,10 +19,7 @@ from dbdaora.keys import FallbackKey
 from dbdaora.query import BaseQuery, Query
 from dbdaora.repository import MemoryRepository
 
-from ..entity import GeoSpatialEntity
-
-
-GeoSpatialData = GeoRadiusOutput
+from ..entity import GeoSpatialData, GeoSpatialEntity
 
 
 class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
@@ -24,13 +30,22 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
     async def get_memory_data(  # type: ignore
         self, key: str, query: 'GeoSpatialQuery[FallbackKey]',
     ) -> Optional[GeoSpatialData]:
-        self._validate_query(query)
+        if query.type == GeoSpatialQueryType.RADIUS:
+            if (
+                query.latitude is None
+                or query.longitude is None
+                or query.max_distance is None
+            ):
+                raise InvalidQueryError(query)
+
+        else:
+            raise InvalidQueryError(query)
 
         data = await self.memory_data_source.georadius(
             key=key,
-            longitude=query.longitude,  # type: ignore
-            latitude=query.latitude,  # type: ignore
-            radius=query.max_distance,  # type: ignore
+            longitude=query.longitude,
+            latitude=query.latitude,
+            radius=query.max_distance,
             unit=query.distance_unit,
             with_dist=query.with_dist,
             with_coord=query.with_coord,
@@ -48,31 +63,18 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
         for_memory: bool = False,
     ) -> Optional[GeoSpatialData]:
         key = self.fallback_key(query)
-        data = await self.fallback_data_source.get(key)
+        data = tuple(await self.fallback_data_source.query(key))
 
-        if data is None:
+        if not data:
             return None
 
         return self.make_fallback_data_for_memory(key, query, data)
-
-    def _validate_query(self, query: 'GeoSpatialQuery[FallbackKey]') -> None:
-        if query.type == GeoSpatialQueryType.RADIUS:
-            if (
-                query.latitude is None
-                or query.longitude is None
-                or query.max_distance is None
-            ):
-                raise InvalidQueryError(query)
-
-            return
-
-        raise InvalidQueryError(query)
 
     def make_fallback_data_for_memory(
         self,
         key: FallbackKey,
         query: 'GeoSpatialQuery[FallbackKey]',
-        data: Dict[str, Any],
+        data: Sequence[Dict[str, Any]],
     ) -> GeoSpatialData:
         return [
             self.memory_data_source.geomember_cls(
@@ -83,7 +85,7 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
                     latitude=member['latitude'], longitude=member['longitude'],
                 ),
             )
-            for member in data['data']
+            for member in data
         ]
 
     def make_entity(  # type: ignore
@@ -109,19 +111,18 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
     async def add_memory_data(
         self, key: str, data: GeoSpatialData, from_fallback: bool = False
     ) -> None:
-        for i, geomember in enumerate(data):
-            if (
-                isinstance(geomember, self.memory_data_source.geomember_cls)
-                and geomember.coord is not None
-            ):
-                await self.memory_data_source.geoadd(
-                    key,
-                    longitude=geomember.coord.longitude,
-                    latitude=geomember.coord.latitude,
-                    member=geomember.member,
-                )
-            else:
-                raise InvalidGeoSpatialDataError(i, geomember)
+        if (
+            isinstance(data, self.memory_data_source.geomember_cls)
+            and data.coord is not None
+        ):
+            await self.memory_data_source.geoadd(
+                key,
+                longitude=data.coord.longitude,
+                latitude=data.coord.latitude,
+                member=data.member,
+            )
+        else:
+            raise InvalidGeoSpatialDataError(data)
 
     async def add_memory_data_from_fallback(
         self,
@@ -179,23 +180,58 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
         *entities: GeoSpatialEntity,
         **kwargs: Any,
     ) -> None:
-        data = {
-            'data': [
-                {
-                    'latitude': m.coord.latitude,
-                    'longitude': m.coord.longitude,
-                    'member': m.member,
-                }
-                for m in entity.data
-                if (
-                    isinstance(m, self.memory_data_source.geomember_cls)
-                    and m.coord is not None
-                )
-            ],
-        }
-        await self.fallback_data_source.put(
-            self.fallback_key(entity), data, **kwargs
-        )
+        if (
+            isinstance(entity.data, self.memory_data_source.geomember_cls)
+            and entity.data.coord is not None
+        ):
+            data = {
+                'latitude': entity.data.coord.latitude,
+                'longitude': entity.data.coord.longitude,
+                'member': entity.data.member,
+            }
+            await self.fallback_data_source.put(
+                self.fallback_key(entity), data, **kwargs
+            )
+            return
+
+        raise InvalidGeoSpatialDataError(entity)
+
+    def fallback_key(
+        self,
+        query: Union[
+            'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
+            GeoSpatialEntity,
+            Dict[str, Any],
+        ],
+    ) -> FallbackKey:
+        if isinstance(query, Query):
+            return self.fallback_data_source.make_key(
+                self.name, *query.key_parts, *('',)
+            )
+
+        elif isinstance(self.get_entity_type(query), _TypedDictMeta):
+            return self.fallback_data_source.make_key(
+                self.name,
+                *self.key_parts(query),
+                *(
+                    query['data'].member.decode()  # type: ignore
+                    if isinstance(query['data'].member, bytes)  # type: ignore
+                    else query['data'].member,  # type: ignore
+                ),
+            )
+
+        elif isinstance(query, self.get_entity_type(query)):
+            return self.fallback_data_source.make_key(
+                self.name,
+                *self.key_parts(query),
+                *(
+                    query.data.member.decode()
+                    if isinstance(query.data.member, bytes)
+                    else query.data.member,
+                ),
+            )
+
+        raise InvalidQueryError(query)
 
     def make_query(
         self, *args: Any, **kwargs: Any
@@ -230,6 +266,16 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
         ],
     ) -> None:
         ...
+
+    async def delete(
+        self, query: 'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
+    ) -> None:
+        raise NotImplementedError()  # pragma: no cover
+
+    async def exists(
+        self, query: 'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
+    ) -> bool:
+        raise NotImplementedError()  # pragma: no cover
 
 
 from ..query import (  # noqa isort:skip

@@ -34,9 +34,20 @@ class DatastoreDataSource(FallbackDataSource[Key]):
     async def delete(self, key: Key) -> None:
         self.client.delete(key)
 
+    async def query(self, key: Key, **kwargs: Any) -> Iterable[Dict[str, Any]]:
+        return self.client.query(kind=key.kind, **kwargs).fetch()
+
 
 def entity_asdict(entity: Entity) -> Dict[str, Any]:
     return {
         k: entity_asdict(v) if isinstance(v, Entity) else v
         for k, v in entity.items()
     }
+
+
+class KindKeyDatastoreDataSource(DatastoreDataSource):
+    def make_key(self, *key_parts: Any) -> Key:
+        return self.client.key(
+            self.key_separator.join([str(k) for k in key_parts[:-1]]),
+            key_parts[-1],
+        )

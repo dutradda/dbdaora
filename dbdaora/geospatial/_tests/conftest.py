@@ -3,11 +3,7 @@ from functools import partial
 import pytest
 from aioredis import RedisError
 
-from dbdaora import (
-    CacheType,
-    make_aioredis_data_source,
-    make_geospatial_service,
-)
+from dbdaora import make_aioredis_data_source, make_geospatial_service
 
 
 @pytest.mark.asyncio
@@ -28,9 +24,6 @@ async def fake_service(mocker, fallback_data_source, fake_repository_cls):
         memory_data_source_factory,
         fallback_data_source_factory,
         repository_expire_time=1,
-        cache_type=CacheType.TTL,
-        cache_ttl=1,
-        cache_max_size=2,
         cb_failure_threshold=0,
         cb_recovery_timeout=10,
         cb_expected_exception=RedisError,

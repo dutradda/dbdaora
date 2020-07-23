@@ -3,14 +3,14 @@ from aioredis import GeoMember, GeoPoint
 from google.cloud import datastore
 
 from dbdaora import (
-    DatastoreDataSource,
     DatastoreGeoSpatialRepository,
     GeoSpatialEntity,
+    KindKeyDatastoreDataSource,
 )
 
 
 class FakeGeoSpatialRepository(DatastoreGeoSpatialRepository):
-    name = 'fake'
+    name = 'fakegeo'
 
 
 @pytest.fixture
@@ -20,16 +20,16 @@ def fake_repository_cls():
 
 @pytest.fixture
 def fallback_data_source():
-    return DatastoreDataSource()
+    return KindKeyDatastoreDataSource()
 
 
 @pytest.mark.asyncio
 async def test_should_exclude_all_attributes_from_indexes(repository):
-    await repository.memory_data_source.delete('fake:fake')
+    await repository.memory_data_source.delete('fakegeo:fake')
     client = repository.fallback_data_source.client
-    key = client.key('fake', 'fake')
+    key = client.key('fakegeo:fake', 'fake')
     entity = datastore.Entity(key=key)
-    entity.update({'data': [{'latitude': 1, 'longitude': 1}]})
+    entity.update({'latitude': 1, 'longitude': 1, 'member': 'fake'})
     client.put(entity)
 
     assert not client.get(key).exclude_from_indexes
@@ -37,12 +37,12 @@ async def test_should_exclude_all_attributes_from_indexes(repository):
     await repository.add(
         GeoSpatialEntity(
             id='fake',
-            data=[
-                GeoMember(
-                    member='fake', dist=None, hash=None, coord=GeoPoint(1, 1)
-                )
-            ],
+            data=GeoMember(
+                member='fake', dist=None, hash=None, coord=GeoPoint(1, 1)
+            ),
         )
     )
 
-    assert client.get(key).exclude_from_indexes == set(['data'])
+    assert client.get(key).exclude_from_indexes == set(
+        ['latitude', 'longitude', 'member']
+    )

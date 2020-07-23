@@ -116,8 +116,8 @@ async def test_should_set_already_not_found_error(
     repository.memory_data_source.exists = asynctest.CoroutineMock(
         side_effect=[False]
     )
-    repository.fallback_data_source.get = asynctest.CoroutineMock(
-        return_value=None
+    repository.fallback_data_source.query = asynctest.CoroutineMock(
+        return_value=[]
     )
     repository.memory_data_source.geoadd = asynctest.CoroutineMock()
 
@@ -145,7 +145,7 @@ async def test_should_set_already_not_found_error(
     assert repository.memory_data_source.exists.call_args_list == [
         mocker.call('fake:fake2:fake')
     ]
-    assert repository.fallback_data_source.get.call_args_list == [
+    assert repository.fallback_data_source.query.call_args_list == [
         mocker.call('fake:fake2:fake')
     ]
     assert not repository.memory_data_source.geoadd.called
@@ -153,12 +153,18 @@ async def test_should_set_already_not_found_error(
 
 @pytest.mark.asyncio
 async def test_should_get_from_fallback(
-    repository, fake_entity, fake_fallback_data_entity
+    repository,
+    fake_entity,
+    fake_fallback_data_entity,
+    fake_fallback_data_entity2,
 ):
     await repository.memory_data_source.delete('fake:fake2:fake')
     repository.fallback_data_source.db[
-        'fake:fake2:fake'
+        'fake:fake2:m1'
     ] = fake_fallback_data_entity
+    repository.fallback_data_source.db[
+        'fake:fake2:m2'
+    ] = fake_fallback_data_entity2
     entity = await repository.query(
         fake_id=fake_entity.fake_id,
         fake2_id=fake_entity.fake2_id,
@@ -168,12 +174,16 @@ async def test_should_get_from_fallback(
     ).entity
 
     assert entity == fake_entity
-    assert repository.memory_data_source.exists('fake:fake')
+    assert repository.memory_data_source.exists('fake:fake2:fake')
 
 
 @pytest.mark.asyncio
 async def test_should_set_memory_after_got_fallback(
-    repository, fake_entity, mocker
+    repository,
+    fake_entity,
+    mocker,
+    fake_fallback_data_entity,
+    fake_fallback_data_entity2,
 ):
     repository.memory_data_source.georadius = asynctest.CoroutineMock(
         side_effect=[[], fake_entity.data]
@@ -181,22 +191,12 @@ async def test_should_set_memory_after_got_fallback(
     repository.memory_data_source.exists = asynctest.CoroutineMock(
         side_effect=[False]
     )
-    repository.fallback_data_source.db['fake:fake2:fake'] = {
-        'fake_id': fake_entity.fake_id,
-        'fake2_id': fake_entity.fake2_id,
-        'data': [
-            {
-                'latitude': fake_entity.data[0].coord.latitude,
-                'longitude': fake_entity.data[0].coord.longitude,
-                'member': fake_entity.data[0].member,
-            },
-            {
-                'latitude': fake_entity.data[1].coord.latitude,
-                'longitude': fake_entity.data[1].coord.longitude,
-                'member': fake_entity.data[1].member,
-            },
-        ],
-    }
+    repository.fallback_data_source.db[
+        'fake:fake2:m1'
+    ] = fake_fallback_data_entity
+    repository.fallback_data_source.db[
+        'fake:fake2:m2'
+    ] = fake_fallback_data_entity2
     repository.memory_data_source.geoadd = asynctest.CoroutineMock()
     entity = await repository.query(
         fake_id=fake_entity.fake_id,

@@ -4,8 +4,11 @@ from aioredis import RedisError
 
 
 @pytest.mark.asyncio
-async def test_should_add(fake_service, fake_entity):
-    await fake_service.repository.add(fake_entity)
+async def test_should_add(
+    fake_service, fake_entity, fake_entity_add, fake_entity_add2
+):
+    await fake_service.add(fake_entity_add)
+    await fake_service.add(fake_entity_add2)
 
     entity = await fake_service.get_one(
         fake_id=fake_entity.fake_id,
@@ -20,11 +23,12 @@ async def test_should_add(fake_service, fake_entity):
 
 @pytest.mark.asyncio
 async def test_should_add_to_fallback_after_open_circuit_breaker(
-    fake_service, fake_entity
+    fake_service, fake_entity, fake_entity_add, fake_entity_add2
 ):
     fake_geoadd = asynctest.CoroutineMock(side_effect=RedisError)
     fake_service.repository.memory_data_source.geoadd = fake_geoadd
-    await fake_service.add(fake_entity)
+    await fake_service.add(fake_entity_add)
+    await fake_service.add(fake_entity_add2)
 
     entity = await fake_service.get_one(
         fake_id=fake_entity.fake_id,
@@ -35,4 +39,4 @@ async def test_should_add_to_fallback_after_open_circuit_breaker(
     )
 
     assert entity == fake_entity
-    assert fake_service.logger.warning.call_count == 1
+    assert fake_service.logger.warning.call_count == 2

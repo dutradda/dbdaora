@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, AsyncGenerator, Dict, Optional
 
 
 class AsyncIOMotorCollection:
@@ -25,6 +25,12 @@ class AsyncIOMotorCollection:
         *args: Any,
         **kwargs: Any,
     ) -> Dict[str, Any]: ...
+
+    def find(
+        self,
+        *args: Any,
+        **kwargs: Any,
+    ) -> AsyncGenerator[Dict[str, Any], None]: ...
 
 
 class AsyncIOMotorDatabase:

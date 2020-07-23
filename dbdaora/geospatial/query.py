@@ -114,7 +114,5 @@ def make(
     return GeoSpatialQuery(*args, **kwargs)
 
 
-from .repositories import (  # noqa isort:skip
-    GeoSpatialData,
-    GeoSpatialRepository,
-)
+from .repositories import GeoSpatialRepository  # noqa isort:skip
+from .entity import GeoSpatialData  # noqa isort:skip

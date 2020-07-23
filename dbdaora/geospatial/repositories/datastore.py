@@ -11,7 +11,11 @@ OrjsonDefaultTypes.types_default_map[Entity] = lambda e: dict(**e)
 
 class DatastoreGeoSpatialRepository(GeoSpatialRepository[Key]):
     __skip_cls_validation__ = ('DatastoreGeoSpatialRepository',)
-    exclude_from_indexes: ClassVar[Sequence[str]] = ('data',)
+    exclude_from_indexes: ClassVar[Sequence[str]] = (
+        'latitude',
+        'longitude',
+        'member',
+    )
 
     async def add_fallback(
         self, entity: Any, *entities: Any, **kwargs: Any

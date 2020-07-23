@@ -3,7 +3,11 @@ from typing import Any, Dict, Iterable, List, Optional
 
 
 class Key:
-    ...
+    kind: str
+
+
+class Query:
+    def fetch(self) -> Iterable[Dict[str, Any]]: ...
 
 
 @dataclass
@@ -22,3 +26,5 @@ class Client:
     def get_multi(self, keys: Iterable[Key]) -> List[Entity]: ...
 
     def key(self, *key_parts: Any) -> Key: ...
+
+    def query(self, kind: str, **kwargs: Any) -> Query: ...

@@ -47,3 +47,14 @@ class MongoDataSource(FallbackDataSource[Key]):
 
     def collection(self, key: Key) -> motor.AsyncIOMotorCollection:
         return self.client[self.database_name][key.collection_name]
+
+    async def query(self, key: Key, **kwargs: Any) -> Iterable[Dict[str, Any]]:
+        return [i async for i in self.collection(key).find(**kwargs)]
+
+
+class CollectionKeyMongoDataSource(MongoDataSource):
+    def make_key(self, *key_parts: Any) -> Key:
+        return Key(
+            self.key_separator.join([str(k) for k in key_parts[:-1]]),
+            key_parts[-1],
+        )

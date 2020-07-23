@@ -6,7 +6,6 @@ import pytest
 from aioredis import GeoMember, GeoPoint, RedisError
 
 from dbdaora import (
-    CacheType,
     DictFallbackDataSource,
     GeoSpatialRepository,
     GeoSpatialService,
@@ -34,9 +33,6 @@ async def fake_service(mocker, fallback_data_source, fake_repository_cls):
         memory_data_source_factory,
         fallback_data_source_factory,
         repository_expire_time=1,
-        cache_type=CacheType.TTL,
-        cache_ttl=1,
-        cache_max_size=1,
         cb_failure_threshold=0,
         cb_recovery_timeout=10,
         cb_expected_exception=RedisError,
@@ -100,6 +96,34 @@ def fake_entity(fake_entity_cls):
 
 
 @pytest.fixture
+def fake_entity_add(fake_entity_cls):
+    return fake_entity_cls(
+        fake_id='fake',
+        fake2_id='fake2',
+        data=GeoMember(
+            member=b'm1',
+            dist=0.0003,
+            hash=None,
+            coord=GeoPoint(6.000002324581146, 4.999999830436074),
+        ),
+    )
+
+
+@pytest.fixture
+def fake_entity_add2(fake_entity_cls):
+    return fake_entity_cls(
+        fake_id='fake',
+        fake2_id='fake2',
+        data=GeoMember(
+            member=b'm2',
+            dist=0.0003,
+            hash=None,
+            coord=GeoPoint(6.000002324581146, 4.999999830436074),
+        ),
+    )
+
+
+@pytest.fixture
 def serialized_fake_entity():
     return [
         (6.000002324581146, 4.999999830436074, 'm1'),
@@ -110,18 +134,18 @@ def serialized_fake_entity():
 @pytest.fixture
 def fake_fallback_data_entity(fake_entity):
     return {
-        'data': [
-            {
-                'latitude': fake_entity.data[0].coord.latitude,
-                'longitude': fake_entity.data[0].coord.longitude,
-                'member': fake_entity.data[0].member,
-            },
-            {
-                'latitude': fake_entity.data[1].coord.latitude,
-                'longitude': fake_entity.data[1].coord.longitude,
-                'member': fake_entity.data[1].member,
-            },
-        ],
+        'latitude': fake_entity.data[0].coord.latitude,
+        'longitude': fake_entity.data[0].coord.longitude,
+        'member': fake_entity.data[0].member,
+    }
+
+
+@pytest.fixture
+def fake_fallback_data_entity2(fake_entity):
+    return {
+        'latitude': fake_entity.data[1].coord.latitude,
+        'longitude': fake_entity.data[1].coord.longitude,
+        'member': fake_entity.data[1].member,
     }
 
 

@@ -3,7 +3,7 @@ import os
 import pytest
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from dbdaora import MongoDataSource, MongodbGeoSpatialRepository
+from dbdaora import CollectionKeyMongoDataSource, MongodbGeoSpatialRepository
 
 
 @pytest.fixture
@@ -12,7 +12,7 @@ def fallback_data_source(event_loop):
     client = AsyncIOMotorClient(
         f'mongodb://{auth}@localhost:27017', io_loop=event_loop
     )
-    return MongoDataSource(database_name='dbdaora', client=client)
+    return CollectionKeyMongoDataSource(database_name='dbdaora', client=client)
 
 
 @pytest.fixture

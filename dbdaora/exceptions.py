@@ -36,3 +36,7 @@ class RequiredClassAttributeError(DBDaoraError):
 
 class InvalidGeoSpatialDataError(DBDaoraError):
     ...
+
+
+class CacheNotAvailableError(DBDaoraError):
+    ...

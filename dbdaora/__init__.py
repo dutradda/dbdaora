@@ -10,7 +10,7 @@ from dbdaora.data_sources.fallback.dict import DictFallbackDataSource
 from dbdaora.data_sources.memory import MemoryDataSource
 from dbdaora.data_sources.memory.dict import DictMemoryDataSource
 from dbdaora.exceptions import EntityNotFoundError, InvalidGeoSpatialDataError
-from dbdaora.geospatial.entity import GeoSpatialEntity
+from dbdaora.geospatial.entity import GeoSpatialData, GeoSpatialEntity
 from dbdaora.geospatial.factory import make_service as make_geospatial_service
 from dbdaora.geospatial.query import GeoSpatialQuery
 from dbdaora.geospatial.repositories import GeoSpatialRepository
@@ -41,7 +41,10 @@ from dbdaora.boolean.repositories.datastore import (  # noqa isort:skip
 )
 
 try:
-    from dbdaora.data_sources.fallback.datastore import DatastoreDataSource
+    from dbdaora.data_sources.fallback.datastore import (
+        DatastoreDataSource,
+        KindKeyDatastoreDataSource,
+    )
     from dbdaora.hash.repositories.datastore import DatastoreHashRepository
     from dbdaora.sorted_set.repositories.datastore import (
         DatastoreSortedSetRepository,
@@ -53,6 +56,7 @@ try:
     )
 except ImportError:
     DatastoreDataSource = None  # type: ignore
+    KindKeyDatastoreDataSource = None  # type: ignore
     DatastoreHashRepository = None  # type: ignore
     DatastoreSortedSetRepository = None  # type: ignore
     DatastoreHashService = None  # type: ignore
@@ -74,6 +78,7 @@ try:
     from dbdaora.data_sources.fallback.mongodb import (
         MongoDataSource,
         Key as MongoKey,
+        CollectionKeyMongoDataSource,
     )
     from dbdaora.hash.repositories.mongodb import MongodbHashRepository
     from dbdaora.hash.service.mongodb import MongoHashService
@@ -83,6 +88,7 @@ try:
     )
 except ImportError:
     MongoDataSource = None  # type: ignore
+    CollectionKeyMongoDataSource = None  # type: ignore
     MongodbHashRepository = None  # type: ignore
     MongoGeoSpatialService = None  # type: ignore
     MongodbGeoSpatialRepository = None  # type: ignore
@@ -125,6 +131,7 @@ __all__ = [
     'GeoSpatialService',
     'GeoSpatialRepository',
     'make_geospatial_service',
+    'GeoSpatialData',
 ]
 
 if AioRedisDataSource:
@@ -139,6 +146,9 @@ if make_aioredis_data_source:
 if DatastoreDataSource:
     __all__.append('DatastoreDataSource')
 
+if KindKeyDatastoreDataSource:
+    __all__.append('KindKeyDatastoreDataSource')
+
 if DatastoreHashRepository:
     __all__.append('DatastoreHashRepository')
 
@@ -147,6 +157,9 @@ if DatastoreSortedSetRepository:
 
 if MongoDataSource:
     __all__.append('MongoDataSource')
+
+if CollectionKeyMongoDataSource:
+    __all__.append('CollectionKeyMongoDataSource')
 
 if MongodbHashRepository:
     __all__.append('MongodbHashRepository')

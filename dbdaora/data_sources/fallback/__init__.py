@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Dict, Generic, Optional
+from typing import Any, ClassVar, Dict, Generic, Iterable, Optional
 
 from dbdaora.keys import FallbackKey
 
@@ -20,4 +20,9 @@ class FallbackDataSource(DataSource, Generic[FallbackKey]):
         raise NotImplementedError()  # pragma: no cover
 
     async def delete(self, key: FallbackKey) -> None:
+        raise NotImplementedError()  # pragma: no cover
+
+    async def query(
+        self, key: FallbackKey, **kwargs: Any
+    ) -> Iterable[Dict[str, Any]]:
         raise NotImplementedError()  # pragma: no cover
