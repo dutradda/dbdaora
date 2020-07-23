@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Sequence, Union
+from typing import Any, ClassVar, Dict, Optional, Sequence, Type, Union
 
 from dbdaora.data_sources.memory import GeoMember, GeoRadiusOutput
 from dbdaora.exceptions import (
@@ -16,12 +16,10 @@ from ..entity import GeoSpatialEntity
 GeoSpatialData = GeoRadiusOutput
 
 
-class GeoSpatialRepository(
-    MemoryRepository[GeoSpatialEntity, GeoSpatialData, FallbackKey]
-):
+class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
     __skip_cls_validation__ = ('GeoSpatialRepository',)
-    entity_cls = GeoSpatialEntity
-    key_attrs = ('id',)
+    entity_cls: ClassVar[Type[Any]] = GeoSpatialEntity
+    key_attrs: ClassVar[Sequence[str]] = ('id',)
 
     async def get_memory_data(  # type: ignore
         self, key: str, query: 'GeoSpatialQuery[FallbackKey]',
@@ -92,7 +90,7 @@ class GeoSpatialRepository(
         self,
         data: GeoSpatialData,
         query: 'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
-    ) -> GeoSpatialEntity:
+    ) -> Any:
         return self.entity_cls(
             data=data,
             **{
@@ -105,7 +103,7 @@ class GeoSpatialRepository(
         self,
         data: GeoSpatialData,
         query: 'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
-    ) -> GeoSpatialEntity:
+    ) -> Any:
         return self.make_entity(data, query)
 
     async def add_memory_data(
