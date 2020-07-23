@@ -151,7 +151,7 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
             ''.join(f'{f}{v}' for f, v in filters.items()) if filters else ''
         )
 
-    async def get_one(self, id: Optional[str] = None, **filters: Any,) -> Any:
+    async def get_one(self, id: Optional[str] = None, **filters: Any) -> Any:
         if id is not None:
             filters['id'] = id
 
@@ -227,52 +227,65 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
             self.logger.warning(error)
             await self.repository.add(entity, *entities, memory=False)
 
-    async def delete(self, entity_id: str, **filters: Any) -> None:
+    async def delete(
+        self, entity_id: Optional[str] = None, **filters: Any
+    ) -> None:
+        if entity_id is not None:
+            filters['id'] = entity_id
+
         try:
-            await self.delete_circuit(
-                self.repository.query(id=entity_id, **filters)
-            )
+            await self.delete_circuit(self.repository.query(**filters))
 
         except CircuitBreakerError as error:
             self.logger.warning(error)
-            await self.repository.query(
-                id=entity_id, memory=False, **filters
-            ).delete
+            await self.repository.query(memory=False, **filters).delete
 
-    async def exists(self, id: str, **filters: Any) -> bool:
+    async def exists(self, id: Optional[str] = None, **filters: Any) -> bool:
+        if id is not None:
+            filters['id'] = id
+
         try:
             if self.exists_cache is None:
                 return await self.exists_circuit(
-                    self.repository.query(id=id, **filters)
+                    self.repository.query(**filters)
                 )
 
-            return await self.exists_cached(id, self.exists_cache, **filters)
+            return await self.exists_cached(self.exists_cache, **filters)
 
         except CircuitBreakerError as error:
             self.logger.warning(error)
             if self.exists_cache is not None:
                 return await self.exists_cached(
-                    id, self.exists_cache, memory=False, **filters,
+                    self.exists_cache, memory=False, **filters,
                 )
 
-            return await self.repository.query(
-                id=id, memory=False, **filters
-            ).exists
+            return await self.repository.query(memory=False, **filters).exists
 
     async def exists_cached(
-        self, id: str, cache: Cache, memory: bool = True, **filters: Any,
+        self, cache: Cache, memory: bool = True, **filters: Any,
     ) -> bool:
+        id = filters.pop(self.repository.id_name, None)
+
+        if id is None:
+            raise RequiredKeyAttributeError(
+                type(self.repository).__name__,
+                self.repository.id_name,
+                self.repository.key_attrs,
+            )
+
         cache_key = self.cache_key(id, self.cache_key_suffix(**filters))
         entity_exists = cache.get(cache_key)
 
         if entity_exists is None:
+            filters[self.repository.id_name] = id
+
             if memory:
                 entity_exists = await self.exists_circuit(
-                    self.repository.query(id=id, **filters)
+                    self.repository.query(**filters)
                 )
             else:
                 entity_exists = await self.repository.query(
-                    id=id, memory=False, **filters
+                    memory=False, **filters
                 ).exists
 
             if not entity_exists:
