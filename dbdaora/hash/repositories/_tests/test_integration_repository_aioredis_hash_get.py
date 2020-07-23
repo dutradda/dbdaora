@@ -12,6 +12,7 @@ from dbdaora.exceptions import EntityNotFoundError
 async def test_should_get_from_memory(
     repository, serialized_fake_entity, fake_entity
 ):
+    await repository.memory_data_source.delete('fake:fake')
     await repository.memory_data_source.hmset(
         'fake:fake', *itertools.chain(*serialized_fake_entity.items())
     )

@@ -1,14 +1,25 @@
 import dataclasses
-from typing import Any, ClassVar, List, Optional, Sequence, Tuple, Type, Union
+from enum import Enum
+from typing import Any, ClassVar, List, Optional, Tuple, Type, Union
 
 from dbdaora.keys import FallbackKey
 from dbdaora.query import BaseQuery, Query, QueryMany
 
 
+class GeoSpatialQueryType(Enum):
+    RADIUS = 'radius'
+
+
 @dataclasses.dataclass(init=False)
 class GeoSpatialQuery(Query[Any, 'GeoSpatialData', FallbackKey]):
     repository: 'GeoSpatialRepository[FallbackKey]'
-    fields: Optional[Sequence[str]] = None
+    type: GeoSpatialQueryType = GeoSpatialQueryType.RADIUS
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    max_distance: Optional[float] = None
+    distance_unit: str = 'km'
+    with_dist: bool = True
+    with_coord: bool = True
 
     def __init__(
         self,
@@ -16,13 +27,25 @@ class GeoSpatialQuery(Query[Any, 'GeoSpatialData', FallbackKey]):
         *args: Any,
         memory: bool = True,
         key_parts: Optional[List[Any]] = None,
-        fields: Optional[Sequence[str]] = None,
+        type: GeoSpatialQueryType = GeoSpatialQueryType.RADIUS,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        max_distance: Optional[float] = None,
+        distance_unit: str = 'km',
+        with_dist: bool = True,
+        with_coord: bool = True,
         **kwargs: Any,
     ):
         super().__init__(
             repository, memory=memory, key_parts=key_parts, *args, **kwargs,
         )
-        self.fields = fields
+        self.type = type
+        self.latitude = latitude
+        self.longitude = longitude
+        self.max_distance = max_distance
+        self.distance_unit = distance_unit
+        self.with_dist = with_dist
+        self.with_coord = with_coord
 
 
 @dataclasses.dataclass(init=False)
@@ -30,9 +53,15 @@ class GeoSpatialQueryMany(QueryMany[Any, 'GeoSpatialData', FallbackKey]):
     query_cls: ClassVar[Type[GeoSpatialQuery[FallbackKey]]] = GeoSpatialQuery[
         FallbackKey
     ]
-    queries: Sequence[GeoSpatialQuery[FallbackKey]]  # type: ignore
+    queries: List[GeoSpatialQuery[FallbackKey]]  # type: ignore
     repository: 'GeoSpatialRepository[FallbackKey]'
-    fields: Optional[Sequence[str]] = None
+    type: GeoSpatialQueryType = GeoSpatialQueryType.RADIUS
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    max_distance: Optional[float] = None
+    distance_unit: str = 'km'
+    with_dist: bool = True
+    with_coord: bool = True
 
     def __init__(
         self,
@@ -41,7 +70,13 @@ class GeoSpatialQueryMany(QueryMany[Any, 'GeoSpatialData', FallbackKey]):
         many: List[Union[Any, Tuple[Any, ...]]],
         memory: bool = True,
         many_key_parts: Optional[List[List[Any]]] = None,
-        fields: Optional[Sequence[str]] = None,
+        type: GeoSpatialQueryType = GeoSpatialQueryType.RADIUS,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        max_distance: Optional[float] = None,
+        distance_unit: str = 'km',
+        with_dist: bool = True,
+        with_coord: bool = True,
         **kwargs: Any,
     ):
         super().__init__(
@@ -52,10 +87,22 @@ class GeoSpatialQueryMany(QueryMany[Any, 'GeoSpatialData', FallbackKey]):
             *args,
             **kwargs,
         )
-        self.fields = fields
+        self.type = type
+        self.latitude = latitude
+        self.longitude = longitude
+        self.max_distance = max_distance
+        self.distance_unit = distance_unit
+        self.with_dist = with_dist
+        self.with_coord = with_coord
 
         for query in self.queries:
-            query.fields = fields
+            query.type = type
+            query.latitude = latitude
+            query.longitude = longitude
+            query.max_distance = max_distance
+            query.distance_unit = distance_unit
+            query.with_dist = with_dist
+            query.with_coord = with_coord
 
 
 def make(

@@ -32,3 +32,7 @@ class InvalidEntityTypeError(DBDaoraError):
 
 class RequiredClassAttributeError(DBDaoraError):
     ...
+
+
+class InvalidGeoSpatialDataError(DBDaoraError):
+    ...

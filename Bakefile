@@ -22,3 +22,6 @@ tests-query:
     export DATASTORE_PROJECT_ID=dbdaora
     export GOOGLE_CLOUD_PROJECT=dbdaora
     coverage run -p -m pytest -xvv -k "${q}" --disable-warnings ${PROJECT_NAME} docs/src
+
+isort: //check-virtualenv
+    isort --recursive --apply ${PROJECT_NAME} docs/src stubs

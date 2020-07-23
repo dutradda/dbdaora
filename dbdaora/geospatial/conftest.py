@@ -1,9 +1,9 @@
 import dataclasses
 from functools import partial
-from typing import List, Optional
+from typing import List
 
 import pytest
-from aioredis import RedisError
+from aioredis import GeoMember, GeoPoint, RedisError
 
 from dbdaora import (
     CacheType,
@@ -17,7 +17,7 @@ from dbdaora import (
 
 @pytest.mark.asyncio
 @pytest.fixture
-async def fake_service(mocker, fallback_data_source, fake_hash_repository_cls):
+async def fake_service(mocker, fallback_data_source, fake_repository_cls):
     memory_data_source_factory = partial(
         make_aioredis_data_source,
         'redis://',
@@ -30,7 +30,7 @@ async def fake_service(mocker, fallback_data_source, fake_hash_repository_cls):
 
     service = await build_service(
         GeoSpatialService,
-        fake_hash_repository_cls,
+        fake_repository_cls,
         memory_data_source_factory,
         fallback_data_source_factory,
         repository_expire_time=1,
@@ -55,87 +55,69 @@ def fallback_data_source():
 
 
 @dataclasses.dataclass
-class FakeInnerEntity:
-    id: str
-
-
-@dataclasses.dataclass
 class FakeEntity:
-    id: str
-    integer: int
-    inner_entities: List[FakeInnerEntity]
-    number: Optional[float] = None
-    boolean: Optional[bool] = None
+    fake_id: str
+    fake2_id: str
+    data: List[GeoMember]
 
 
 class FakeGeoSpatialRepository(GeoSpatialRepository[str]):
     name = 'fake'
+    key_attrs = ('fake2_id', 'fake_id')
     entity_cls = FakeEntity
 
 
 @pytest.fixture
-def fake_hash_repository_cls():
-    return FakeGeoSpatialRepository
-
-
-@pytest.fixture
-def dict_repository_cls():
+def fake_repository_cls():
     return FakeGeoSpatialRepository
 
 
 @pytest.fixture
 def fake_entity():
     return FakeEntity(
-        id='fake',
-        inner_entities=[FakeInnerEntity('inner1'), FakeInnerEntity('inner2')],
-        integer=1,
-        number=0.1,
-        boolean=True,
-    )
-
-
-@pytest.fixture
-def fake_entity2():
-    return FakeEntity(
-        id='fake2',
-        inner_entities=[FakeInnerEntity('inner3'), FakeInnerEntity('inner4')],
-        integer=2,
-        number=0.2,
-        boolean=False,
+        fake_id='fake',
+        fake2_id='fake2',
+        data=[
+            GeoMember(
+                member=b'm1',
+                dist=0.0003,
+                hash=None,
+                coord=GeoPoint(6.000002324581146, 4.999999830436074),
+            ),
+            GeoMember(
+                member=b'm2',
+                dist=0.0003,
+                hash=None,
+                coord=GeoPoint(6.000002324581146, 4.999999830436074),
+            ),
+        ],
     )
 
 
 @pytest.fixture
 def serialized_fake_entity():
-    return {
-        b'id': b'fake',
-        b'integer': b'1',
-        b'number': b'0.1',
-        b'boolean': b'1',
-        b'inner_entities': b'[{"id":"inner1"},{"id":"inner2"}]',
-    }
-
-
-@pytest.fixture
-def serialized_fake_entity2():
-    return {
-        b'id': b'fake2',
-        b'integer': b'2',
-        b'number': b'0.2',
-        b'boolean': b'0',
-        b'inner_entities': b'[{"id":"inner3"},{"id":"inner4"}]',
-    }
+    return [
+        (6.000002324581146, 4.999999830436074, 'm1'),
+        (6.000002324581146, 4.999999830436074, 'm2'),
+    ]
 
 
 @pytest.mark.asyncio
 @pytest.fixture
-async def repository(mocker):
-    memory_data_source = await make_aioredis_data_source(
+async def memory_data_source():
+    return await make_aioredis_data_source(
         'redis://', 'redis://localhost/1', 'redis://localhost/2'
     )
-    yield FakeGeoSpatialRepository(
+
+
+@pytest.mark.asyncio
+@pytest.fixture
+async def repository(
+    mocker, memory_data_source, fallback_data_source, fake_repository_cls
+):
+    yield fake_repository_cls(
         memory_data_source=memory_data_source,
-        fallback_data_source=DictFallbackDataSource(),
+        fallback_data_source=fallback_data_source,
         expire_time=1,
     )
     memory_data_source.close()

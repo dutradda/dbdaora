@@ -1,13 +1,23 @@
 import asyncio
 import dataclasses
-from typing import Any, Dict, List, Optional, Sequence, Set, Type, Union
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Type,
+    Union,
+)
 
-from aioredis import Redis, create_redis_pool
+from aioredis import GeoMember, GeoPoint, Redis, create_redis_pool
 from aioredis.commands.transaction import MultiExec
 
 from dbdaora.hashring import HashRing
 
-from . import MemoryDataSource, MemoryMultiExec, RangeOutput
+from . import GeoRadiusOutput, MemoryDataSource, MemoryMultiExec, RangeOutput
 
 
 class AioRedisDataSource(Redis, MemoryDataSource):
@@ -75,6 +85,8 @@ class ShardsAioRedisMultiExec(MemoryMultiExec):
 @dataclasses.dataclass
 class ShardsAioRedisDataSource(MemoryDataSource):
     hashring: HashRing[AioRedisDataSource]
+    geopoint_cls: ClassVar[Type[GeoPoint]] = GeoPoint  # type: ignore
+    geomember_cls: ClassVar[Type[GeoMember]] = GeoMember  # type: ignore
 
     def get_client(self, key: str) -> AioRedisDataSource:
         return self.hashring.get_node(key)
@@ -125,6 +137,40 @@ class ShardsAioRedisDataSource(MemoryDataSource):
 
     async def hgetall(self, key: str) -> Dict[bytes, bytes]:
         return await self.get_client(key).hgetall(key)
+
+    async def georadius(
+        self,
+        key: str,
+        longitude: float,
+        latitude: float,
+        radius: float,
+        unit: str = 'm',
+        *,
+        with_dist: bool = False,
+        with_coord: bool = False,
+    ) -> GeoRadiusOutput:
+        return await self.get_client(key).georadius(
+            key=key,
+            longitude=longitude,
+            latitude=latitude,
+            radius=radius,
+            unit=unit,
+            with_dist=with_dist,
+            with_coord=with_coord,
+        )
+
+    async def geoadd(
+        self,
+        key: str,
+        longitude: float,
+        latitude: float,
+        member: Union[str, bytes],
+        *args: Any,
+        **kwargs: Any,
+    ) -> int:
+        return await self.get_client(key).geoadd(
+            key, longitude, latitude, member, *args, **kwargs,
+        )
 
     def close(self) -> None:
         for client in self.hashring.nodes:

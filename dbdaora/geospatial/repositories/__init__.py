@@ -1,161 +1,255 @@
-import dataclasses
-import itertools
 from typing import Any, Dict, Optional, Sequence, Union
 
-from jsondaora import dataclasses as jdataclasses
-
-from dbdaora.exceptions import InvalidEntityTypeError
+from dbdaora.data_sources.memory import GeoMember, GeoRadiusOutput
+from dbdaora.exceptions import (
+    EntityNotFoundError,
+    InvalidGeoSpatialDataError,
+    InvalidQueryError,
+)
 from dbdaora.keys import FallbackKey
-from dbdaora.query import BaseQuery
+from dbdaora.query import BaseQuery, Query
 from dbdaora.repository import MemoryRepository
 
-
-GeoSpatialData = Union[
-    Dict[str, Any], Dict[bytes, Any],
-]
+from ..entity import GeoSpatialEntity
 
 
-class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
+GeoSpatialData = GeoRadiusOutput
+
+
+class GeoSpatialRepository(
+    MemoryRepository[GeoSpatialEntity, GeoSpatialData, FallbackKey]
+):
     __skip_cls_validation__ = ('GeoSpatialRepository',)
+    entity_cls = GeoSpatialEntity
+    key_attrs = ('id',)
 
     async def get_memory_data(  # type: ignore
         self, key: str, query: 'GeoSpatialQuery[FallbackKey]',
-    ) -> Optional[Union[GeoSpatialData, Dict[bytes, Any]]]:
-        data: Optional[Union[GeoSpatialData, Dict[bytes, Any]]]
+    ) -> Optional[GeoSpatialData]:
+        self._validate_query(query)
 
-        if query.fields:
-            data = self.make_hmget_dict(
-                query.fields,
-                await self.memory_data_source.hmget(key, *query.fields),
-            )
-
-            if not data:
-                return None
-
-            return data
-
-        data = await self.memory_data_source.hgetall(key)
+        data = await self.memory_data_source.georadius(
+            key=key,
+            longitude=query.longitude,  # type: ignore
+            latitude=query.latitude,  # type: ignore
+            radius=query.max_distance,  # type: ignore
+            unit=query.distance_unit,
+            with_dist=query.with_dist,
+            with_coord=query.with_coord,
+        )
 
         if not data:
             return None
 
         return data
 
-    def make_hmget_dict(
-        self, fields: Sequence[str], data: Sequence[Optional[bytes]]
-    ) -> Dict[bytes, Any]:
-        return {f.encode(): v for f, v in zip(fields, data) if v is not None}
-
     async def get_fallback_data(  # type: ignore
         self,
         query: 'GeoSpatialQuery[FallbackKey]',
         *,
         for_memory: bool = False,
-    ) -> Optional[Union[GeoSpatialData]]:
-        data = await self.fallback_data_source.get(self.fallback_key(query))
+    ) -> Optional[GeoSpatialData]:
+        self._validate_query(query)
+
+        key = self.fallback_key(query)
+        data = await self.fallback_data_source.get(key)
 
         if data is None:
             return None
 
-        if not for_memory and query.fields:
-            return self.make_fallback_data_fields(query, data)
-
         elif for_memory:
-            return {
-                k: int(v) if isinstance(v, bool) else v
-                for k, v in data.items()
-            }
+            return self.make_fallback_data_for_memory(key, query, data)
 
-        return data
+        return self.make_fallback_data_by_query(key, query, data)
 
-    def make_fallback_data_fields(
-        self, query: 'GeoSpatialQuery[FallbackKey]', data: GeoSpatialData,
+    def _validate_query(self, query: 'GeoSpatialQuery[FallbackKey]') -> None:
+        if query.type == GeoSpatialQueryType.RADIUS:
+            if (
+                query.latitude is None
+                or query.longitude is None
+                or query.max_distance is None
+            ):
+                raise InvalidQueryError(query)
+
+            return
+
+        raise InvalidQueryError(query)
+
+    def make_fallback_data_by_query(
+        self,
+        key: FallbackKey,
+        query: 'GeoSpatialQuery[FallbackKey]',
+        data: Dict[str, Any],
     ) -> GeoSpatialData:
-        return {f: v for f, v in data.items() if f in query.fields}  # type: ignore
+        raise NotImplementedError()
 
-    def make_fallback_data_fields_with_bytes_keys(
-        self, query: 'GeoSpatialQuery[FallbackKey]', data: GeoSpatialData,
+    def make_fallback_data_for_memory(
+        self,
+        key: FallbackKey,
+        query: 'GeoSpatialQuery[FallbackKey]',
+        data: Dict[str, Any],
     ) -> GeoSpatialData:
-        return {
-            f: v for f, v in data.items() if f.decode() in query.fields  # type: ignore
-        }
+        return [
+            self.memory_data_source.geomember_cls(
+                member=member['member'],
+                hash=None,
+                dist=None,
+                coord=self.memory_data_source.geopoint_cls(
+                    latitude=member['latitude'], longitude=member['longitude'],
+                ),
+            )
+            for member in data['data']
+        ]
 
-    def make_entity(
+    def make_entity(  # type: ignore
         self,
         data: GeoSpatialData,
-        query: 'BaseQuery[Any, GeoSpatialData, FallbackKey]',
-    ) -> Any:
-        if dataclasses.is_dataclass(self.get_entity_type(query)):
-            return jdataclasses.asdataclass(
-                data, self.get_entity_type(query), has_bytes_keys=True
-            )
-
-        raise InvalidEntityTypeError(self.get_entity_type(query))
+        query: 'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
+    ) -> GeoSpatialEntity:
+        return self.entity_cls(
+            data=data,
+            **{
+                id_name: id_value
+                for id_name, id_value in zip(self.key_attrs, query.key_parts)
+            },
+        )
 
     def make_entity_from_fallback(
         self,
         data: GeoSpatialData,
-        query: 'BaseQuery[Any, GeoSpatialData, FallbackKey]',
-    ) -> Any:
-        return jdataclasses.asdataclass(data, self.get_entity_type(query))
+        query: 'BaseQuery[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
+    ) -> GeoSpatialEntity:
+        raise NotImplementedError()
 
     async def add_memory_data(
         self, key: str, data: GeoSpatialData, from_fallback: bool = False
     ) -> None:
-        delete_future = self.memory_data_source.delete(key)
-        hmset_future = self.memory_data_source.hmset(
-            key, *itertools.chain(*data.items())
-        )
-        await delete_future
-        await hmset_future
+        for i, geomember in enumerate(data):
+            if (
+                isinstance(geomember, self.memory_data_source.geomember_cls)
+                and geomember.coord is not None
+            ):
+                await self.memory_data_source.geoadd(
+                    key,
+                    longitude=geomember.coord.longitude,
+                    latitude=geomember.coord.latitude,
+                    member=geomember.member,
+                )
+            else:
+                raise InvalidGeoSpatialDataError(i, geomember)
 
     async def add_memory_data_from_fallback(
         self,
         key: str,
-        query: Union[BaseQuery[Any, GeoSpatialData, FallbackKey], Any],
+        query: Union[
+            BaseQuery[GeoSpatialEntity, GeoSpatialData, FallbackKey],
+            GeoSpatialEntity,
+        ],
         data: GeoSpatialData,
     ) -> GeoSpatialData:
-        data = self.make_memory_data_from_fallback(query, data)  # type: ignore
-        await self.memory_data_source.hmset(
-            key, *itertools.chain(*data.items())  # type: ignore
-        )
+        geomembers = self.make_memory_data_from_fallback(query, data)
 
-        if isinstance(query, GeoSpatialQuery) and query.fields:
-            return self.make_fallback_data_fields_with_bytes_keys(query, data)
+        for i, geomember in enumerate(geomembers):
+            if (
+                isinstance(geomember, self.memory_data_source.geomember_cls)
+                and geomember.coord is not None
+            ):
+                await self.memory_data_source.geoadd(
+                    key,
+                    longitude=geomember.coord.longitude,
+                    latitude=geomember.coord.latitude,
+                    member=geomember.member,
+                )
+            else:
+                raise InvalidGeoSpatialDataError(i, geomember)
 
-        return data
+        if isinstance(query, GeoSpatialQuery):
+            memory_data = await self.get_memory_data(key, query)
+        else:
+            memory_data = data
+
+        if memory_data is None:
+            raise EntityNotFoundError(query)
+
+        return memory_data
 
     def make_memory_data_from_fallback(
         self,
-        query: Union[BaseQuery[Any, GeoSpatialData, FallbackKey], Any],
-        data: Dict[str, Any],
-    ) -> Dict[bytes, Any]:
-        return {
-            k.encode(): int(v) if isinstance(v, bool) else v
-            for k, v in jdataclasses.asdict(data, dumps_value=True).items()
-            if v is not None
-        }
+        query: Union[
+            BaseQuery[GeoSpatialEntity, GeoSpatialData, FallbackKey],
+            GeoSpatialEntity,
+        ],
+        data: GeoSpatialData,
+    ) -> Sequence[GeoMember]:
+        return data  # type: ignore
 
-    def make_memory_data_from_entity(self, entity: Any) -> GeoSpatialData:
-        return {
-            k: int(v) if isinstance(v, bool) else v
-            for k, v in jdataclasses.asdict(entity, dumps_value=True).items()
-            if v is not None
-        }
+    def make_memory_data_from_entity(
+        self, entity: GeoSpatialEntity
+    ) -> GeoSpatialData:
+        return entity.data
 
     async def add_fallback(
-        self, entity: Any, *entities: Any, **kwargs: Any
+        self,
+        entity: GeoSpatialEntity,
+        *entities: GeoSpatialEntity,
+        **kwargs: Any,
     ) -> None:
-        data = jdataclasses.asdict(entity)
+        data = {
+            'data': [
+                {
+                    'latitude': m.coord.latitude,
+                    'longitude': m.coord.longitude,
+                    'member': m.member,
+                }
+                for m in entity.data
+                if (
+                    isinstance(m, self.memory_data_source.geomember_cls)
+                    and m.coord is not None
+                )
+            ],
+        }
         await self.fallback_data_source.put(
             self.fallback_key(entity), data, **kwargs
         )
 
     def make_query(
         self, *args: Any, **kwargs: Any
-    ) -> 'BaseQuery[Any, GeoSpatialData, FallbackKey]':
+    ) -> 'BaseQuery[GeoSpatialEntity, GeoSpatialData, FallbackKey]':
         return query_factory(self, *args, **kwargs)
 
+    async def already_got_not_found(
+        self,
+        query: Union[
+            'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
+            GeoSpatialEntity,
+        ],
+    ) -> bool:
+        return bool(
+            await self.memory_data_source.exists(self.memory_key(query))
+        )
 
-from ..query import GeoSpatialQuery, GeoSpatialQueryMany  # noqa isort:skip
+    async def delete_fallback_not_found(
+        self,
+        query: Union[
+            'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
+            GeoSpatialEntity,
+        ],
+    ) -> None:
+        ...
+
+    async def set_fallback_not_found(
+        self,
+        query: Union[
+            'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
+            GeoSpatialEntity,
+        ],
+    ) -> None:
+        ...
+
+
+from ..query import (  # noqa isort:skip
+    GeoSpatialQuery,
+    GeoSpatialQueryMany,
+    GeoSpatialQueryType,
+)
 from ..query import make as query_factory  # noqa isort:skip

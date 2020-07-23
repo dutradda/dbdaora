@@ -1,4 +1,14 @@
-from typing import Any, ClassVar, Dict, Optional, Sequence, Tuple, Type, Union
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
 
 
 rangeOutput = Sequence[bytes]
@@ -58,3 +68,14 @@ class Redis:
 async def create_redis_pool(
     address: str, *, commands_factory: Optional[Type[Redis]] = None
 ) -> Redis: ...
+
+
+class GeoPoint(NamedTuple):
+    longitude: float
+    latitude: float
+
+
+class GeoMember(NamedTuple):
+    member: bytes
+    dist: Optional[float]
+    coord: Optional[GeoPoint]

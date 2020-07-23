@@ -9,7 +9,11 @@ from dbdaora.data_sources.fallback import FallbackDataSource
 from dbdaora.data_sources.fallback.dict import DictFallbackDataSource
 from dbdaora.data_sources.memory import MemoryDataSource
 from dbdaora.data_sources.memory.dict import DictMemoryDataSource
-from dbdaora.exceptions import EntityNotFoundError
+from dbdaora.exceptions import EntityNotFoundError, InvalidGeoSpatialDataError
+from dbdaora.geospatial.entity import GeoSpatialEntity
+from dbdaora.geospatial.query import GeoSpatialQuery
+from dbdaora.geospatial.repositories import GeoSpatialRepository
+from dbdaora.geospatial.service import GeoSpatialService
 from dbdaora.hash.factory import make_service as make_hash_service
 from dbdaora.hash.query import HashQuery, HashQueryMany
 from dbdaora.hash.repositories import HashData, HashRepository
@@ -114,6 +118,11 @@ __all__ = [
     'BooleanService',
     'Query',
     'QueryMany',
+    'InvalidGeoSpatialDataError',
+    'GeoSpatialQuery',
+    'GeoSpatialEntity',
+    'GeoSpatialService',
+    'GeoSpatialRepository',
 ]
 
 if AioRedisDataSource:

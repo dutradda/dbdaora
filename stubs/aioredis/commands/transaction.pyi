@@ -1,5 +1,6 @@
-from typing import Union, Any, Type
-from aioredis import Redis, ConnectionsPool
+from typing import Any, Type, Union
+
+from aioredis import ConnectionsPool, Redis
 
 
 class MultiExec:

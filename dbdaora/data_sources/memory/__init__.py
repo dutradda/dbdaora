@@ -1,6 +1,42 @@
-from typing import Any, ClassVar, Dict, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    Optional,
+    Protocol,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
 
 from .. import DataSource
+
+
+class GeoPoint(Protocol):
+    longitude: float
+    latitude: float
+
+    def __init__(self, longitude: float, latitude: float):
+        ...
+
+
+class GeoMember(Protocol):
+    member: bytes
+    dist: Optional[float]
+    coord: Optional[GeoPoint]
+
+    def __init__(
+        self,
+        member: bytes,
+        dist: Optional[float],
+        coord: Optional[GeoPoint],
+        hash: Optional[str] = None,
+    ):
+        ...
+
+
+GeoRadiusOutput = Union[Sequence[GeoMember], Sequence[str]]
 
 
 RangeOutput = Union[
@@ -34,6 +70,8 @@ class MemoryMultiExec:
 
 class MemoryDataSource(DataSource):
     key_separator: ClassVar[str] = ':'
+    geopoint_cls: ClassVar[Type[GeoPoint]]
+    geomember_cls: ClassVar[Type[GeoMember]]
 
     def make_key(self, *key_parts: str) -> str:
         return self.key_separator.join(key_parts)
@@ -92,4 +130,28 @@ class MemoryDataSource(DataSource):
         raise NotImplementedError()  # pragma: no cover
 
     def multi_exec(self) -> MemoryMultiExec:
+        raise NotImplementedError()  # pragma: no cover
+
+    async def georadius(
+        self,
+        key: str,
+        longitude: float,
+        latitude: float,
+        radius: float,
+        unit: str = 'm',
+        *,
+        with_dist: bool = False,
+        with_coord: bool = False,
+    ) -> GeoRadiusOutput:
+        raise NotImplementedError()  # pragma: no cover
+
+    async def geoadd(
+        self,
+        key: str,
+        longitude: float,
+        latitude: float,
+        member: Union[str, bytes],
+        *args: Any,
+        **kwargs: Any,
+    ) -> int:
         raise NotImplementedError()  # pragma: no cover
