@@ -68,13 +68,18 @@ class FakeGeoSpatialRepository(GeoSpatialRepository[str]):
 
 
 @pytest.fixture
+def fake_entity_cls():
+    return FakeEntity
+
+
+@pytest.fixture
 def fake_repository_cls():
     return FakeGeoSpatialRepository
 
 
 @pytest.fixture
-def fake_entity():
-    return FakeEntity(
+def fake_entity(fake_entity_cls):
+    return fake_entity_cls(
         fake_id='fake',
         fake2_id='fake2',
         data=[
@@ -100,6 +105,24 @@ def serialized_fake_entity():
         (6.000002324581146, 4.999999830436074, 'm1'),
         (6.000002324581146, 4.999999830436074, 'm2'),
     ]
+
+
+@pytest.fixture
+def fake_fallback_data_entity(fake_entity):
+    return {
+        'data': [
+            {
+                'latitude': fake_entity.data[0].coord.latitude,
+                'longitude': fake_entity.data[0].coord.longitude,
+                'member': fake_entity.data[0].member,
+            },
+            {
+                'latitude': fake_entity.data[1].coord.latitude,
+                'longitude': fake_entity.data[1].coord.longitude,
+                'member': fake_entity.data[1].member,
+            },
+        ],
+    }
 
 
 @pytest.mark.asyncio

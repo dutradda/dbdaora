@@ -5,16 +5,14 @@ from aioredis import RedisError
 
 from dbdaora import (
     CacheType,
-    DictFallbackDataSource,
-    GeoSpatialService,
-    build_service,
     make_aioredis_data_source,
+    make_geospatial_service,
 )
 
 
 @pytest.mark.asyncio
 @pytest.fixture
-async def fake_service(mocker, fallback_data_source, fake_hash_repository_cls):
+async def fake_service(mocker, fallback_data_source, fake_repository_cls):
     memory_data_source_factory = partial(
         make_aioredis_data_source,
         'redis://',
@@ -25,9 +23,8 @@ async def fake_service(mocker, fallback_data_source, fake_hash_repository_cls):
     async def fallback_data_source_factory():
         return fallback_data_source
 
-    service = await build_service(
-        GeoSpatialService,
-        fake_hash_repository_cls,
+    service = await make_geospatial_service(
+        fake_repository_cls,
         memory_data_source_factory,
         fallback_data_source_factory,
         repository_expire_time=1,
@@ -43,8 +40,3 @@ async def fake_service(mocker, fallback_data_source, fake_hash_repository_cls):
     yield service
 
     await service.shutdown()
-
-
-@pytest.fixture
-def fallback_data_source():
-    return DictFallbackDataSource()

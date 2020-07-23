@@ -2,6 +2,8 @@
 
 ### UNRELEASED
 
+ - Add support for redis geospatial data type
+
  - Fix Hash services conditional imports
 
  - Fix Service class to be generic

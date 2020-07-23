@@ -1,124 +1,23 @@
-import itertools
-
-import asynctest
 import pytest
-from aioredis import RedisError
-from jsondaora import dataclasses
-
-from dbdaora.data_sources.fallback.mongodb import Key
 
 
 @pytest.mark.asyncio
 async def test_should_get_one(
-    fake_service, serialized_fake_entity, fake_entity
+    fake_service, fake_entity, repository, fake_fallback_data_entity
 ):
-    await fake_service.repository.memory_data_source.hmset(
-        'fake:other_fake:fake',
-        *itertools.chain(*serialized_fake_entity.items()),
-    )
-
-    entity = await fake_service.get_one('fake', other_id='other_fake')
-
-    assert entity == fake_entity
-
-
-@pytest.mark.asyncio
-async def test_should_get_one_with_fields(
-    fake_service, serialized_fake_entity, fake_entity
-):
-    await fake_service.repository.memory_data_source.hmset(
-        'fake:other_fake:fake',
-        *itertools.chain(*serialized_fake_entity.items()),
-    )
-    fake_entity.number = None
-    fake_entity.boolean = None
-
-    entity = await fake_service.get_one(
-        'fake',
-        fields=['id', 'other_id', 'integer', 'inner_entities'],
-        other_id='other_fake',
-    )
-
-    assert entity == fake_entity
-
-
-@pytest.mark.asyncio
-async def test_should_get_one_from_cache(
-    fake_service, serialized_fake_entity, fake_entity
-):
-    fake_service.repository.memory_data_source.hgetall = (
-        asynctest.CoroutineMock()
-    )
-    fake_service.cache['fakeother_idother_fake'] = fake_entity
-
-    entity = await fake_service.get_one('fake', other_id='other_fake')
-
-    assert entity == fake_entity
-    assert not fake_service.repository.memory_data_source.hgetall.called
-
-
-@pytest.mark.asyncio
-async def test_should_get_one_from_fallback_when_not_found_on_memory(
-    fake_service, serialized_fake_entity, fake_entity
-):
-    await fake_service.repository.memory_data_source.delete(
-        'fake:other_fake:fake'
-    )
-    await fake_service.repository.memory_data_source.delete(
-        'fake:not-found:other_fake:fake'
-    )
-    await fake_service.repository.fallback_data_source.put(
-        Key('fake', 'other_fake:fake'), dataclasses.asdict(fake_entity)
-    )
-
-    entity = await fake_service.get_one('fake', other_id='other_fake')
-
-    assert entity == fake_entity
-    assert fake_service.repository.memory_data_source.exists(
-        'fake:other_fake:fake'
-    )
-
-
-@pytest.mark.asyncio
-async def test_should_get_one_from_fallback_when_not_found_on_memory_with_fields(
-    fake_service, serialized_fake_entity, fake_entity
-):
-    await fake_service.repository.memory_data_source.delete(
-        'fake:other_fake:fake'
-    )
-    await fake_service.repository.fallback_data_source.put(
-        Key('fake', 'other_fake:fake'), dataclasses.asdict(fake_entity)
-    )
-    fake_entity.number = None
-    fake_entity.boolean = None
-
-    entity = await fake_service.get_one(
-        'fake',
-        other_id='other_fake',
-        fields=['id', 'other_id', 'integer', 'inner_entities'],
-    )
-
-    assert entity == fake_entity
-    assert fake_service.repository.memory_data_source.exists(
-        'fake:other_fake:fake'
-    )
-
-
-@pytest.mark.asyncio
-async def test_should_get_one_from_fallback_after_open_circuit_breaker(
-    fake_service, fake_entity, mocker
-):
-    fake_service.repository.memory_data_source.hgetall = asynctest.CoroutineMock(
-        side_effect=RedisError
-    )
+    await repository.memory_data_source.delete('fake:fake2:fake')
     key = fake_service.repository.fallback_data_source.make_key(
-        'fake', 'other_fake', 'fake'
+        'fake', 'fake2', 'fake'
     )
     await fake_service.repository.fallback_data_source.put(
-        key, dataclasses.asdict(fake_entity)
+        key, fake_fallback_data_entity
     )
-
-    entity = await fake_service.get_one('fake', other_id='other_fake')
+    entity = await repository.query(
+        fake_id=fake_entity.fake_id,
+        fake2_id=fake_entity.fake2_id,
+        latitude=5,
+        longitude=6,
+        max_distance=1,
+    ).entity
 
     assert entity == fake_entity
-    assert fake_service.logger.warning.call_count == 1

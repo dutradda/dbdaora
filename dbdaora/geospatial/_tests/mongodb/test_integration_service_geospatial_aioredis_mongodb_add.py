@@ -7,7 +7,13 @@ from aioredis import RedisError
 async def test_should_add(fake_service, fake_entity):
     await fake_service.repository.add(fake_entity)
 
-    entity = await fake_service.get_one('fake', other_id='other_fake')
+    entity = await fake_service.get_one(
+        fake_id=fake_entity.fake_id,
+        fake2_id=fake_entity.fake2_id,
+        latitude=5,
+        longitude=6,
+        max_distance=1,
+    )
 
     assert entity == fake_entity
 
@@ -16,11 +22,17 @@ async def test_should_add(fake_service, fake_entity):
 async def test_should_add_to_fallback_after_open_circuit_breaker(
     fake_service, fake_entity
 ):
-    fake_exists = asynctest.CoroutineMock(side_effect=RedisError)
-    fake_service.repository.memory_data_source.exists = fake_exists
+    fake_geoadd = asynctest.CoroutineMock(side_effect=RedisError)
+    fake_service.repository.memory_data_source.geoadd = fake_geoadd
     await fake_service.add(fake_entity)
 
-    entity = await fake_service.get_one('fake', other_id='other_fake')
+    entity = await fake_service.get_one(
+        fake_id=fake_entity.fake_id,
+        fake2_id=fake_entity.fake2_id,
+        latitude=5,
+        longitude=6,
+        max_distance=1,
+    )
 
     assert entity == fake_entity
-    assert fake_service.logger.warning.call_count == 2
+    assert fake_service.logger.warning.call_count == 1

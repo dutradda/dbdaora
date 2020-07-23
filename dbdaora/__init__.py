@@ -11,6 +11,7 @@ from dbdaora.data_sources.memory import MemoryDataSource
 from dbdaora.data_sources.memory.dict import DictMemoryDataSource
 from dbdaora.exceptions import EntityNotFoundError, InvalidGeoSpatialDataError
 from dbdaora.geospatial.entity import GeoSpatialEntity
+from dbdaora.geospatial.factory import make_service as make_geospatial_service
 from dbdaora.geospatial.query import GeoSpatialQuery
 from dbdaora.geospatial.repositories import GeoSpatialRepository
 from dbdaora.geospatial.service import GeoSpatialService
@@ -123,6 +124,7 @@ __all__ = [
     'GeoSpatialEntity',
     'GeoSpatialService',
     'GeoSpatialRepository',
+    'make_geospatial_service',
 ]
 
 if AioRedisDataSource:

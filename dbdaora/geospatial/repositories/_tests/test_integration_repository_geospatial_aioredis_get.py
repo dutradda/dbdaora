@@ -11,13 +11,12 @@ from dbdaora.exceptions import EntityNotFoundError
 async def test_should_get_from_memory(
     repository, serialized_fake_entity, fake_entity
 ):
-    await repository.memory_data_source.delete('fake:fake')
     await repository.memory_data_source.geoadd(
         'fake:fake2:fake', *itertools.chain(*serialized_fake_entity)
     )
     entity = await repository.query(
-        fake_id='fake',
-        fake2_id='fake2',
+        fake_id=fake_entity.fake_id,
+        fake2_id=fake_entity.fake2_id,
         latitude=5,
         longitude=6,
         max_distance=1,
@@ -28,7 +27,6 @@ async def test_should_get_from_memory(
 
 @pytest.mark.asyncio
 async def test_should_raise_not_found_error(repository, fake_entity, mocker):
-    await repository.memory_data_source.delete('fake:fake')
     fake_query = GeoSpatialQuery(
         repository,
         memory=True,
@@ -154,24 +152,13 @@ async def test_should_set_already_not_found_error(
 
 
 @pytest.mark.asyncio
-async def test_should_get_from_fallback(repository, fake_entity):
+async def test_should_get_from_fallback(
+    repository, fake_entity, fake_fallback_data_entity
+):
     await repository.memory_data_source.delete('fake:fake2:fake')
-    repository.fallback_data_source.db['fake:fake2:fake'] = {
-        'fake_id': fake_entity.fake_id,
-        'fake2_id': fake_entity.fake2_id,
-        'data': [
-            {
-                'latitude': fake_entity.data[0].coord.latitude,
-                'longitude': fake_entity.data[0].coord.longitude,
-                'member': fake_entity.data[0].member,
-            },
-            {
-                'latitude': fake_entity.data[1].coord.latitude,
-                'longitude': fake_entity.data[1].coord.longitude,
-                'member': fake_entity.data[1].member,
-            },
-        ],
-    }
+    repository.fallback_data_source.db[
+        'fake:fake2:fake'
+    ] = fake_fallback_data_entity
     entity = await repository.query(
         fake_id=fake_entity.fake_id,
         fake2_id=fake_entity.fake2_id,

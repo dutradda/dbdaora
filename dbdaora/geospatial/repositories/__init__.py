@@ -49,18 +49,13 @@ class GeoSpatialRepository(
         *,
         for_memory: bool = False,
     ) -> Optional[GeoSpatialData]:
-        self._validate_query(query)
-
         key = self.fallback_key(query)
         data = await self.fallback_data_source.get(key)
 
         if data is None:
             return None
 
-        elif for_memory:
-            return self.make_fallback_data_for_memory(key, query, data)
-
-        return self.make_fallback_data_by_query(key, query, data)
+        return self.make_fallback_data_for_memory(key, query, data)
 
     def _validate_query(self, query: 'GeoSpatialQuery[FallbackKey]') -> None:
         if query.type == GeoSpatialQueryType.RADIUS:
@@ -74,14 +69,6 @@ class GeoSpatialRepository(
             return
 
         raise InvalidQueryError(query)
-
-    def make_fallback_data_by_query(
-        self,
-        key: FallbackKey,
-        query: 'GeoSpatialQuery[FallbackKey]',
-        data: Dict[str, Any],
-    ) -> GeoSpatialData:
-        raise NotImplementedError()
 
     def make_fallback_data_for_memory(
         self,
@@ -114,12 +101,12 @@ class GeoSpatialRepository(
             },
         )
 
-    def make_entity_from_fallback(
+    def make_entity_from_fallback(  # type: ignore
         self,
         data: GeoSpatialData,
-        query: 'BaseQuery[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
+        query: 'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
     ) -> GeoSpatialEntity:
-        raise NotImplementedError()
+        return self.make_entity(data, query)
 
     async def add_memory_data(
         self, key: str, data: GeoSpatialData, from_fallback: bool = False
