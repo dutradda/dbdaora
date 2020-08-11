@@ -1,5 +1,14 @@
 from datetime import datetime
-from typing import Any, Awaitable, Callable, Optional, Type, TypeVar
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from circuitbreaker import (
     STATE_CLOSED,
@@ -19,7 +28,9 @@ class AsyncCircuitBreaker(CircuitBreaker):
         self,
         failure_threshold: Optional[int] = None,
         recovery_timeout: Optional[int] = None,
-        expected_exception: Optional[Type[Exception]] = None,
+        expected_exception: Optional[
+            Union[Type[Exception], Tuple[Type[Exception], ...]]
+        ] = None,
         name: Optional[str] = None,
         fallback_function: Optional[
             Callable[..., Awaitable[FuncReturn]]
@@ -49,9 +60,10 @@ class AsyncCircuitBreaker(CircuitBreaker):
     ) -> FuncReturn:
         if self.opened:
             if self.fallback_function:
-                await self.fallback_function(*args, **kwargs)
+                return await self.fallback_function(*args, **kwargs)
             else:
-                raise CircuitBreakerError(self)
+                raise DBDaoraCircuitBreakerError(self, func.__name__)
+
         try:
             result = await func(*args, **kwargs)
         except self._expected_exception as e:
@@ -59,7 +71,7 @@ class AsyncCircuitBreaker(CircuitBreaker):
             self.__call_failed()
 
             if self._failure_threshold == 0:
-                raise CircuitBreakerError(self)
+                raise DBDaoraCircuitBreakerError(self, func.__name__)
 
             raise
 
@@ -76,3 +88,39 @@ class AsyncCircuitBreaker(CircuitBreaker):
         if self._failure_count >= self._failure_threshold:
             self._state = STATE_OPEN
             self._opened = datetime.utcnow()
+
+    @property
+    def expected_exception(
+        self,
+    ) -> Union[Type[Exception], Tuple[Type[Exception], ...]]:
+        return self._expected_exception
+
+
+class DBDaoraCircuitBreakerError(CircuitBreakerError):
+    _circuit_breaker: AsyncCircuitBreaker
+    last_failure: Optional[Exception]
+
+    def __init__(
+        self,
+        circuit_breaker: CircuitBreaker,
+        name_sufix: Optional[str] = None,
+        *args: Any,
+        **kwargs: Any,
+    ):
+        super().__init__(circuit_breaker, *args, **kwargs)
+        self._name_sufix = name_sufix
+        self.last_failure = self._circuit_breaker._last_failure
+
+    def __str__(self, *args: Any, **kwargs: Any) -> str:
+        return (
+            'Circuit "%s" OPEN until %s (%d failures, %d sec remaining) (last_failure: %r)'
+            % (
+                self._circuit_breaker.name
+                if self._name_sufix is None
+                else f'{self._circuit_breaker.name}_{self._name_sufix}',
+                self._circuit_breaker.open_until,
+                self._circuit_breaker.failure_count,
+                round(self._circuit_breaker.open_remaining),
+                self._circuit_breaker.last_failure,
+            )
+        )

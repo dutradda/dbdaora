@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Add fallback circuit breaker for service
+
 ### 0.18.0 - 2020-07-23
 
  - Add support for redis geospatial data type

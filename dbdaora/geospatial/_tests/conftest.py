@@ -2,6 +2,7 @@ from functools import partial
 
 import pytest
 from aioredis import RedisError
+from pymongo.errors import PyMongoError
 
 from dbdaora import make_aioredis_data_source, make_geospatial_service
 
@@ -27,6 +28,7 @@ async def fake_service(mocker, fallback_data_source, fake_repository_cls):
         cb_failure_threshold=0,
         cb_recovery_timeout=10,
         cb_expected_exception=RedisError,
+        cb_expected_fallback_exception=PyMongoError,
         logger=mocker.MagicMock(),
     )
 

@@ -195,7 +195,9 @@ async def make(
     *uris: str,
     hashring_cls: Type[HashRing[AioRedisDataSource]] = HashRing,
     hashring_nodes_size: Optional[int] = None,
-    commands_factory: Type[AioRedisDataSource] = AioRedisDataSource,
+    commands_factory: Type[
+        ShardsAioRedisDataSource
+    ] = ShardsAioRedisDataSource,
 ) -> Union[Redis, ShardsAioRedisDataSource]:
     if len(uris) == 0:
         uris = ['redis://']  # type: ignore
@@ -208,7 +210,7 @@ async def make(
             for uri in uris
         ]
         hashring = hashring_cls(clients, hashring_nodes_size)
-        return ShardsAioRedisDataSource(hashring)
+        return commands_factory(hashring)
 
     else:
         return await create_redis_pool(

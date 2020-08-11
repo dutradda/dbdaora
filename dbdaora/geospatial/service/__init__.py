@@ -17,6 +17,7 @@ class GeoSpatialService(Service[Entity, GeoSpatialData, FallbackKey]):
         self,
         repository: MemoryRepository[Entity, GeoSpatialData, FallbackKey],
         circuit_breaker: AsyncCircuitBreaker,
+        fallback_circuit_breaker: Optional[AsyncCircuitBreaker] = None,
         cache: Optional[Cache] = None,
         exists_cache: Optional[Cache] = None,
         logger: Logger = getLogger(__name__),
@@ -29,6 +30,7 @@ class GeoSpatialService(Service[Entity, GeoSpatialData, FallbackKey]):
         super().__init__(
             repository=repository,
             circuit_breaker=circuit_breaker,
+            fallback_circuit_breaker=fallback_circuit_breaker,
             cache=None,
             exists_cache=None,
             logger=logger,

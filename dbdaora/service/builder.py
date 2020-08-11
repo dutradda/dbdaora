@@ -1,5 +1,5 @@
 from logging import Logger, getLogger
-from typing import Any, Optional, Type
+from typing import Any, Optional, Tuple, Type, Union
 
 from cachetools import Cache
 
@@ -22,7 +22,12 @@ async def build(
     cache_max_size: Optional[int] = None,
     cb_failure_threshold: Optional[int] = None,
     cb_recovery_timeout: Optional[int] = None,
-    cb_expected_exception: Optional[Type[Exception]] = None,
+    cb_expected_exception: Optional[
+        Union[Type[Exception], Tuple[Type[Exception], ...]]
+    ] = None,
+    cb_expected_fallback_exception: Optional[
+        Union[Type[Exception], Tuple[Type[Exception], ...]]
+    ] = None,
     logger: Logger = getLogger(__name__),
     cache_ttl_failure_threshold: int = 0,
 ) -> Service[Entity, EntityData, FallbackKey]:
@@ -32,11 +37,31 @@ async def build(
         fallback_data_source_factory,
         repository_expire_time,
     )
+
+    if cb_expected_exception and cb_expected_fallback_exception:
+        if not isinstance(cb_expected_exception, tuple):
+            cb_expected_exception = (cb_expected_exception,)
+
+        if not isinstance(cb_expected_fallback_exception, tuple):
+            cb_expected_fallback_exception = (cb_expected_fallback_exception,)
+
+        cb_expected_exception += cb_expected_fallback_exception
+
     circuit_breaker = build_circuit_breaker(
-        repository_cls.name,
+        f'{repository_cls.name}_memory',
         cb_failure_threshold,
         cb_recovery_timeout,
         cb_expected_exception,
+    )
+    fallback_circuit_breaker = (
+        build_circuit_breaker(
+            f'{repository_cls.name}_fallback',
+            cb_failure_threshold,
+            cb_recovery_timeout,
+            cb_expected_fallback_exception,
+        )
+        if cb_expected_fallback_exception
+        else None
     )
     cache = build_cache(
         cache_type, cache_ttl, cache_max_size, cache_ttl_failure_threshold
@@ -45,7 +70,12 @@ async def build(
         cache_type, cache_ttl, cache_max_size, cache_ttl_failure_threshold
     )
     return service_cls(
-        repository, circuit_breaker, cache, exists_cache, logger
+        repository,
+        circuit_breaker,
+        fallback_circuit_breaker,
+        cache,
+        exists_cache,
+        logger,
     )
 
 
@@ -92,7 +122,9 @@ def build_circuit_breaker(
     name: str,
     failure_threshold: Optional[int] = None,
     recovery_timeout: Optional[int] = None,
-    expected_exception: Optional[Type[Exception]] = None,
+    expected_exception: Optional[
+        Union[Type[Exception], Tuple[Type[Exception], ...]]
+    ] = None,
 ) -> AsyncCircuitBreaker:
     return AsyncCircuitBreaker(
         failure_threshold, recovery_timeout, expected_exception, name=name,

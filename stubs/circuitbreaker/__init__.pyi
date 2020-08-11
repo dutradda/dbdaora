@@ -1,4 +1,14 @@
-from typing import Any, Awaitable, Callable, Optional, Type, TypeVar
+from datetime import datetime
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 
 FuncReturn = TypeVar('FuncReturn')
@@ -8,7 +18,7 @@ STATE_OPEN = 'open'
 
 
 class CircuitBreaker:
-    _expected_exception: Type[Exception]
+    _expected_exception: Union[Type[Exception], Tuple[Type[Exception], ...]]
     _failure_threshold: int
     name: str
     FAILURE_THRESHOLD: int
@@ -20,7 +30,7 @@ class CircuitBreaker:
         self,
         failure_threshold: Optional[int] = None,
         recovery_timeout: Optional[int] = None,
-        expected_exception: Optional[Type[Exception]] = None,
+        expected_exception: Optional[Union[Type[Exception], Tuple[Type[Exception], ...]]] = None,
         name: Optional[str] = None,
         fallback_function: Optional[
             Callable[..., Awaitable[FuncReturn]]
@@ -46,6 +56,20 @@ class CircuitBreaker:
         self,
     ) -> Optional[Callable[..., Awaitable[FuncReturn]]]: ...
 
+    @property
+    def open_until(self) -> datetime: ...
+
+    @property
+    def open_remaining(self) -> int: ...
+
+    @property
+    def failure_count(self) -> int: ...
+
+    @property
+    def last_failure(self) -> Optional[Exception]: ...
+
 
 class CircuitBreakerError(Exception):
-    ...
+    def __init__(
+        self, circuit_breaker: CircuitBreaker, *args: Any, **kwargs: Any
+    ): ...

@@ -22,6 +22,7 @@ async def make_service(
     cb_failure_threshold: Optional[int] = None,
     cb_recovery_timeout: Optional[int] = None,
     cb_expected_exception: Optional[Type[Exception]] = None,
+    cb_expected_fallback_exception: Optional[Type[Exception]] = None,
     logger: Logger = getLogger(__name__),
 ) -> Service[Entity, EntityData, FallbackKey]:
     return await build_base_service(
@@ -36,5 +37,6 @@ async def make_service(
         cb_failure_threshold=cb_failure_threshold,
         cb_recovery_timeout=cb_recovery_timeout,
         cb_expected_exception=cb_expected_exception,
+        cb_expected_fallback_exception=cb_expected_fallback_exception,
         logger=logger,
     )
