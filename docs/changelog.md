@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.19.0 - 2020-08-12
 
  - Add fallback circuit breaker for service
 
