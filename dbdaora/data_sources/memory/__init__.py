@@ -142,6 +142,7 @@ class MemoryDataSource(DataSource):
         *,
         with_dist: bool = False,
         with_coord: bool = False,
+        count: Optional[int] = None,
     ) -> GeoRadiusOutput:
         raise NotImplementedError()  # pragma: no cover
 

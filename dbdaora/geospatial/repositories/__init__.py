@@ -49,6 +49,7 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
             unit=query.distance_unit,
             with_dist=query.with_dist,
             with_coord=query.with_coord,
+            count=query.count,
         )
 
         if not data:

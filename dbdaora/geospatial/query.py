@@ -20,6 +20,7 @@ class GeoSpatialQuery(Query[Any, 'GeoSpatialData', FallbackKey]):
     distance_unit: str = 'km'
     with_dist: bool = True
     with_coord: bool = True
+    count: Optional[int] = None
 
     def __init__(
         self,
@@ -34,6 +35,7 @@ class GeoSpatialQuery(Query[Any, 'GeoSpatialData', FallbackKey]):
         distance_unit: str = 'km',
         with_dist: bool = True,
         with_coord: bool = True,
+        count: Optional[int] = None,
         **kwargs: Any,
     ):
         super().__init__(
@@ -46,6 +48,7 @@ class GeoSpatialQuery(Query[Any, 'GeoSpatialData', FallbackKey]):
         self.distance_unit = distance_unit
         self.with_dist = with_dist
         self.with_coord = with_coord
+        self.count = count
 
 
 @dataclasses.dataclass(init=False)
@@ -62,6 +65,7 @@ class GeoSpatialQueryMany(QueryMany[Any, 'GeoSpatialData', FallbackKey]):
     distance_unit: str = 'km'
     with_dist: bool = True
     with_coord: bool = True
+    count: Optional[int] = None
 
     def __init__(
         self,
@@ -77,6 +81,7 @@ class GeoSpatialQueryMany(QueryMany[Any, 'GeoSpatialData', FallbackKey]):
         distance_unit: str = 'km',
         with_dist: bool = True,
         with_coord: bool = True,
+        count: Optional[int] = None,
         **kwargs: Any,
     ):
         super().__init__(
@@ -94,6 +99,7 @@ class GeoSpatialQueryMany(QueryMany[Any, 'GeoSpatialData', FallbackKey]):
         self.distance_unit = distance_unit
         self.with_dist = with_dist
         self.with_coord = with_coord
+        self.count = count
 
         for query in self.queries:
             query.type = type
@@ -103,6 +109,7 @@ class GeoSpatialQueryMany(QueryMany[Any, 'GeoSpatialData', FallbackKey]):
             query.distance_unit = distance_unit
             query.with_dist = with_dist
             query.with_coord = with_coord
+            query.count = count
 
 
 def make(

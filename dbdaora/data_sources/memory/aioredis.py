@@ -148,6 +148,7 @@ class ShardsAioRedisDataSource(MemoryDataSource):
         *,
         with_dist: bool = False,
         with_coord: bool = False,
+        count: Optional[int] = None,
     ) -> GeoRadiusOutput:
         return await self.get_client(key).georadius(
             key=key,
@@ -157,6 +158,7 @@ class ShardsAioRedisDataSource(MemoryDataSource):
             unit=unit,
             with_dist=with_dist,
             with_coord=with_coord,
+            count=count,
         )
 
     async def geoadd(

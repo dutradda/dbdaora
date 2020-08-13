@@ -89,6 +89,7 @@ async def test_should_raise_not_found_error_when_already_raised_before(
             unit='km',
             with_dist=True,
             with_coord=True,
+            count=None,
         ),
     ]
     assert repository.memory_data_source.exists.call_args_list == [
@@ -140,6 +141,7 @@ async def test_should_set_already_not_found_error(
             unit='km',
             with_dist=True,
             with_coord=True,
+            count=None,
         ),
     ]
     assert repository.memory_data_source.exists.call_args_list == [
