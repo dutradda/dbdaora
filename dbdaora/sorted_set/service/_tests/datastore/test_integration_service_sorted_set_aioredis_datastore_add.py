@@ -6,7 +6,6 @@ from circuitbreaker import CircuitBreakerError
 
 @pytest.mark.asyncio
 async def test_should_add(fake_service, fake_entity, fake_entity_withscores):
-    print(fake_service.repository.fallback_data_source)
     await fake_service.add(fake_entity_withscores)
 
     entity = await fake_service.get_one(fake_id=fake_entity_withscores.fake_id)

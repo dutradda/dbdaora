@@ -79,7 +79,6 @@ async def test_should_get_one_min_score_and_max_score_not_found(
             max_score=3,
             memory=False,
         )
-        print(e)
 
 
 @pytest.mark.asyncio
