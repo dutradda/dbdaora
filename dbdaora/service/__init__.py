@@ -225,6 +225,8 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
                 raise EntityNotFoundError(id, filters)
 
             try:
+                filters.pop('memory', None)
+
                 if self.cache is not None:
                     return await self.get_one_cached(
                         cache=self.cache, memory=False, **filters

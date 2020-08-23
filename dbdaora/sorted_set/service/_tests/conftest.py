@@ -33,7 +33,7 @@ def fake_entity_cls():
 @pytest.fixture
 def fake_repository_cls(fake_entity_cls):
     class FakeRepository(SortedSetRepository[str]):
-        key_attrs = ('fake_id',)
+        id_name = 'fake_id'
         entity_cls = fake_entity_cls
 
     return FakeRepository
@@ -49,10 +49,19 @@ def fake_entity_withscores(fake_entity_cls):
     return fake_entity_cls(fake_id='fake', values=[(b'1', 0), (b'2', 1)])
 
 
+@pytest.fixture
+def cache_config():
+    return {}
+
+
 @pytest.mark.asyncio
 @pytest.fixture
 async def fake_service(
-    mocker, fallback_data_source, fake_repository_cls, fallback_cb_error
+    mocker,
+    fallback_data_source,
+    fake_repository_cls,
+    fallback_cb_error,
+    cache_config,
 ):
     memory_data_source_factory = partial(
         make_aioredis_data_source,
@@ -74,6 +83,7 @@ async def fake_service(
         cb_expected_exception=RedisError,
         cb_expected_fallback_exception=fallback_cb_error,
         logger=mocker.MagicMock(),
+        **cache_config,
     )
 
     yield service
