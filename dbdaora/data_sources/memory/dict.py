@@ -98,7 +98,7 @@ class DictMemoryDataSource(MemoryDataSource):
         self.db[key] = sorted(
             [
                 (
-                    data[i].encode() if isinstance(data[i], str) else data[i],
+                    data[i].encode() if isinstance(data[i], str) else data[i],  # type: ignore
                     data[i - 1],
                 )
                 for i in range(1, len(data), 2)

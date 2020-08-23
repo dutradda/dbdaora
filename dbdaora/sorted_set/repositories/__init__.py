@@ -19,7 +19,7 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey],):
     async def get_memory_data(  # type: ignore
         self, key: str, query: SortedSetQuery[FallbackKey],
     ) -> Optional[SortedSetData]:
-        size_task: Optional[Awaitable[Any]] = None
+        size_task: Optional[asyncio.Task[Any]] = None
         data_task: Awaitable[Any]
 
         if query.withmaxsize:
@@ -116,7 +116,7 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey],):
 
         data_withscores = [
             (
-                data['values'][i].encode()
+                data['values'][i].encode()  # type: ignore
                 if isinstance(data['values'][i], str)
                 else data['values'][i],
                 data['values'][i + 1],
@@ -131,7 +131,7 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey],):
 
     def parse_data_from_fallback(
         self, data_withscores: Any, query: Any
-    ) -> Any:
+    ) -> SortedSetData:
         sorted_data = sorted(
             data_withscores, key=lambda v: v[1], reverse=query.reverse
         )
@@ -145,7 +145,7 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey],):
                 sorted_data = [
                     (member, score)
                     for member, score in sorted_data
-                    if min_score <= score <= max_score  # type: ignore
+                    if min_score <= score <= max_score
                 ]
 
         else:
