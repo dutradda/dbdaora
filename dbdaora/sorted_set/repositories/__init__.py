@@ -142,17 +142,16 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey]):
 
     def parse_data_from_fallback(
         self, data_withscores: Any, query: Any
-    ) -> SortedSetData:
+    ) -> Optional[SortedSetData]:
         sorted_data = sorted(
             data_withscores, key=lambda v: v[1], reverse=query.reverse
         )
-
         maxsize = len(sorted_data) if query.withmaxsize else None
 
-        if query.max_score or query.min_score:
+        if query.max_score is not None or query.min_score is not None:
             max_score, min_score = self.parse_score_limits(query)
 
-            if max_score != float('inf') and min_score != float('-inf'):
+            if max_score != float('inf') or min_score != float('-inf'):
                 sorted_data = [
                     (member, score)
                     for member, score in sorted_data
@@ -162,8 +161,11 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey]):
         else:
             start, stop = self.parse_page(query)
 
-            if start != 0 and stop != -1:
-                sorted_data = sorted_data[start:stop]
+            if start != 0 or stop != -1:
+                sorted_data = sorted_data[start : stop + 1]  # noqa
+
+        if not sorted_data:
+            return None
 
         if query.withscores:
             return (sorted_data, maxsize)  # type: ignore
@@ -188,10 +190,14 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey]):
         return self.make_entity(data, query)
 
     async def add_memory_data(self, key: str, data: SortedSetData) -> None:
-        transaction = self.memory_data_source.multi_exec()
-        transaction.delete(key)
-        transaction.zadd(key, *data)
-        await transaction.execute()
+        delete_task = asyncio.create_task(self.memory_data_source.delete(key))
+        delete_task.add_done_callback(task_done_callback)
+        zadd_task = asyncio.create_task(
+            self.memory_data_source.zadd(key, *data)
+        )
+        zadd_task.add_done_callback(task_done_callback)
+        await delete_task
+        await zadd_task
 
     async def add_fallback(
         self, entity: Any, *entities: Any, **kwargs: Any
@@ -211,7 +217,7 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey]):
         key: str,
         query: Union[SortedSetQuery[FallbackKey], Any],
         data: Sequence[Tuple[str, float]],
-    ) -> SortedSetData:
+    ) -> Optional[SortedSetData]:
         await self.memory_data_source.zadd(key, *self.format_memory_data(data))
         return self.parse_data_from_fallback(data, query)
 
@@ -230,3 +236,10 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey]):
         data = list(itertools.chain(*data))
         data.reverse()
         return data
+
+
+def task_done_callback(f: Any) -> None:
+    try:
+        f.result()
+    except Exception:  # pragma: no cover
+        ...  # pragma: no cover
