@@ -25,7 +25,6 @@ from ..entity import GeoSpatialData, GeoSpatialEntity
 class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
     __skip_cls_validation__ = ('GeoSpatialRepository',)
     entity_cls: ClassVar[Type[Any]] = GeoSpatialEntity
-    key_attrs: ClassVar[Sequence[str]] = ('id',)
 
     async def get_memory_data(  # type: ignore
         self, key: str, query: 'GeoSpatialQuery[FallbackKey]',
