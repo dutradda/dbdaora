@@ -30,6 +30,7 @@ from dbdaora.sorted_set.entity import (
     SortedSetDictEntity,
     SortedSetEntity,
 )
+from dbdaora.sorted_set.factory import make_service as make_sorted_set_service
 from dbdaora.sorted_set.query import SortedSetQuery
 from dbdaora.sorted_set.repositories import SortedSetRepository
 
@@ -54,6 +55,7 @@ try:
     from dbdaora.geospatial.repositories.datastore import (
         DatastoreGeoSpatialRepository,
     )
+    from dbdaora.sorted_set.service.datastore import DatastoreSortedSetService
 except ImportError:
     DatastoreDataSource = None  # type: ignore
     KindKeyDatastoreDataSource = None  # type: ignore
@@ -62,6 +64,7 @@ except ImportError:
     DatastoreHashService = None  # type: ignore
     DatastoreGeoSpatialService = None  # type: ignore
     DatastoreGeoSpatialRepository = None  # type: ignore
+    DatastoreSortedSetService = None  # type: ignore
 
 try:
     from dbdaora.data_sources.memory.aioredis import (
@@ -86,6 +89,10 @@ try:
     from dbdaora.geospatial.repositories.mongodb import (
         MongodbGeoSpatialRepository,
     )
+    from dbdaora.sorted_set.service.mongodb import MongoSortedSetService
+    from dbdaora.sorted_set.repositories.mongodb import (
+        MongodbSortedSetRepository,
+    )
 except ImportError:
     MongoDataSource = None  # type: ignore
     CollectionKeyMongoDataSource = None  # type: ignore
@@ -93,6 +100,8 @@ except ImportError:
     MongoGeoSpatialService = None  # type: ignore
     MongodbGeoSpatialRepository = None  # type: ignore
     MongoHashService = None  # type: ignore
+    MongoSortedSetService = None  # type: ignore
+    MongodbSortedSetRepository = None  # type: ignore
 
 
 __all__ = [
@@ -132,6 +141,7 @@ __all__ = [
     'GeoSpatialRepository',
     'make_geospatial_service',
     'GeoSpatialData',
+    'make_sorted_set_service',
 ]
 
 if AioRedisDataSource:
@@ -184,3 +194,12 @@ if DatastoreGeoSpatialRepository:
 
 if DatastoreGeoSpatialService:
     __all__.append('DatastoreGeoSpatialService')
+
+if DatastoreSortedSetService:
+    __all__.append('DatastoreSortedSetService')
+
+if MongodbSortedSetRepository:
+    __all__.append('MongodbSortedSetRepository')
+
+if MongoSortedSetService:
+    __all__.append('MongoSortedSetService')

@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass
+from typing import Optional
 
 from dbdaora import (
     DictFallbackDataSource,
@@ -13,6 +14,7 @@ from dbdaora import (
 class Playlist:
     id: str
     values: SortedSetData
+    max_size: Optional[int] = None
 
 
 class PlaylistRepository(SortedSetRepository[str]):

@@ -59,7 +59,7 @@ class DictMemoryDataSource(MemoryDataSource):
         return key in self.db
 
     async def zrevrange(
-        self, key: str, withscores: bool = False
+        self, key: str, start: int, stop: int, withscores: bool = False
     ) -> Optional[RangeOutput]:
         data: RangeOutput
 
@@ -75,7 +75,11 @@ class DictMemoryDataSource(MemoryDataSource):
         return data
 
     async def zrange(
-        self, key: str, withscores: bool = False
+        self,
+        key: str,
+        start: int = 0,
+        stop: int = -1,
+        withscores: bool = False,
     ) -> Optional[RangeOutput]:
         data: Optional[RangeOutput] = self.db.get(key)
 
@@ -92,7 +96,13 @@ class DictMemoryDataSource(MemoryDataSource):
     ) -> None:
         data = [score, member] + list(pairs)
         self.db[key] = sorted(
-            [(data[i], data[i - 1]) for i in range(1, len(data), 2)],
+            [
+                (
+                    data[i].encode() if isinstance(data[i], str) else data[i],
+                    data[i - 1],
+                )
+                for i in range(1, len(data), 2)
+            ],
             key=lambda d: d[1],
         )
 

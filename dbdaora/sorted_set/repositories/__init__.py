@@ -1,5 +1,6 @@
+import asyncio
 import itertools
-from typing import Any, Optional, Sequence, Tuple, TypedDict, Union
+from typing import Any, Awaitable, Optional, Sequence, Tuple, TypedDict, Union
 
 from dbdaora.keys import FallbackKey
 from dbdaora.repository import MemoryRepository
@@ -9,7 +10,7 @@ from ..query import SortedSetQuery
 
 
 class FallbackSortedSetData(TypedDict):
-    values: Sequence[Tuple[str, float]]
+    values: Sequence[Union[str, float]]
 
 
 class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey],):
@@ -18,10 +19,86 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey],):
     async def get_memory_data(  # type: ignore
         self, key: str, query: SortedSetQuery[FallbackKey],
     ) -> Optional[SortedSetData]:
-        if query.reverse:
-            return await self.memory_data_source.zrevrange(key)
+        size_task: Optional[Awaitable[Any]] = None
+        data_task: Awaitable[Any]
 
-        return await self.memory_data_source.zrange(key)
+        if query.withmaxsize:
+            size_task = asyncio.create_task(self.memory_data_source.zcard(key))
+
+        if query.max_score is not None or query.min_score is not None:
+            max_score, min_score = self.parse_score_limits(query)
+
+            if query.reverse:
+                data_task = asyncio.create_task(
+                    self.memory_data_source.zrevrangebyscore(
+                        key,
+                        max=max_score,
+                        min=min_score,
+                        withscores=query.withscores,
+                    )
+                )
+            else:
+                data_task = asyncio.create_task(
+                    self.memory_data_source.zrangebyscore(
+                        key,
+                        max=max_score,
+                        min=min_score,
+                        withscores=query.withscores,
+                    )
+                )
+
+        else:
+            start, stop = self.parse_page(query)
+
+            if query.reverse:
+                data_task = asyncio.create_task(
+                    self.memory_data_source.zrevrange(
+                        key,
+                        start=start,
+                        stop=stop,
+                        withscores=query.withscores,
+                    )
+                )
+            else:
+                data_task = asyncio.create_task(
+                    self.memory_data_source.zrange(
+                        key,
+                        start=start,
+                        stop=stop,
+                        withscores=query.withscores,
+                    )
+                )
+
+        data = await data_task
+
+        if not data:
+            if size_task:
+                size_task.cancel()
+            return None
+
+        return data, await size_task if size_task else None
+
+    def parse_page(
+        self, query: SortedSetQuery[FallbackKey]
+    ) -> Tuple[int, int]:
+        if query.page_size:
+            if query.page == 1 or query.page is None:
+                return 0, query.page_size - 1
+            else:
+                return (
+                    (query.page - 1) * query.page_size,
+                    query.page * query.page_size - 1,
+                )
+
+        return 0, -1
+
+    def parse_score_limits(
+        self, query: SortedSetQuery[FallbackKey]
+    ) -> Tuple[float, float]:
+        return (
+            float('inf') if query.max_score is None else query.max_score,
+            float('-inf') if query.min_score is None else query.min_score,
+        )
 
     async def get_fallback_data(
         self,
@@ -37,21 +114,57 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey],):
         if data is None:
             return None
 
-        elif for_memory or (
-            isinstance(query, SortedSetQuery) and query.withscores
-        ):
-            return [  # type: ignore
-                (data['values'][i], data['values'][i + 1])
-                for i in range(0, len(data['values']), 2)
-            ]
+        data_withscores = [
+            (
+                data['values'][i].encode()
+                if isinstance(data['values'][i], str)
+                else data['values'][i],
+                data['values'][i + 1],
+            )
+            for i in range(0, len(data['values']), 2)
+        ]
 
-        return [data['values'][i] for i in range(0, len(data['values']), 2)]
+        if for_memory:
+            return data_withscores  # type: ignore
+
+        return self.parse_data_from_fallback(data_withscores, query)
+
+    def parse_data_from_fallback(
+        self, data_withscores: Any, query: Any
+    ) -> Any:
+        sorted_data = sorted(
+            data_withscores, key=lambda v: v[1], reverse=query.reverse
+        )
+
+        maxsize = len(sorted_data) if query.withmaxsize else None
+
+        if query.max_score or query.min_score:
+            max_score, min_score = self.parse_score_limits(query)
+
+            if max_score != float('inf') and min_score != float('-inf'):
+                sorted_data = [
+                    (member, score)
+                    for member, score in sorted_data
+                    if min_score <= score <= max_score  # type: ignore
+                ]
+
+        else:
+            start, stop = self.parse_page(query)
+
+            if start != 0 and stop != -1:
+                sorted_data = sorted_data[start:stop]
+
+        if query.withscores:
+            return (sorted_data, maxsize)  # type: ignore
+
+        return ([member for member, score in sorted_data], maxsize)  # type: ignore
 
     def make_entity(  # type: ignore
         self, data: SortedSetData, query: SortedSetQuery[FallbackKey]
     ) -> Any:
         return self.get_entity_type(query)(
-            values=data,
+            values=data[0],
+            max_size=data[1],
             **{self.id_name: query.attribute_from_key(self.id_name)},
         )
 
@@ -86,11 +199,7 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey],):
         data: Sequence[Tuple[str, float]],
     ) -> SortedSetData:
         await self.memory_data_source.zadd(key, *self.format_memory_data(data))
-
-        if isinstance(query, SortedSetQuery) and query.withscores:
-            return data
-
-        return [i[0] for i in data]
+        return self.parse_data_from_fallback(data, query)
 
     def make_query(
         self, *args: Any, **kwargs: Any

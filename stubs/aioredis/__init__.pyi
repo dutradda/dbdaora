@@ -37,11 +37,15 @@ class Redis:
     async def exists(self, key: str) -> int: ...
 
     async def zrevrange(
-        self, key: str, withscores: bool = False
+        self, key: str, start: int, stop: int, withscores: bool = False
     ) -> Optional[SortedSetData]: ...
 
     async def zrange(
-        self, key: str, withscores: bool = False
+        self,
+        key: str,
+        start: int = 0,
+        stop: int = -1,
+        withscores: bool = False,
     ) -> Optional[SortedSetData]: ...
 
     async def zadd(
@@ -63,6 +67,27 @@ class Redis:
     async def hgetall(self, key: str) -> Dict[bytes, bytes]: ...
 
     def pipeline(self) -> Any: ...
+
+    async def zrevrangebyscore(
+        self,
+        key: str,
+        max: float = float('inf'),
+        min: float = float('-inf'),
+        withscores: bool = False,
+    ) -> Optional[SortedSetData]:
+        ...
+
+    async def zrangebyscore(
+        self,
+        key: str,
+        min: float = float('-inf'),
+        max: float = float('inf'),
+        withscores: bool = False,
+    ) -> Optional[SortedSetData]:
+        ...
+
+    async def zcard(self, key: str) -> int:
+        ...
 
 
 async def create_redis_pool(

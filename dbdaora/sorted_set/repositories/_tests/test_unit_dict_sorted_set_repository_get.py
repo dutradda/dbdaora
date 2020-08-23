@@ -51,7 +51,7 @@ async def test_should_raise_not_found_error_when_already_raised_before(
 
     assert exc_info.value.args == (expected_query,)
     assert repository.memory_data_source.zrange.call_args_list == [
-        mocker.call('fake:fake'),
+        mocker.call('fake:fake', start=0, stop=-1, withscores=False),
     ]
     assert repository.memory_data_source.exists.call_args_list == [
         mocker.call('fake:not-found:fake')
@@ -64,7 +64,7 @@ async def test_should_get_from_fallback(
     repository, fake_entity_withscores, fake_entity
 ):
     repository.memory_data_source.zrange = asynctest.CoroutineMock(
-        side_effect=[None, fake_entity.values]
+        side_effect=[None]
     )
     repository.fallback_data_source.db['fake:fake'] = {
         'values': tuple(itertools.chain(*fake_entity_withscores.values))
@@ -90,6 +90,6 @@ async def test_should_set_memory_after_got_fallback(
 
     assert repository.memory_data_source.zrange.called
     assert repository.memory_data_source.zadd.call_args_list == [
-        mocker.call('fake:fake', 1, '2', 0, '1')
+        mocker.call('fake:fake', 1, b'2', 0, b'1')
     ]
     assert entity == fake_entity

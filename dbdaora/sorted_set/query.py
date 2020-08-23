@@ -14,8 +14,9 @@ class SortedSetQuery(Query[Entity, SortedSetData, FallbackKey]):
     withscores: bool = False
     page: Optional[int] = None
     page_size: Optional[int] = None
-    min: Optional[float] = None
-    max: Optional[float] = None
+    min_score: Optional[float] = None
+    max_score: Optional[float] = None
+    withmaxsize: bool = False
 
     def __init__(
         self,
@@ -27,8 +28,9 @@ class SortedSetQuery(Query[Entity, SortedSetData, FallbackKey]):
         withscores: bool = False,
         page: Optional[int] = None,
         page_size: Optional[int] = None,
-        min: Optional[float] = None,
-        max: Optional[float] = None,
+        min_score: Optional[float] = None,
+        max_score: Optional[float] = None,
+        withmaxsize: bool = False,
         **kwargs: Any,
     ):
         super().__init__(
@@ -38,8 +40,9 @@ class SortedSetQuery(Query[Entity, SortedSetData, FallbackKey]):
         self.withscores = withscores
         self.page = page
         self.page_size = page_size
-        self.min = min
-        self.max = max
+        self.min_score = min_score
+        self.max_score = max_score
+        self.withmaxsize = withmaxsize
 
 
 from .repositories import SortedSetRepository  # noqa isort:skip

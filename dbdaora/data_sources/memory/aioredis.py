@@ -107,19 +107,52 @@ class ShardsAioRedisDataSource(MemoryDataSource):
         return await self.get_client(key).exists(key)
 
     async def zrevrange(
-        self, key: str, withscores: bool = False
+        self, key: str, start: int, stop: int, withscores: bool = False
     ) -> Optional[RangeOutput]:
-        return await self.get_client(key).zrevrange(key, withscores=withscores)
+        return await self.get_client(key).zrevrange(
+            key, start=start, stop=stop, withscores=withscores
+        )
 
     async def zrange(
-        self, key: str, withscores: bool = False
+        self,
+        key: str,
+        start: int = 0,
+        stop: int = -1,
+        withscores: bool = False,
     ) -> Optional[RangeOutput]:
-        return await self.get_client(key).zrange(key, withscores=withscores)
+        return await self.get_client(key).zrange(
+            key, start=start, stop=stop, withscores=withscores
+        )
 
     async def zadd(
         self, key: str, score: float, member: str, *pairs: Union[float, str]
     ) -> None:
         await self.get_client(key).zadd(key, score, member, *pairs)
+
+    async def zcard(self, key: str) -> int:
+        return await self.get_client(key).zcard(key)
+
+    async def zrevrangebyscore(
+        self,
+        key: str,
+        max: float = float('inf'),
+        min: float = float('-inf'),
+        withscores: bool = False,
+    ) -> Optional[RangeOutput]:
+        return await self.get_client(key).zrevrangebyscore(
+            key, max=max, min=min, withscores=withscores
+        )
+
+    async def zrangebyscore(
+        self,
+        key: str,
+        min: float = float('-inf'),
+        max: float = float('inf'),
+        withscores: bool = False,
+    ) -> Optional[RangeOutput]:
+        return await self.get_client(key).zrangebyscore(
+            key, min=min, max=max, withscores=withscores
+        )
 
     async def hmset(
         self,

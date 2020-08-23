@@ -92,18 +92,43 @@ class MemoryDataSource(DataSource):
         raise NotImplementedError()  # pragma: no cover
 
     async def zrevrange(
-        self, key: str, withscores: bool = False
+        self, key: str, start: int, stop: int, withscores: bool = False
     ) -> Optional[RangeOutput]:
         raise NotImplementedError()  # pragma: no cover
 
     async def zrange(
-        self, key: str, withscores: bool = False
+        self,
+        key: str,
+        start: int = 0,
+        stop: int = -1,
+        withscores: bool = False,
+    ) -> Optional[RangeOutput]:
+        raise NotImplementedError()  # pragma: no cover
+
+    async def zrevrangebyscore(
+        self,
+        key: str,
+        max: float = float('inf'),
+        min: float = float('-inf'),
+        withscores: bool = False,
+    ) -> Optional[RangeOutput]:
+        raise NotImplementedError()  # pragma: no cover
+
+    async def zrangebyscore(
+        self,
+        key: str,
+        min: float = float('-inf'),
+        max: float = float('inf'),
+        withscores: bool = False,
     ) -> Optional[RangeOutput]:
         raise NotImplementedError()  # pragma: no cover
 
     async def zadd(
         self, key: str, score: float, member: str, *pairs: Union[float, str]
     ) -> None:
+        raise NotImplementedError()  # pragma: no cover
+
+    async def zcard(self, key: str) -> int:
         raise NotImplementedError()  # pragma: no cover
 
     async def hmset(

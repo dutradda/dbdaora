@@ -1,4 +1,4 @@
-from typing import Any, Dict, Protocol, Sequence, TypedDict, Union
+from typing import Any, Dict, Optional, Protocol, Sequence, TypedDict, Union
 
 from dbdaora.data_sources.memory import RangeOutput
 
@@ -13,12 +13,17 @@ class SortedSetEntity(Protocol):
     def values(self) -> SortedSetData:
         raise NotImplementedError()  # pragma: no cover
 
+    @property
+    def max_size(self) -> Optional[int]:
+        raise NotImplementedError()  # pragma: no cover
+
     def __init__(self, values: SortedSetData, **kwargs: Any):
         raise NotImplementedError()  # pragma: no cover
 
 
 class SortedSetDictEntity(TypedDict):
     values: SortedSetData
+    max_size: Optional[int]
 
 
 # see https://github.com/python/mypy/issues/4300
