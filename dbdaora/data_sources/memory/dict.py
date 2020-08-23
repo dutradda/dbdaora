@@ -1,50 +1,12 @@
-import asyncio
 import dataclasses
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, Optional, Sequence, Union
 
-from . import MemoryDataSource, MemoryMultiExec, RangeOutput
-
-
-@dataclasses.dataclass
-class DictMultiExec(MemoryMultiExec):
-    client: 'DictMemoryDataSource'
-    futures: List[Any] = dataclasses.field(default_factory=list)
-
-    def delete(self, key: str) -> Any:
-        future = self.client.delete(key)
-        self.futures.append(future)
-        return future
-
-    def hmset(
-        self,
-        key: str,
-        field: Union[str, bytes],
-        value: Union[str, bytes],
-        *pairs: Union[str, bytes],
-    ) -> Any:
-        future = self.client.hmset(key, field, value, *pairs)
-        self.futures.append(future)
-        return future
-
-    def zadd(
-        self, key: str, score: float, member: str, *pairs: Union[float, str]
-    ) -> Any:
-        future = self.client.zadd(key, score, member, *pairs)
-        self.futures.append(future)
-        return future
-
-    async def execute(self, *, return_exceptions: bool = False) -> Any:
-        results = await asyncio.gather(*self.futures)
-        self.futures.clear()
-        return results
+from . import MemoryDataSource, RangeOutput
 
 
 @dataclasses.dataclass
 class DictMemoryDataSource(MemoryDataSource):
     db: Dict[str, Any] = dataclasses.field(default_factory=dict)
-
-    async def get(self, key: str) -> Optional[bytes]:
-        return self.db.get(key)
 
     async def set(self, key: str, data: str) -> None:
         self.db[key] = data.encode()
@@ -58,22 +20,6 @@ class DictMemoryDataSource(MemoryDataSource):
     async def exists(self, key: str) -> bool:
         return key in self.db
 
-    async def zrevrange(
-        self, key: str, start: int, stop: int, withscores: bool = False
-    ) -> Optional[RangeOutput]:
-        data: RangeOutput
-
-        if key not in self.db:
-            return None
-
-        if withscores:
-            data = list(self.db[key])
-        else:
-            data = [i[0] for i in self.db[key]]
-
-        data.reverse()
-        return data
-
     async def zrange(
         self,
         key: str,
@@ -85,9 +31,6 @@ class DictMemoryDataSource(MemoryDataSource):
 
         if data is None:
             return None
-
-        if withscores:
-            return data
 
         return [i[0] for i in self.db[key]]
 
@@ -126,10 +69,7 @@ class DictMemoryDataSource(MemoryDataSource):
     async def hmget(
         self, key: str, field: Union[str, bytes], *fields: Union[str, bytes]
     ) -> Sequence[Optional[bytes]]:
-        data: Optional[Dict[bytes, Any]] = self.db.get(key)
-
-        if data is None:
-            return [None for i in range(len(fields) + 1)]
+        data: Dict[bytes, Any] = self.db.get(key, {})
 
         return [
             None
@@ -154,6 +94,3 @@ class DictMemoryDataSource(MemoryDataSource):
             )
             for f, d in self.db.get(key, {}).items()
         }
-
-    def multi_exec(self) -> MemoryMultiExec:
-        return DictMultiExec(self)

@@ -68,16 +68,12 @@ class Query(BaseQuery[Entity, EntityData, FallbackKey]):
         key_parts: Optional[List[Any]] = None,
         **kwargs: Any,
     ):
-        self.repository = repository
-        self.memory = memory
+        super().__init__(repository, memory=memory)
 
         if key_parts:
             self.key_parts = key_parts
         else:
             self.key_parts = self.make_key_parts(*args, **kwargs)
-
-    def attribute_from_key(self, attr_name: str) -> Any:
-        return self.key_parts[self.repository.key_attrs.index(attr_name)]
 
     @property
     async def delete(self) -> None:

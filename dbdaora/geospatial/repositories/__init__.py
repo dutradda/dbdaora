@@ -280,7 +280,6 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
 
 from ..query import (  # noqa isort:skip
     GeoSpatialQuery,
-    GeoSpatialQueryMany,
     GeoSpatialQueryType,
 )
 from ..query import make as query_factory  # noqa isort:skip
