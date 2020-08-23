@@ -123,7 +123,12 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     def make_memory_data_from_entity(self, entity: Entity) -> EntityData:
         raise NotImplementedError()  # pragma: no cover
 
-    async def add_fallback(self, entity: Entity, *entities: Entity) -> None:
+    async def add_fallback(
+        self,
+        entity: Entity,
+        *entities: Entity,
+        fallback_ttl: Optional[int] = None,
+    ) -> None:
         raise NotImplementedError()  # pragma: no cover
 
     async def entity(
@@ -202,13 +207,21 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         *entities: Entity,
         memory: bool = True,
         query: Optional['BaseQuery[Entity, EntityData, FallbackKey]'] = None,
+        fallback_ttl: Optional[int] = None,
     ) -> None:
         if memory:
-            return await self.add_memory(*entities)
+            return await self.add_memory(*entities, fallback_ttl=fallback_ttl)
         else:
-            return await self.add_fallback(*entities)
+            return await self.add_fallback(
+                *entities, fallback_ttl=fallback_ttl
+            )
 
-    async def add_memory(self, entity: Entity, *entities: Entity) -> None:
+    async def add_memory(
+        self,
+        entity: Entity,
+        *entities: Entity,
+        fallback_ttl: Optional[int] = None,
+    ) -> None:
         memory_key = self.memory_key(entity)
 
         if await self.memory_data_source.exists(memory_key):
@@ -216,7 +229,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
             await self.add_memory_data(memory_key, memory_data)
             await self.set_expire_time(memory_key)
 
-        await self.add_fallback(entity)
+        await self.add_fallback(entity, fallback_ttl=fallback_ttl)
         await self.delete_fallback_not_found(entity)
 
     async def set_expire_time(self, key: str) -> None:

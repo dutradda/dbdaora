@@ -68,13 +68,15 @@ class BooleanRepository(MemoryRepository[Any, bool, FallbackKey]):
     ) -> BaseQuery[Any, bool, FallbackKey]:
         return query_factory(self, *args, **kwargs)
 
-    async def add_memory(self, entity: Any, *entities: Any) -> None:
+    async def add_memory(
+        self, entity: Any, *entities: Any, fallback_ttl: Optional[int] = None
+    ) -> None:
         memory_key = self.memory_key(entity)
         memory_data = self.make_memory_data_from_entity(entity)
 
         await self.add_memory_data(memory_key, memory_data)
         await self.set_expire_time(memory_key)
-        await self.add_fallback(entity)
+        await self.add_fallback(entity, fallback_ttl=fallback_ttl)
 
     async def set_fallback_not_found(
         self, query: Union[BaseQuery[Any, bool, FallbackKey], Any],
