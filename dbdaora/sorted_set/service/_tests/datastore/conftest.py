@@ -12,7 +12,7 @@ def fallback_data_source():
 @pytest.fixture
 def fake_repository_cls(fake_entity_cls):
     class FakeRepository(DatastoreSortedSetRepository):
-        key_attrs = ('id',)
+        key_attrs = ('fake_id',)
         entity_cls = fake_entity_cls
 
     return FakeRepository

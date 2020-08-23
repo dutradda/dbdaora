@@ -1,11 +1,21 @@
 import asyncio
 import itertools
-from typing import Any, Awaitable, Optional, Sequence, Tuple, TypedDict, Union
+from typing import (
+    Any,
+    Awaitable,
+    ClassVar,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypedDict,
+    Union,
+)
 
 from dbdaora.keys import FallbackKey
 from dbdaora.repository import MemoryRepository
 
-from ..entity import SortedSetData
+from ..entity import SortedSetData, SortedSetEntity
 from ..query import SortedSetQuery
 
 
@@ -13,8 +23,9 @@ class FallbackSortedSetData(TypedDict):
     values: Sequence[Union[str, float]]
 
 
-class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey],):
+class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey]):
     __skip_cls_validation__ = ('SortedSetRepository',)
+    entity_cls: ClassVar[Type[Any]] = SortedSetEntity
 
     async def get_memory_data(  # type: ignore
         self, key: str, query: SortedSetQuery[FallbackKey],
@@ -165,7 +176,10 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey],):
         return self.get_entity_type(query)(
             values=data[0],
             max_size=data[1],
-            **{self.id_name: query.attribute_from_key(self.id_name)},
+            **{
+                id_name: id_value
+                for id_name, id_value in zip(self.key_attrs, query.key_parts)
+            },
         )
 
     def make_entity_from_fallback(  # type: ignore

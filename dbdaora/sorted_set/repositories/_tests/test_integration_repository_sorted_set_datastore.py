@@ -1,35 +1,26 @@
-from typing import TypedDict
-
 import pytest
 from google.cloud import datastore
-from jsondaora import jsondaora
 
-from dbdaora import DatastoreSortedSetRepository, SortedSetData
-from dbdaora.data_sources.fallback.datastore import DatastoreDataSource
-from dbdaora.data_sources.memory.dict import DictMemoryDataSource
-
-
-@jsondaora
-class FakeEntity(TypedDict):
-    id: str
-    values: SortedSetData
-
-
-class FakeRepository(DatastoreSortedSetRepository, entity_cls=FakeEntity):
-    key_attrs = ('id',)
+from dbdaora import DatastoreDataSource, DatastoreSortedSetRepository
 
 
 @pytest.fixture
-async def repository(mocker, dict_repository_cls):
-    return FakeRepository(
-        memory_data_source=DictMemoryDataSource(),
-        fallback_data_source=DatastoreDataSource(),
-        expire_time=1,
-    )
+def fallback_data_source():
+    return DatastoreDataSource()
+
+
+@pytest.fixture
+def fake_repository_cls(fake_entity_cls):
+    class FakeRepository(DatastoreSortedSetRepository):
+        entity_cls = fake_entity_cls
+
+    return FakeRepository
 
 
 @pytest.mark.asyncio
-async def test_should_exclude_values_attributes_from_indexes(repository):
+async def test_should_exclude_values_attributes_from_indexes(
+    repository, fake_entity_cls
+):
     client = repository.fallback_data_source.client
     values = ['v1', 1, 'v2', 2]
     key = client.key('fake', 'fake')
@@ -40,6 +31,6 @@ async def test_should_exclude_values_attributes_from_indexes(repository):
     assert not client.get(key).exclude_from_indexes
 
     values = [('v1', 1), ('v2', 2)]
-    await repository.add(FakeEntity(id='fake', values=values))
+    await repository.add(fake_entity_cls(id='fake', values=values))
 
     assert client.get(key).exclude_from_indexes == set(['values'])

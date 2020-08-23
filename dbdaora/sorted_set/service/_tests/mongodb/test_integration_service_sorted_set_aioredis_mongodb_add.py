@@ -8,7 +8,7 @@ from circuitbreaker import CircuitBreakerError
 async def test_should_add(fake_service, fake_entity, fake_entity_withscores):
     await fake_service.add(fake_entity_withscores)
 
-    entity = await fake_service.get_one(fake_entity_withscores.id)
+    entity = await fake_service.get_one(fake_id=fake_entity_withscores.fake_id)
 
     assert entity == fake_entity
 
@@ -27,7 +27,7 @@ async def test_should_add_to_fallback_after_open_circuit_breaker(
     fake_service.logger.warning.reset_mock()
 
     entity = await fake_service.get_one(
-        fake_entity_withscores.id, memory=False
+        fake_id=fake_entity_withscores.fake_id, memory=False
     )
 
     assert entity == fake_entity

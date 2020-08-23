@@ -1,23 +1,52 @@
+from dataclasses import dataclass
 from functools import partial
+from typing import Optional
 
 import pytest
 from aioredis import RedisError
 
 from dbdaora import (
-    DictFallbackDataSource,
+    SortedSetData,
+    SortedSetRepository,
     make_aioredis_data_source,
     make_sorted_set_service,
 )
 
 
-@pytest.fixture
-def fallback_data_source():
-    return DictFallbackDataSource()
+@dataclass
+class FakeEntity:
+    fake_id: str
+    values: SortedSetData
+    max_size: Optional[int] = None
 
 
 @pytest.fixture
 def fallback_cb_error():
     return KeyError
+
+
+@pytest.fixture
+def fake_entity_cls():
+    return FakeEntity
+
+
+@pytest.fixture
+def fake_repository_cls(fake_entity_cls):
+    class FakeRepository(SortedSetRepository[str]):
+        key_attrs = ('fake_id',)
+        entity_cls = fake_entity_cls
+
+    return FakeRepository
+
+
+@pytest.fixture
+def fake_entity(fake_entity_cls):
+    return fake_entity_cls(fake_id='fake', values=[b'1', b'2'])
+
+
+@pytest.fixture
+def fake_entity_withscores(fake_entity_cls):
+    return fake_entity_cls(fake_id='fake', values=[(b'1', 0), (b'2', 1)])
 
 
 @pytest.mark.asyncio

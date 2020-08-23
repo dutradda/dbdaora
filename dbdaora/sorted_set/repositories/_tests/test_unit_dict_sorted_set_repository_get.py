@@ -7,11 +7,6 @@ from dbdaora import SortedSetQuery
 from dbdaora.exceptions import EntityNotFoundError
 
 
-@pytest.fixture
-def repository(dict_repository):
-    return dict_repository
-
-
 @pytest.mark.asyncio
 async def test_should_get_from_memory(
     repository, fake_entity, fake_entity_withscores

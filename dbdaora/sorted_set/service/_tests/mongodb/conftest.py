@@ -19,7 +19,7 @@ def fallback_data_source(event_loop):
 @pytest.fixture
 def fake_repository_cls(fake_entity_cls):
     class FakeRepository(MongodbSortedSetRepository):
-        key_attrs = ('id',)
+        key_attrs = ('fake_id',)
         entity_cls = fake_entity_cls
 
     return FakeRepository
