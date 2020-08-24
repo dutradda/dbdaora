@@ -513,24 +513,17 @@ service patterns and python dataclasses
 
 <h2 id="simple-redis-sorted-set-example">Simple redis sorted set example</h2>
 <div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">asyncio</span>
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 
 <span class="kn">from</span> <span class="nn">dbdaora</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">DictFallbackDataSource</span><span class="p">,</span>
     <span class="n">DictMemoryDataSource</span><span class="p">,</span>
-    <span class="n">SortedSetData</span><span class="p">,</span>
+    <span class="n">SortedSetEntity</span><span class="p">,</span>
     <span class="n">SortedSetRepository</span><span class="p">,</span>
 <span class="p">)</span>
 
 
-<span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">Playlist</span><span class="p">:</span>
-    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">values</span><span class="p">:</span> <span class="n">SortedSetData</span>
-
-
 <span class="k">class</span> <span class="nc">PlaylistRepository</span><span class="p">(</span><span class="n">SortedSetRepository</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
-    <span class="n">entity_cls</span> <span class="o">=</span> <span class="n">Playlist</span>
+    <span class="o">...</span>
 
 
 <span class="n">repository</span> <span class="o">=</span> <span class="n">PlaylistRepository</span><span class="p">(</span>
@@ -539,7 +532,7 @@ service patterns and python dataclasses
     <span class="n">expire_time</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">values</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;m1&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;m2&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;m3&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
-<span class="n">playlist</span> <span class="o">=</span> <span class="n">Playlist</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;my_plalist&#39;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">)</span>
+<span class="n">playlist</span> <span class="o">=</span> <span class="n">SortedSetEntity</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;my_plalist&#39;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">)</span>
 <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">repository</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">playlist</span><span class="p">))</span>
 
 <span class="n">geted_playlist</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">repository</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">playlist</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">entity</span><span class="p">)</span>
@@ -547,7 +540,7 @@ service patterns and python dataclasses
 </code></pre></div>
 
 
-<div class="codehilite"><pre><span></span><code><span class="n">Playlist</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;my_plalist&#39;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;m1&#39;</span><span class="p">,</span> <span class="s1">&#39;m2&#39;</span><span class="p">,</span> <span class="s1">&#39;m3&#39;</span><span class="p">]</span>
+<div class="codehilite"><pre><span></span><code><span class="n">SortedSetEntity</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;my_plalist&#39;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="sa">b</span><span class="s1">&#39;m1&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;m2&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;m3&#39;</span><span class="p">],</span> <span class="n">max_size</span><span class="o">=</span><span class="kc">None</span>
 </code></pre></div>
 
 
