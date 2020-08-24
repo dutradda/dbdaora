@@ -107,24 +107,17 @@ Person(id='john_doe', name='John Doe', age=33)
 
 ```python
 import asyncio
-from dataclasses import dataclass
 
 from dbdaora import (
     DictFallbackDataSource,
     DictMemoryDataSource,
-    SortedSetData,
+    SortedSetEntity,
     SortedSetRepository,
 )
 
 
-@dataclass
-class Playlist:
-    id: str
-    values: SortedSetData
-
-
 class PlaylistRepository(SortedSetRepository[str]):
-    entity_cls = Playlist
+    ...
 
 
 repository = PlaylistRepository(
@@ -133,7 +126,7 @@ repository = PlaylistRepository(
     expire_time=60,
 )
 values = [('m1', 1), ('m2', 2), ('m3', 3)]
-playlist = Playlist(id='my_plalist', values=values)
+playlist = SortedSetEntity(id='my_plalist', values=values)
 asyncio.run(repository.add(playlist))
 
 geted_playlist = asyncio.run(repository.query(playlist.id).entity)
@@ -142,7 +135,7 @@ print(geted_playlist)
 ```
 
 ```python
-Playlist(id='my_plalist', values=['m1', 'm2', 'm3'])
+SortedSetEntity(id='my_plalist', values=[b'm1', b'm2', b'm3'], max_size=None)
 ```
 
 

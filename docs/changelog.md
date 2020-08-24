@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Improve SortedSet
+
 ### 0.19.1 - 2020-08-13
 
  - Improve georadius support
