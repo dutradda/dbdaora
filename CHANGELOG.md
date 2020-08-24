@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.20.0 - 2020-08-23
 
  - Improve SortedSet
 
