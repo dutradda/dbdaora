@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Refactor get_many to use async generator
+
 ### 0.20.0 - 2020-08-23
 
  - Improve SortedSet

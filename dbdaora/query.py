@@ -1,5 +1,15 @@
 import dataclasses
-from typing import Any, ClassVar, Generic, List, Optional, Tuple, Type, Union
+from typing import (
+    Any,
+    AsyncGenerator,
+    ClassVar,
+    Generic,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 from dbdaora.entity import Entity, EntityData
 from dbdaora.exceptions import RequiredKeyAttributeError
@@ -45,7 +55,7 @@ class BaseQuery(Generic[Entity, EntityData, FallbackKey]):
         raise NotImplementedError()  # pragma: no cover
 
     @property
-    async def entities(self) -> List[Entity]:
+    def entities(self) -> AsyncGenerator[Entity, None]:
         raise NotImplementedError()  # pragma: no cover
 
     @property
@@ -145,8 +155,8 @@ class QueryMany(BaseQuery[Entity, EntityData, FallbackKey]):
         ]
 
     @property
-    async def entities(self) -> List[Entity]:
-        return await self.repository.entities(self)
+    def entities(self) -> AsyncGenerator[Entity, None]:
+        return self.repository.entities(self)
 
 
 def make(

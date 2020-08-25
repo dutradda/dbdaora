@@ -2,8 +2,6 @@ import asynctest
 import pytest
 from aioredis import RedisError
 
-from dbdaora import EntityNotFoundError
-
 
 @pytest.mark.asyncio
 async def test_should_get_many(
@@ -19,9 +17,12 @@ async def test_should_get_many(
     await fake_service.repository.memory_data_source.set(
         'fake:other_fake:fake2', serialized_fake_entity2,
     )
-    entities = await fake_service.get_many(
-        'fake', 'fake2', other_id='other_fake'
-    )
+    entities = [
+        e
+        async for e in fake_service.get_many(
+            'fake', 'fake2', other_id='other_fake'
+        )
+    ]
 
     assert entities == [fake_entity.id, fake_entity2.id]
 
@@ -33,9 +34,12 @@ async def test_should_get_many_from_cache(
     fake_service.repository.memory_data_source.get = asynctest.CoroutineMock()
     fake_service.cache['fakeother_idother_fake'] = fake_entity.id
     fake_service.cache['fake2other_idother_fake'] = fake_entity2.id
-    entities = await fake_service.get_many(
-        'fake', 'fake2', other_id='other_fake'
-    )
+    entities = [
+        e
+        async for e in fake_service.get_many(
+            'fake', 'fake2', other_id='other_fake'
+        )
+    ]
 
     assert entities == [fake_entity.id, fake_entity2.id]
     assert not fake_service.repository.memory_data_source.get.called
@@ -65,9 +69,12 @@ async def test_should_get_many_from_fallback_when_not_found_on_memory(
         client.key('fake', 'other_fake:fake2'), {'value': True},
     )
 
-    entities = await fake_service.get_many(
-        'fake', 'fake2', other_id='other_fake'
-    )
+    entities = [
+        e
+        async for e in fake_service.get_many(
+            'fake', 'fake2', other_id='other_fake'
+        )
+    ]
 
     assert entities == [fake_entity.id, fake_entity2.id]
     assert (
@@ -104,9 +111,12 @@ async def test_should_get_many_from_fallback_after_open_circuit_breaker(
         key, {'value': True}
     )
 
-    entities = await fake_service.get_many(
-        'fake', 'fake2', other_id='other_fake'
-    )
+    entities = [
+        e
+        async for e in fake_service.get_many(
+            'fake', 'fake2', other_id='other_fake'
+        )
+    ]
 
     assert entities == [fake_entity.id, fake_entity2.id]
     assert fake_service.logger.warning.call_count == 1
@@ -148,17 +158,25 @@ async def test_should_get_many_from_cache_memory_and_fallback(
         == b'1'
     )
 
-    entities = await fake_service.get_many('fake', other_id='other_fake')
+    entities = [
+        e async for e in fake_service.get_many('fake', other_id='other_fake')
+    ]
     assert entities == [fake_entity.id]
 
-    entities = await fake_service.get_many(
-        'fake', 'fake2', other_id='other_fake'
-    )
+    entities = [
+        e
+        async for e in fake_service.get_many(
+            'fake', 'fake2', other_id='other_fake'
+        )
+    ]
     assert entities == [fake_entity.id, fake_entity2.id]
 
-    entities = await fake_service.get_many(
-        'fake', 'fake2', 'fake3', other_id='other_fake'
-    )
+    entities = [
+        e
+        async for e in fake_service.get_many(
+            'fake', 'fake2', 'fake3', other_id='other_fake'
+        )
+    ]
 
     assert entities == [fake_entity.id, fake_entity2.id, fake_entity3.id]
 
@@ -172,27 +190,31 @@ async def test_should_get_many_from_cache_when_not_found_some_entities(
     await fake_service.delete('fake3', other_id='other_fake')
     await fake_service.add(fake_entity)
 
-    entities = await fake_service.get_many('fake', other_id='other_fake')
+    entities = [
+        e async for e in fake_service.get_many('fake', other_id='other_fake')
+    ]
     assert entities == [fake_entity.id]
 
-    entities = await fake_service.get_many(
-        'fake', 'fake2', 'fake3', other_id='other_fake'
-    )
+    entities = [
+        e
+        async for e in fake_service.get_many(
+            'fake', 'fake2', 'fake3', other_id='other_fake'
+        )
+    ]
     assert entities == [fake_entity.id]
 
 
 @pytest.mark.asyncio
-async def test_should_raise_entity_not_found_error_when_get_many(fake_service):
+async def test_should_get_many_empty(fake_service):
     await fake_service.delete('fake', other_id='other_fake')
     await fake_service.delete('fake2', other_id='other_fake')
     await fake_service.delete('fake3', other_id='other_fake')
 
-    with pytest.raises(EntityNotFoundError) as exc_info:
-        await fake_service.get_many(
+    entities = [
+        e
+        async for e in fake_service.get_many(
             'fake', 'fake2', 'fake3', other_id='other_fake'
         )
+    ]
 
-    assert exc_info.value.args == (
-        ('fake', 'fake2', 'fake3'),
-        {'other_id': 'other_fake'},
-    )
+    assert entities == []

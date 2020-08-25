@@ -2,21 +2,12 @@ import asynctest
 import pytest
 from jsondaora import dataclasses
 
-from dbdaora import HashQueryMany
-from dbdaora.exceptions import EntityNotFoundError
-
 
 @pytest.mark.asyncio
 async def test_should_set_already_not_found_error_when_get_many_with_fields(
     repository, mocker
 ):
     fake_entity = 'fake'
-    expected_query = HashQueryMany(
-        repository,
-        memory=True,
-        many=[fake_entity],
-        fields=['id', 'integer', 'inner_entities'],
-    )
     repository.memory_data_source.hmget = asynctest.CoroutineMock(
         return_value=[None, None, None]
     )
@@ -29,12 +20,13 @@ async def test_should_set_already_not_found_error_when_get_many_with_fields(
     repository.memory_data_source.set = asynctest.CoroutineMock()
     repository.memory_data_source.hmset = asynctest.CoroutineMock()
 
-    with pytest.raises(EntityNotFoundError) as exc_info:
-        await repository.query(
+    assert [
+        e
+        async for e in repository.query(
             many=[fake_entity], fields=['id', 'integer', 'inner_entities']
         ).entities
+    ] == []
 
-    assert exc_info.value.args == (expected_query,)
     assert repository.memory_data_source.hmget.call_args_list == [
         mocker.call('fake:fake', 'id', 'integer', 'inner_entities'),
     ]
@@ -62,9 +54,12 @@ async def test_should_get_many_from_fallback_with_fields(
     fake_entity.number = None
     fake_entity.boolean = None
 
-    entities = await repository.query(
-        many=[fake_entity.id], fields=['id', 'integer', 'inner_entities']
-    ).entities
+    entities = [
+        e
+        async for e in repository.query(
+            many=[fake_entity.id], fields=['id', 'integer', 'inner_entities']
+        ).entities
+    ]
 
     assert entities == [fake_entity]
     assert repository.memory_data_source.exists('fake:fake')

@@ -53,15 +53,11 @@ async def build(
         cb_recovery_timeout,
         cb_expected_exception,
     )
-    fallback_circuit_breaker = (
-        build_circuit_breaker(
-            f'{repository_cls.name}_fallback',
-            cb_failure_threshold,
-            cb_recovery_timeout,
-            cb_expected_fallback_exception,
-        )
-        if cb_expected_fallback_exception
-        else None
+    fallback_circuit_breaker = build_circuit_breaker(
+        f'{repository_cls.name}_fallback',
+        cb_failure_threshold,
+        cb_recovery_timeout,
+        cb_expected_fallback_exception,
     )
     cache = build_cache(
         cache_type, cache_ttl, cache_max_size, cache_ttl_failure_threshold

@@ -67,12 +67,7 @@ class AsyncCircuitBreaker(CircuitBreaker):
         try:
             result = await func(*args, **kwargs)
         except self._expected_exception as e:
-            self._last_failure = e
-            self.__call_failed()
-
-            if self._failure_threshold == 0:
-                raise DBDaoraCircuitBreakerError(self, func.__name__)
-
+            self.set_failure(func.__name__, e)
             raise
 
         self.__call_succeeded()
@@ -94,6 +89,16 @@ class AsyncCircuitBreaker(CircuitBreaker):
         self,
     ) -> Union[Type[Exception], Tuple[Type[Exception], ...]]:
         return self._expected_exception
+
+    def set_failure(self, func_name: str, error: Exception) -> None:
+        self._last_failure = error
+        self.__call_failed()
+
+        if self._failure_threshold == 0:
+            raise DBDaoraCircuitBreakerError(self, func_name)
+
+    def set_success(self) -> None:
+        self.__call_succeeded()
 
 
 class DBDaoraCircuitBreakerError(CircuitBreakerError):

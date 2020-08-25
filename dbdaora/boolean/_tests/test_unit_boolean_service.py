@@ -1,4 +1,3 @@
-import asynctest
 import pytest
 
 from dbdaora import EntityNotFoundError, HashService
@@ -6,14 +5,14 @@ from dbdaora.service import CACHE_ALREADY_NOT_FOUND
 
 
 @pytest.fixture
-def service():
+def service(mocker):
     s = HashService(
-        repository=asynctest.MagicMock(id_name='id'),
-        circuit_breaker=asynctest.MagicMock(),
+        repository=mocker.MagicMock(id_name='id'),
+        circuit_breaker=mocker.MagicMock(),
+        fallback_circuit_breaker=mocker.MagicMock(),
         cache={},
     )
-    s.entity_circuit = asynctest.CoroutineMock()
-    s.entities_circuit = asynctest.CoroutineMock()
+    s.entity_circuit = mocker.AsyncMock()
     return s
 
 
@@ -41,12 +40,16 @@ async def test_should_get_already_not_found_when_getting_one(service):
 
 
 @pytest.mark.asyncio
-async def test_should_set_cache_entities_not_found_when_getting_many(service):
+async def test_should_set_cache_entities_not_found_when_getting_many(
+    service, async_iterator
+):
     fake_entity = {'id': 'fake'}
-    service.entities_circuit.return_value = [fake_entity]
+    service.repository.query.return_value.entities = async_iterator(
+        [fake_entity]
+    )
     service.repository.id_name = 'id'
 
-    entities = await service.get_many('fake', 'fake2', 'fake3')
+    entities = [e async for e in service.get_many('fake', 'fake2', 'fake3')]
 
     assert entities == [fake_entity]
     assert service.cache['fake2'] == CACHE_ALREADY_NOT_FOUND
@@ -60,9 +63,9 @@ async def test_should_get_already_not_found_when_getting_many(service):
     service.cache['fake2'] = CACHE_ALREADY_NOT_FOUND
     service.cache['fake3'] = CACHE_ALREADY_NOT_FOUND
 
-    entities = await service.get_many('fake', 'fake2', 'fake3')
+    entities = [e async for e in service.get_many('fake', 'fake2', 'fake3')]
 
-    assert not service.entities_circuit.called
+    assert not service.repository.query.called
     assert entities == [fake_entity]
     assert service.cache['fake2'] == CACHE_ALREADY_NOT_FOUND
     assert service.cache['fake3'] == CACHE_ALREADY_NOT_FOUND

@@ -47,6 +47,7 @@ async def fake_service(
         cb_failure_threshold=0,
         cb_recovery_timeout=10,
         cb_expected_exception=RedisError,
+        cb_expected_fallback_exception=KeyError,
         logger=mocker.MagicMock(),
     )
 

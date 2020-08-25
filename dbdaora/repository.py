@@ -1,8 +1,8 @@
-import asyncio
 import dataclasses
 import re
 from typing import (  # type: ignore
     Any,
+    AsyncGenerator,
     ClassVar,
     Generic,
     List,
@@ -139,33 +139,46 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         else:
             return await self.get_fallback(query)
 
-    async def entities(
+    def entities(
         self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
-    ) -> List[Entity]:
-        tasks = []
-        entities = []
-
+    ) -> AsyncGenerator[Entity, None]:
         if query.memory:
-            for query_ in query.queries:
-                task = asyncio.create_task(self.get_memory(query_))
-                task.add_done_callback(task_done_callback)
-                tasks.append(task)
+            return self.get_memory_many(query)
         else:
-            for query_ in query.queries:
-                task = asyncio.create_task(self.get_fallback(query_))
-                task.add_done_callback(task_done_callback)
-                tasks.append(task)
+            return self.get_fallback_many(query)
 
-        for t in tasks:
+    async def get_fallback_many(
+        self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
+    ) -> AsyncGenerator[Entity, None]:
+        for query_ in query.queries:
             try:
-                entities.append(await t)
+                yield await self.get_fallback(query_)
             except EntityNotFoundError:
                 continue
 
-        if not entities:
-            raise EntityNotFoundError(query)
+    async def get_memory_many(
+        self, query: 'QueryMany[Entity, EntityData, FallbackKey]',
+    ) -> AsyncGenerator[Entity, None]:
+        for query_i in query.queries:
+            memory_key = self.memory_key(query_i)
+            memory_data = await self.get_memory_data(memory_key, query_i)
 
-        return entities
+            if memory_data:
+                yield self.make_entity(memory_data, query_i)
+
+            elif not await self.already_got_not_found(query_i):
+                fallback_data = await self.get_fallback_data(
+                    query_i, for_memory=True
+                )
+
+                if fallback_data is None:
+                    await self.set_fallback_not_found(query_i)
+                else:
+                    memory_data = await self.add_memory_data_from_fallback(
+                        memory_key, query_i, fallback_data
+                    )
+                    await self.set_expire_time(memory_key)
+                    yield self.make_entity(memory_data, query_i)
 
     async def get_memory(
         self, query: 'Query[Entity, EntityData, FallbackKey]',

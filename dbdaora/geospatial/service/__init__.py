@@ -1,5 +1,5 @@
 from logging import Logger, getLogger
-from typing import Any, Optional, Sequence, Union
+from typing import Any, AsyncGenerator, Optional, Sequence, Union
 
 from cachetools import Cache
 
@@ -17,7 +17,7 @@ class GeoSpatialService(Service[Entity, GeoSpatialData, FallbackKey]):
         self,
         repository: MemoryRepository[Entity, GeoSpatialData, FallbackKey],
         circuit_breaker: AsyncCircuitBreaker,
-        fallback_circuit_breaker: Optional[AsyncCircuitBreaker] = None,
+        fallback_circuit_breaker: AsyncCircuitBreaker,
         cache: Optional[Cache] = None,
         exists_cache: Optional[Cache] = None,
         logger: Logger = getLogger(__name__),
@@ -38,16 +38,18 @@ class GeoSpatialService(Service[Entity, GeoSpatialData, FallbackKey]):
         self.entity_circuit = self.repository.entity
         self.entities_circuit = self.repository.entities
 
-    async def get_many(self, *ids: str, **filters: Any,) -> Sequence[Any]:
+    def get_many(
+        self, *ids: str, **filters: Any,
+    ) -> AsyncGenerator[Entity, None]:
         raise NotImplementedError()  # pragma: no cover
 
-    async def get_many_cached(
+    def get_many_cached(
         self,
         ids: Sequence[str],
         cache: Cache,
         memory: bool = True,
         **filters: Any,
-    ) -> Sequence[Any]:
+    ) -> AsyncGenerator[Entity, None]:
         raise NotImplementedError()  # pragma: no cover
 
     def get_cached_entity(

@@ -73,7 +73,7 @@ async def test_should_get_one_min_score_and_max_score_not_found(
     fake_service, fake_entity_withscores
 ):
     with pytest.raises(EntityNotFoundError):
-        e = await fake_service.get_one(
+        await fake_service.get_one(
             fake_id=fake_entity_withscores.fake_id,
             min_score=2,
             max_score=3,

@@ -17,7 +17,7 @@ async def test_should_get_many(
     await fake_service.repository.memory_data_source.set(
         'fake:fake2', serialized_fake_entity2
     )
-    entities = await fake_service.get_many('fake', 'fake2')
+    entities = [e async for e in fake_service.get_many('fake', 'fake2')]
 
     assert entities == [fake_entity.id, fake_entity2.id]
 
@@ -37,7 +37,7 @@ async def test_should_get_many_without_cache(
     await fake_service.repository.memory_data_source.set(
         'fake:fake2', serialized_fake_entity2
     )
-    entities = await fake_service.get_many('fake', 'fake2')
+    entities = [e async for e in fake_service.get_many('fake', 'fake2')]
 
     assert entities == [fake_entity.id, fake_entity2.id]
 
@@ -49,7 +49,7 @@ async def test_should_get_many_from_cache(
     fake_service.repository.memory_data_source.get = asynctest.CoroutineMock()
     fake_service.cache['fake'] = fake_entity.id
     fake_service.cache['fake2'] = fake_entity2.id
-    entities = await fake_service.get_many('fake', 'fake2')
+    entities = [e async for e in fake_service.get_many('fake', 'fake2')]
 
     assert entities == [fake_entity.id, fake_entity2.id]
     assert not fake_service.repository.memory_data_source.get.called
@@ -69,7 +69,7 @@ async def test_should_get_many_from_fallback_after_open_circuit_breaker(
         'value': True
     }
 
-    entities = await fake_service.get_many('fake', 'fake2')
+    entities = [e async for e in fake_service.get_many('fake', 'fake2')]
 
     assert entities == [fake_entity.id, fake_entity2.id]
     assert fake_service.logger.warning.call_count == 1
@@ -90,7 +90,7 @@ async def test_should_get_many_from_fallback_after_open_circuit_breaker_without_
         'value': True
     }
 
-    entities = await fake_service.get_many('fake', 'fake2')
+    entities = [e async for e in fake_service.get_many('fake', 'fake2')]
 
     assert entities == [fake_entity.id, fake_entity2.id]
     assert fake_service.logger.warning.call_count == 1

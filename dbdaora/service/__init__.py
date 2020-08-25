@@ -1,6 +1,15 @@
 from dataclasses import dataclass
 from logging import Logger, getLogger
-from typing import Any, Generic, List, Optional, Sequence, Union
+from typing import (
+    Any,
+    AsyncGenerator,
+    Generic,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Union,
+)
 
 from cachetools import Cache
 
@@ -16,7 +25,7 @@ from ..repository import MemoryRepository
 class Service(Generic[Entity, EntityData, FallbackKey]):
     repository: MemoryRepository[Entity, EntityData, FallbackKey]
     circuit_breaker: AsyncCircuitBreaker
-    fallback_circuit_breaker: Optional[AsyncCircuitBreaker]
+    fallback_circuit_breaker: AsyncCircuitBreaker
     cache: Optional[Cache]
     logger: Logger
 
@@ -24,7 +33,7 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         self,
         repository: MemoryRepository[Entity, EntityData, FallbackKey],
         circuit_breaker: AsyncCircuitBreaker,
-        fallback_circuit_breaker: Optional[AsyncCircuitBreaker] = None,
+        fallback_circuit_breaker: AsyncCircuitBreaker,
         cache: Optional[Cache] = None,
         exists_cache: Optional[Cache] = None,
         logger: Logger = getLogger(__name__),
@@ -35,73 +44,34 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         self.cache = cache
         self.exists_cache = exists_cache
         self.entity_circuit = self.circuit_breaker(self.repository.entity)
-        self.entities_circuit = self.circuit_breaker(self.repository.entities)
         self.add_circuit = self.circuit_breaker(self.repository.add)
         self.delete_circuit = self.circuit_breaker(self.repository.delete)
         self.exists_circuit = self.circuit_breaker(self.repository.exists)
         self.logger = logger
 
-        if self.fallback_circuit_breaker:
-            self.entity_fallback_circuit = self.fallback_circuit_breaker(
-                self.repository.entity
-            )
-            self.entities_fallback_circuit = self.fallback_circuit_breaker(
-                self.repository.entities
-            )
-            self.add_fallback_circuit = self.fallback_circuit_breaker(
-                self.repository.add
-            )
-            self.delete_fallback_circuit = self.fallback_circuit_breaker(
-                self.repository.delete
-            )
-            self.exists_fallback_circuit = self.fallback_circuit_breaker(
-                self.repository.exists
-            )
-        else:
-            self.entity_fallback_circuit = self.repository.entity
-            self.entities_fallback_circuit = self.repository.entities
-            self.add_fallback_circuit = self.repository.add
-            self.delete_fallback_circuit = self.repository.delete
-            self.exists_fallback_circuit = self.repository.exists
+        self.entity_fallback_circuit = self.fallback_circuit_breaker(
+            self.repository.entity
+        )
+        self.add_fallback_circuit = self.fallback_circuit_breaker(
+            self.repository.add
+        )
+        self.delete_fallback_circuit = self.fallback_circuit_breaker(
+            self.repository.delete
+        )
+        self.exists_fallback_circuit = self.fallback_circuit_breaker(
+            self.repository.exists
+        )
 
-    async def get_many(self, *ids: str, **filters: Any) -> Sequence[Any]:
-        try:
-            if self.cache is None:
-                return [
-                    entity
-                    for entity in await self.entities_circuit(
-                        self.repository.query(many=ids, **filters)
-                    )
-                    if entity is not None
-                ]
+    def get_many(
+        self, *ids: str, memory: bool = True, **filters: Any
+    ) -> AsyncGenerator[Entity, None]:
+        if self.cache is None:
+            if memory:
+                return self.get_many_no_cache_memory(*ids, **filters)
 
-            return await self.get_many_cached(ids, self.cache, **filters)
+            return self.get_many_no_cache_fallback(*ids, **filters)
 
-        except DBDaoraCircuitBreakerError as error:
-            self.logger.warning(error)
-            if self.should_raise_not_found_error_for_fallback_circuit_breaker(
-                error
-            ):
-                raise EntityNotFoundError(ids, filters)
-
-            try:
-                if self.cache is not None:
-                    return await self.get_many_cached(
-                        ids, self.cache, memory=False, **filters
-                    )
-
-                return [
-                    entity
-                    for entity in await self.entities_fallback_circuit(
-                        self.repository.query(
-                            many=ids, memory=False, **filters
-                        )
-                    )
-                    if entity is not None
-                ]
-            except DBDaoraCircuitBreakerError as fallback_error:
-                self.logger.warning(fallback_error)
-                raise EntityNotFoundError(ids, filters)
+        return self.get_many_cached(ids, self.cache, **filters)
 
     def should_raise_not_found_error_for_fallback_circuit_breaker(
         self, error: DBDaoraCircuitBreakerError
@@ -118,15 +88,80 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
 
         return False
 
+    async def get_many_no_cache_memory(
+        self, *ids: str, **filters: Any
+    ) -> AsyncGenerator[Entity, None]:
+        try:
+            try:
+                async for entity in self.repository.query(
+                    many=ids, **filters
+                ).entities:
+                    yield entity
+
+                self.circuit_breaker.set_success()
+
+            except self.circuit_breaker.expected_exception as error:
+                self.circuit_breaker.set_failure('get-many-memory', error)
+                raise
+
+        except DBDaoraCircuitBreakerError as error:
+            self.logger.warning(error)
+            if self.should_raise_not_found_error_for_fallback_circuit_breaker(
+                error
+            ):
+                raise EntityNotFoundError(ids, filters)
+
+            try:
+                try:
+                    async for entity in self.repository.query(
+                        many=ids, memory=False, **filters
+                    ).entities:
+                        yield entity
+
+                    self.fallback_circuit_breaker.set_success()
+
+                except self.fallback_circuit_breaker.expected_exception as error:
+                    self.fallback_circuit_breaker.set_failure(
+                        'get-many-fallback', error
+                    )
+                    raise
+
+            except DBDaoraCircuitBreakerError as fallback_error:
+                self.logger.warning(fallback_error)
+                raise EntityNotFoundError(ids, filters)
+
+    async def get_many_no_cache_fallback(
+        self, *ids: str, **filters: Any
+    ) -> AsyncGenerator[Entity, None]:
+        try:
+            try:
+                async for entity in self.repository.query(
+                    many=ids, memory=False, **filters
+                ).entities:
+                    yield entity
+
+                self.fallback_circuit_breaker.set_success()
+
+            except self.fallback_circuit_breaker.expected_exception as error:
+                self.fallback_circuit_breaker.set_failure(
+                    'get-many-fallback', error
+                )
+                raise
+
+        except DBDaoraCircuitBreakerError as fallback_error:
+            self.logger.warning(fallback_error)
+            raise EntityNotFoundError(ids, filters)
+
     async def get_many_cached(
         self,
         ids: Sequence[str],
         cache: Cache,
         memory: bool = True,
         **filters: Any,
-    ) -> Sequence[Any]:
+    ) -> AsyncGenerator[Entity, None]:
         missed_ids: List[str] = []
-        entities = {}
+        missed_ids_set: Set[str] = set()
+        found_ids_set: Set[str] = set()
         cache_key_suffix = self.cache_key_suffix(**filters)
 
         for id_ in ids:
@@ -134,51 +169,101 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
 
             if entity is None:
                 missed_ids.append(id_)
+                missed_ids_set.add(id_)
 
-            entities[id_] = entity
+            elif entity is not CACHE_ALREADY_NOT_FOUND:
+                yield entity
 
         if missed_ids:
-            try:
-                if memory:
-                    missed_entities = await self.entities_circuit(
-                        self.repository.query(many=missed_ids, **filters)
-                    )
-                else:
-                    missed_entities = await self.entities_fallback_circuit(
-                        self.repository.query(
-                            many=missed_ids, memory=False, **filters
+            if memory:
+                try:
+                    try:
+                        async for entity in self.repository.query(
+                            many=missed_ids, **filters
+                        ).entities:
+                            yield entity
+                            id_ = self.entity_id(entity)
+                            self.set_cached_entity(
+                                id_, cache_key_suffix, entity
+                            )
+                            found_ids_set.add(id_)
+
+                        self.circuit_breaker.set_success()
+
+                    except self.circuit_breaker.expected_exception as error:
+                        self.circuit_breaker.set_failure(
+                            'get-many-memory', error
                         )
-                    )
+                        raise
 
-            except EntityNotFoundError:
-                missed_entities = []
+                except DBDaoraCircuitBreakerError as error:
+                    self.logger.warning(error)
+                    if self.should_raise_not_found_error_for_fallback_circuit_breaker(
+                        error
+                    ):
+                        raise EntityNotFoundError(ids, filters)
 
-            for entity in missed_entities:
-                id_ = (
-                    entity[self.repository.id_name]
-                    if isinstance(entity, dict)
-                    else entity
-                    if isinstance(entity, str)
-                    else getattr(entity, self.repository.id_name)
-                )
-                entities[id_] = entity
+                    try:
+                        try:
+                            async for entity in self.repository.query(
+                                many=missed_ids, memory=False, **filters
+                            ).entities:
+                                yield entity
+                                id_ = self.entity_id(entity)
+                                self.set_cached_entity(
+                                    id_, cache_key_suffix, entity
+                                )
+                                found_ids_set.add(id_)
 
-        final_entities = []
+                            self.fallback_circuit_breaker.set_success()
 
-        for id_, entity in entities.items():
-            if entity is not None and entity is not CACHE_ALREADY_NOT_FOUND:
-                final_entities.append(entity)
-                self.set_cached_entity(id_, cache_key_suffix, entity)
+                        except self.fallback_circuit_breaker.expected_exception as error:
+                            self.fallback_circuit_breaker.set_failure(
+                                'get-many-fallback', error
+                            )
+                            raise
 
-            elif entity is None:
-                self.set_cached_entity(
-                    id_, cache_key_suffix, CACHE_ALREADY_NOT_FOUND
-                )
+                    except DBDaoraCircuitBreakerError as fallback_error:
+                        self.logger.warning(fallback_error)
+                        raise EntityNotFoundError(ids, filters)
 
-        if not final_entities:
-            raise EntityNotFoundError(ids, filters)
+            else:
+                try:
+                    try:
+                        async for entity in self.repository.query(
+                            many=missed_ids, memory=False, **filters
+                        ).entities:
+                            yield entity
+                            id_ = self.entity_id(entity)
+                            self.set_cached_entity(
+                                id_, cache_key_suffix, entity
+                            )
+                            found_ids_set.add(id_)
 
-        return final_entities
+                        self.fallback_circuit_breaker.set_success()
+
+                    except self.fallback_circuit_breaker.expected_exception as error:
+                        self.fallback_circuit_breaker.set_failure(
+                            'get-many-fallback', error
+                        )
+                        raise
+                except DBDaoraCircuitBreakerError as fallback_error:
+                    self.logger.warning(fallback_error)
+                    raise EntityNotFoundError(ids, filters)
+
+        for id_ in missed_ids_set.difference(found_ids_set):
+            self.set_cached_entity(
+                id_, cache_key_suffix, CACHE_ALREADY_NOT_FOUND
+            )
+
+    def entity_id(self, entity: Entity) -> str:
+        return (  # type: ignore
+            entity[self.repository.id_name]
+            if isinstance(entity, dict)
+            else entity
+            if isinstance(entity, str)
+            else getattr(entity, self.repository.id_name)
+        )
 
     def get_cached_entity(
         self, id: str, key_suffix: str, **filters: Any,
