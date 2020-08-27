@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.21.0 - 2020-08-27
 
  - Refactor get_many to use async generator
 
