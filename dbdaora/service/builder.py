@@ -30,12 +30,15 @@ async def build(
     ] = None,
     logger: Logger = getLogger(__name__),
     cache_ttl_failure_threshold: int = 0,
+    repository_timeout: Optional[int] = None,
 ) -> Service[Entity, EntityData, FallbackKey]:
     repository = await build_repository(
         repository_cls,
         memory_data_source_factory,
         fallback_data_source_factory,
         repository_expire_time,
+        repository_timeout,
+        logger,
     )
 
     if cb_expected_exception and cb_expected_fallback_exception:
@@ -80,11 +83,19 @@ async def build_repository(
     memory_data_source_factory: Any,
     fallback_data_source_factory: Any,
     expire_time: int,
+    timeout: Optional[int],
+    logger: Optional[Logger],
 ) -> MemoryRepository[Entity, EntityData, FallbackKey]:
+    optional_args = {
+        k: v
+        for k, v in zip(['timeout', 'logger'], [timeout, logger])
+        if v is not None
+    }
     return cls(
         memory_data_source=await memory_data_source_factory(),
         fallback_data_source=await fallback_data_source_factory(),
         expire_time=expire_time,
+        **optional_args,  # type: ignore
     )
 
 

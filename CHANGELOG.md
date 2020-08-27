@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Add timeout for repository when getting data from data sources
+
 ### 0.21.0 - 2020-08-27
 
  - Refactor get_many to use async generator

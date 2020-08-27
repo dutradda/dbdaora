@@ -1,5 +1,7 @@
+import asyncio
 import dataclasses
 import re
+from logging import Logger, getLogger
 from typing import (  # type: ignore
     Any,
     AsyncGenerator,
@@ -37,6 +39,8 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     key_attrs: ClassVar[Sequence[str]]
     many_key_attrs: ClassVar[Sequence[str]]
     __skip_cls_validation__: Sequence[str] = ()
+    timeout: int = 1
+    logger: Logger = getLogger(__name__)
 
     def __init_subclass__(
         cls,
@@ -94,6 +98,39 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         for_memory: bool = False,
     ) -> Optional[EntityData]:
         raise NotImplementedError()  # pragma: no cover
+
+    async def get_memory_data_timeout(
+        self, key: str, query: 'BaseQuery[Entity, EntityData, FallbackKey]',
+    ) -> Optional[EntityData]:
+        try:
+            return await asyncio.wait_for(
+                self.get_memory_data(key, query), self.timeout
+            )
+        except TimeoutError:
+            self.logger.warning(
+                'skip memory_data timeout for '
+                f'key={key}, timeout={self.timeout}'
+            )
+            return None
+
+    async def get_fallback_data_timeout(
+        self,
+        query: Union['BaseQuery[Entity, EntityData, FallbackKey]', Entity],
+        *,
+        for_memory: bool = False,
+    ) -> Optional[EntityData]:
+        try:
+            return await asyncio.wait_for(
+                self.get_fallback_data(query, for_memory=for_memory),
+                self.timeout,
+            )
+        except TimeoutError:
+            self.logger.warning(
+                'skip fallback_data timeout for '  # type: ignore
+                f'key={self.memory_key(query)}, '
+                f'timeout={self.timeout}'
+            )
+            raise
 
     def make_entity(
         self,
@@ -161,43 +198,51 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     ) -> AsyncGenerator[Entity, None]:
         for query_i in query.queries:
             memory_key = self.memory_key(query_i)
-            memory_data = await self.get_memory_data(memory_key, query_i)
+            memory_data = await self.get_memory_data_timeout(
+                memory_key, query_i
+            )
 
             if memory_data:
                 yield self.make_entity(memory_data, query_i)
 
             elif not await self.already_got_not_found(query_i):
-                fallback_data = await self.get_fallback_data(
-                    query_i, for_memory=True
-                )
-
-                if fallback_data is None:
-                    await self.set_fallback_not_found(query_i)
-                else:
-                    memory_data = await self.add_memory_data_from_fallback(
-                        memory_key, query_i, fallback_data
+                try:
+                    fallback_data = await self.get_fallback_data_timeout(
+                        query_i, for_memory=True
                     )
-                    await self.set_expire_time(memory_key)
-                    yield self.make_entity(memory_data, query_i)
+                except TimeoutError:
+                    ...
+                else:
+                    if fallback_data is None:
+                        await self.set_fallback_not_found(query_i)
+                    else:
+                        memory_data = await self.add_memory_data_from_fallback(
+                            memory_key, query_i, fallback_data
+                        )
+                        await self.set_expire_time(memory_key)
+                        yield self.make_entity(memory_data, query_i)
 
     async def get_memory(
         self, query: 'Query[Entity, EntityData, FallbackKey]',
     ) -> Entity:
         memory_key = self.memory_key(query)
-        memory_data = await self.get_memory_data(memory_key, query)
+        memory_data = await self.get_memory_data_timeout(memory_key, query)
 
         if not memory_data and not await self.already_got_not_found(query):
-            fallback_data = await self.get_fallback_data(
-                query, for_memory=True
-            )
-
-            if fallback_data is None:
-                await self.set_fallback_not_found(query)
-            else:
-                memory_data = await self.add_memory_data_from_fallback(
-                    memory_key, query, fallback_data
+            try:
+                fallback_data = await self.get_fallback_data_timeout(
+                    query, for_memory=True
                 )
-                await self.set_expire_time(memory_key)
+            except TimeoutError:
+                ...
+            else:
+                if fallback_data is None:
+                    await self.set_fallback_not_found(query)
+                else:
+                    memory_data = await self.add_memory_data_from_fallback(
+                        memory_key, query, fallback_data
+                    )
+                    await self.set_expire_time(memory_key)
 
         if not memory_data:
             raise EntityNotFoundError(query)
@@ -208,7 +253,10 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         self,
         query: Union['BaseQuery[Entity, EntityData, FallbackKey]', Entity],
     ) -> Entity:
-        data = await self.get_fallback_data(query)
+        try:
+            data = await self.get_fallback_data_timeout(query)
+        except TimeoutError as error:
+            raise EntityNotFoundError(query) from error
 
         if data is None:
             raise EntityNotFoundError(query)
@@ -298,11 +346,15 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     async def already_got_not_found(
         self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
     ) -> bool:
-        return bool(
-            await self.memory_data_source.exists(
-                self.fallback_not_found_key(query)
+        try:
+            return bool(
+                await self.memory_data_source.exists(
+                    self.fallback_not_found_key(query)
+                )
             )
-        )
+        except TimeoutError:
+            ...
+            return False
 
     async def delete_fallback_not_found(
         self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
