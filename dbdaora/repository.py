@@ -348,13 +348,15 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     ) -> bool:
         try:
             return bool(
-                await self.memory_data_source.exists(
-                    self.fallback_not_found_key(query)
+                await asyncio.wait_for(
+                    self.memory_data_source.exists(
+                        self.fallback_not_found_key(query)
+                    ),
+                    self.timeout,
                 )
             )
         except TimeoutError:
-            ...
-            return False
+            return True
 
     async def delete_fallback_not_found(
         self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],

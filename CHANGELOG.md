@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Fix Repository.already_got_not_found timeout
+
 ### 0.21.1 - 2020-08-27
 
  - Add timeout for repository when getting data from data sources
