@@ -344,7 +344,11 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         return entity
 
     async def add(
-        self, entity: Any, *entities: Any, memory: bool = True
+        self,
+        entity: Any,
+        *entities: Any,
+        memory: bool = True,
+        fallback_ttl: Optional[int] = None,
     ) -> None:
         if not memory:
             try:
