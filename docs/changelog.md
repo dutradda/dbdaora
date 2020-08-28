@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.22.4 - 2020-08-28
 
  - Fix Service
 
