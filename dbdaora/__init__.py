@@ -22,7 +22,7 @@ from dbdaora.hash.service import HashService
 from dbdaora.hashring import HashRing
 from dbdaora.query import Query, QueryMany
 from dbdaora.repository import MemoryRepository
-from dbdaora.service import Service
+from dbdaora.service import CACHE_ALREADY_NOT_FOUND, Service
 from dbdaora.service.builder import build as build_service
 from dbdaora.service.builder import build_cache
 from dbdaora.sorted_set.entity import (
@@ -142,6 +142,7 @@ __all__ = [
     'make_geospatial_service',
     'GeoSpatialData',
     'make_sorted_set_service',
+    'CACHE_ALREADY_NOT_FOUND',
 ]
 
 if AioRedisDataSource:
