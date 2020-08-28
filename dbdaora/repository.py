@@ -21,7 +21,6 @@ from dbdaora.exceptions import (
     EntityNotFoundError,
     InvalidKeyAttributeError,
     InvalidQueryError,
-    RepositoryDataTimeoutError,
     RequiredClassAttributeError,
 )
 from dbdaora.keys import FallbackKey
@@ -107,7 +106,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
             return await asyncio.wait_for(
                 self.get_memory_data(key, query), self.timeout
             )
-        except TimeoutError:
+        except asyncio.TimeoutError:
             self.logger.warning(
                 'skip memory_data; timeout for '
                 f'key={key}, timeout={self.timeout}'
@@ -125,15 +124,13 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                 self.get_fallback_data(query, for_memory=for_memory),
                 self.timeout,
             )
-        except TimeoutError:
+        except asyncio.TimeoutError:
             self.logger.warning(
                 'skip fallback_data; timeout for '  # type: ignore
                 f'key={self.memory_key(query)}, '
                 f'timeout={self.timeout}'
             )
-            raise RepositoryDataTimeoutError(
-                self.memory_key(query), self.timeout  # type: ignore
-            )
+            raise
 
     def make_entity(
         self,
@@ -213,7 +210,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                     fallback_data = await self.get_fallback_data_timeout(
                         query_i, for_memory=True
                     )
-                except RepositoryDataTimeoutError:
+                except asyncio.TimeoutError:
                     ...
                 else:
                     if fallback_data is None:
@@ -236,7 +233,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                 fallback_data = await self.get_fallback_data_timeout(
                     query, for_memory=True
                 )
-            except RepositoryDataTimeoutError:
+            except asyncio.TimeoutError:
                 ...
             else:
                 if fallback_data is None:
@@ -258,7 +255,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     ) -> Entity:
         try:
             data = await self.get_fallback_data_timeout(query)
-        except TimeoutError as error:
+        except asyncio.TimeoutError as error:
             raise EntityNotFoundError(query) from error
 
         if data is None:
@@ -356,7 +353,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                     self.memory_data_source.exists(key), self.timeout,
                 )
             )
-        except TimeoutError:
+        except asyncio.TimeoutError:
             self.logger.warning(
                 'skip already_got_not_found; timeout for '
                 f'key={key}, timeout={self.timeout}'

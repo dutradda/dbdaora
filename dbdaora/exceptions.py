@@ -40,7 +40,3 @@ class InvalidGeoSpatialDataError(DBDaoraError):
 
 class CacheNotAvailableError(DBDaoraError):
     ...
-
-
-class RepositoryDataTimeoutError(DBDaoraError, TimeoutError):
-    ...
