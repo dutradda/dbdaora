@@ -21,6 +21,7 @@ from dbdaora.exceptions import (
     EntityNotFoundError,
     InvalidKeyAttributeError,
     InvalidQueryError,
+    RepositoryDataTimeoutError,
     RequiredClassAttributeError,
 )
 from dbdaora.keys import FallbackKey
@@ -130,7 +131,9 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                 f'key={self.memory_key(query)}, '
                 f'timeout={self.timeout}'
             )
-            raise
+            raise RepositoryDataTimeoutError(
+                self.memory_key(query), self.timeout  # type: ignore
+            )
 
     def make_entity(
         self,
@@ -210,7 +213,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                     fallback_data = await self.get_fallback_data_timeout(
                         query_i, for_memory=True
                     )
-                except TimeoutError:
+                except RepositoryDataTimeoutError:
                     ...
                 else:
                     if fallback_data is None:
@@ -233,7 +236,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
                 fallback_data = await self.get_fallback_data_timeout(
                     query, for_memory=True
                 )
-            except TimeoutError:
+            except RepositoryDataTimeoutError:
                 ...
             else:
                 if fallback_data is None:
