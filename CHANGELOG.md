@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.21.2 - 2020-08-27
 
  - Fix Repository.already_got_not_found timeout
 
