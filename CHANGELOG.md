@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Fix query make_key method
+
 ### 0.22.0 - 2020-08-28
 
  - Fix service get_many ordering

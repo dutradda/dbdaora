@@ -36,9 +36,10 @@ class BaseQuery(Generic[Entity, EntityData, FallbackKey]):
         args_counter = 0
 
         for key_attr_name in self.repository.key_attrs:
-            key_value = kwargs.get(key_attr_name)
 
-            if key_value is None:
+            if key_attr_name in kwargs:
+                key_value = kwargs[key_attr_name]
+            else:
                 try:
                     key_value = args[args_counter]
                 except IndexError:
