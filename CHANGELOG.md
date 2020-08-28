@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.22.1 - 2020-08-28
 
  - Fix query make_key method
 
