@@ -8,6 +8,7 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    Tuple,
     Union,
 )
 
@@ -161,8 +162,9 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
     ) -> AsyncGenerator[Entity, None]:
         missed_ids: List[str] = []
         missed_ids_set: Set[str] = set()
-        found_ids_set: Set[str] = set()
+        found_ids_set: Set[Union[str, Tuple[str, ...]]] = set()
         cache_key_suffix = self.cache_key_suffix(**filters)
+        is_composed_key = False
 
         for id_ in ids:
             entity = self.get_cached_entity(id_, cache_key_suffix, **filters)
@@ -170,6 +172,8 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
             if entity is None:
                 missed_ids.append(id_)
                 missed_ids_set.add(id_)
+                if not is_composed_key and isinstance(id_, tuple):
+                    is_composed_key = True
 
             elif entity is not CACHE_ALREADY_NOT_FOUND:
                 yield entity
@@ -182,11 +186,11 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
                             many=missed_ids, **filters
                         ).entities:
                             yield entity
-                            id_ = self.entity_id(entity)
+                            entity_id = self.entity_id(entity, is_composed_key)
                             self.set_cached_entity(
-                                id_, cache_key_suffix, entity
+                                entity_id, cache_key_suffix, entity
                             )
-                            found_ids_set.add(id_)
+                            found_ids_set.add(entity_id)
 
                         self.circuit_breaker.set_success()
 
@@ -209,11 +213,13 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
                                 many=missed_ids, memory=False, **filters
                             ).entities:
                                 yield entity
-                                id_ = self.entity_id(entity)
-                                self.set_cached_entity(
-                                    id_, cache_key_suffix, entity
+                                entity_id = self.entity_id(
+                                    entity, is_composed_key
                                 )
-                                found_ids_set.add(id_)
+                                self.set_cached_entity(
+                                    entity_id, cache_key_suffix, entity
+                                )
+                                found_ids_set.add(entity_id)
 
                             self.fallback_circuit_breaker.set_success()
 
@@ -234,11 +240,11 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
                             many=missed_ids, memory=False, **filters
                         ).entities:
                             yield entity
-                            id_ = self.entity_id(entity)
+                            entity_id = self.entity_id(entity, is_composed_key)
                             self.set_cached_entity(
-                                id_, cache_key_suffix, entity
+                                entity_id, cache_key_suffix, entity
                             )
-                            found_ids_set.add(id_)
+                            found_ids_set.add(entity_id)
 
                         self.fallback_circuit_breaker.set_success()
 
@@ -256,8 +262,20 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
                 id_, cache_key_suffix, CACHE_ALREADY_NOT_FOUND
             )
 
-    def entity_id(self, entity: Entity) -> str:
-        return (  # type: ignore
+    def entity_id(
+        self, entity: Entity, is_composed_key: bool
+    ) -> Union[str, Tuple[str, ...]]:
+        if is_composed_key:
+            return tuple(
+                entity[id_name]
+                if isinstance(entity, dict)
+                else entity
+                if isinstance(entity, str)
+                else getattr(entity, id_name)
+                for id_name in self.repository.many_key_attrs
+            )
+
+        return (
             entity[self.repository.id_name]
             if isinstance(entity, dict)
             else entity
@@ -266,19 +284,19 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         )
 
     def get_cached_entity(
-        self, id: str, key_suffix: str, **filters: Any,
+        self, id: Union[str, Tuple[str, ...]], key_suffix: str, **filters: Any,
     ) -> Any:
         if self.cache is None:
             return None
 
         return self.cache.get(self.cache_key(id, key_suffix))
 
-    def cache_key(self, id: str, suffix: str) -> str:
+    def cache_key(self, id: Union[str, Tuple[str, ...]], suffix: str) -> str:
         return f'{id}{suffix}'
 
     def set_cached_entity(
         self,
-        id: str,
+        id: Union[str, Tuple[str, ...]],
         key_suffix: str,
         entity: Union[Entity, 'CacheAlreadyNotFound'],
     ) -> None:
@@ -292,7 +310,7 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
 
     async def get_one(self, id: Optional[str] = None, **filters: Any) -> Any:
         if id is not None:
-            filters['id'] = id
+            filters[self.repository.id_name] = id
 
         try:
             if self.cache is None:
@@ -403,7 +421,7 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         self, entity_id: Optional[str] = None, **filters: Any
     ) -> None:
         if entity_id is not None:
-            filters['id'] = entity_id
+            filters[self.repository.id_name] = entity_id
 
         try:
             await self.delete_circuit(self.repository.query(**filters))

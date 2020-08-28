@@ -1,5 +1,5 @@
 from logging import Logger, getLogger
-from typing import Any, AsyncGenerator, Optional, Sequence, Union
+from typing import Any, AsyncGenerator, Optional, Sequence, Tuple, Union
 
 from cachetools import Cache
 
@@ -53,16 +53,16 @@ class GeoSpatialService(Service[Entity, GeoSpatialData, FallbackKey]):
         raise NotImplementedError()  # pragma: no cover
 
     def get_cached_entity(
-        self, id: str, key_suffix: str, **filters: Any,
+        self, id: Union[str, Tuple[str, ...]], key_suffix: str, **filters: Any,
     ) -> Any:
         raise NotImplementedError()  # pragma: no cover
 
-    def cache_key(self, id: str, suffix: str) -> str:
+    def cache_key(self, id: Union[str, Tuple[str, ...]], suffix: str) -> str:
         raise NotImplementedError()  # pragma: no cover
 
     def set_cached_entity(
         self,
-        id: str,
+        id: Union[str, Tuple[str, ...]],
         key_suffix: str,
         entity: Union[Entity, CacheAlreadyNotFound],
     ) -> None:

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Tuple, Union
 
 from ...entity import Entity
 from ...keys import FallbackKey
@@ -15,7 +15,7 @@ class HashService(Service[Entity, HashData, FallbackKey]):
         )
 
     def get_cached_entity(
-        self, id: str, key_suffix: str, **filters: Any,
+        self, id: Union[str, Tuple[str, ...]], key_suffix: str, **filters: Any,
     ) -> Any:
         entity = super().get_cached_entity(id, key_suffix, **filters)
         fields = filters.get('fields')

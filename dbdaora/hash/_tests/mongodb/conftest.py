@@ -33,6 +33,11 @@ class FakeEntity:
 
 
 @pytest.fixture
+def fake_entity_cls():
+    return FakeEntity
+
+
+@pytest.fixture
 def fake_entity():
     return FakeEntity(
         id='fake',
