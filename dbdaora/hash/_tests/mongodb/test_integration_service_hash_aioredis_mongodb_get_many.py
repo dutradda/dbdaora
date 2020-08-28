@@ -173,7 +173,7 @@ async def test_should_get_many_from_fallback_after_open_circuit_breaker(
     ]
 
     assert entities == [fake_entity, fake_entity2]
-    assert fake_service.logger.warning.call_count == 1
+    assert fake_service.logger.warning.call_count == 2
 
 
 @pytest.mark.asyncio
@@ -273,7 +273,7 @@ async def test_should_get_many_from_fallback_after_open_circuit_breaker_with_fie
     ]
 
     assert entities == [fake_entity, fake_entity2]
-    assert fake_service.logger.warning.call_count == 1
+    assert fake_service.logger.warning.call_count == 2
 
 
 @pytest.mark.asyncio

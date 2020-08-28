@@ -4,10 +4,8 @@ from typing import (
     Any,
     AsyncGenerator,
     Generic,
-    List,
     Optional,
     Sequence,
-    Set,
     Tuple,
     Union,
 )
@@ -160,9 +158,6 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         memory: bool = True,
         **filters: Any,
     ) -> AsyncGenerator[Entity, None]:
-        missed_ids: List[str] = []
-        missed_ids_set: Set[str] = set()
-        found_ids_set: Set[Union[str, Tuple[str, ...]]] = set()
         cache_key_suffix = self.cache_key_suffix(**filters)
         is_composed_key = False
 
@@ -170,97 +165,61 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
             entity = self.get_cached_entity(id_, cache_key_suffix, **filters)
 
             if entity is None:
-                missed_ids.append(id_)
-                missed_ids_set.add(id_)
                 if not is_composed_key and isinstance(id_, tuple):
                     is_composed_key = True
 
-            elif entity is not CACHE_ALREADY_NOT_FOUND:
-                yield entity
-
-        if missed_ids:
-            if memory:
                 try:
-                    try:
-                        async for entity in self.repository.query(
-                            many=missed_ids, **filters
-                        ).entities:
-                            yield entity
-                            entity_id = self.entity_id(entity, is_composed_key)
-                            self.set_cached_entity(
-                                entity_id, cache_key_suffix, entity
-                            )
-                            found_ids_set.add(entity_id)
-
-                        self.circuit_breaker.set_success()
-
-                    except self.circuit_breaker.expected_exception as error:
-                        self.circuit_breaker.set_failure(
-                            'get-many-memory', error
-                        )
-                        raise
+                    entity = await self.repository_entity(
+                        id_, cache_key_suffix, memory, **filters
+                    )
+                    if entity:
+                        yield entity
 
                 except DBDaoraCircuitBreakerError as error:
                     self.logger.warning(error)
                     if self.should_raise_not_found_error_for_fallback_circuit_breaker(
                         error
                     ):
-                        raise EntityNotFoundError(ids, filters)
+                        continue
 
                     try:
-                        try:
-                            async for entity in self.repository.query(
-                                many=missed_ids, memory=False, **filters
-                            ).entities:
-                                yield entity
-                                entity_id = self.entity_id(
-                                    entity, is_composed_key
-                                )
-                                self.set_cached_entity(
-                                    entity_id, cache_key_suffix, entity
-                                )
-                                found_ids_set.add(entity_id)
-
-                            self.fallback_circuit_breaker.set_success()
-
-                        except self.fallback_circuit_breaker.expected_exception as error:
-                            self.fallback_circuit_breaker.set_failure(
-                                'get-many-fallback', error
-                            )
-                            raise
-
-                    except DBDaoraCircuitBreakerError as fallback_error:
-                        self.logger.warning(fallback_error)
-                        raise EntityNotFoundError(ids, filters)
-
-            else:
-                try:
-                    try:
-                        async for entity in self.repository.query(
-                            many=missed_ids, memory=False, **filters
-                        ).entities:
-                            yield entity
-                            entity_id = self.entity_id(entity, is_composed_key)
-                            self.set_cached_entity(
-                                entity_id, cache_key_suffix, entity
-                            )
-                            found_ids_set.add(entity_id)
-
-                        self.fallback_circuit_breaker.set_success()
-
-                    except self.fallback_circuit_breaker.expected_exception as error:
-                        self.fallback_circuit_breaker.set_failure(
-                            'get-many-fallback', error
+                        entity = await self.repository_entity(
+                            id_, cache_key_suffix, memory=False, **filters
                         )
-                        raise
-                except DBDaoraCircuitBreakerError as fallback_error:
-                    self.logger.warning(fallback_error)
-                    raise EntityNotFoundError(ids, filters)
+                        if entity:
+                            yield entity
 
-        for id_ in missed_ids_set.difference(found_ids_set):
-            self.set_cached_entity(
-                id_, cache_key_suffix, CACHE_ALREADY_NOT_FOUND
+                    except DBDaoraCircuitBreakerError as error:
+                        self.logger.warning(error)
+
+            elif entity is not CACHE_ALREADY_NOT_FOUND:
+                yield entity
+
+    async def repository_entity(
+        self,
+        id_: Union[str, Tuple[str, ...]],
+        cache_key_suffix: str,
+        memory: bool,
+        **filters: Any,
+    ) -> Optional[Entity]:
+        circuit = (
+            self.entity_circuit if memory else self.entity_fallback_circuit
+        )
+
+        try:
+            if isinstance(id_, tuple):
+                return await circuit(
+                    self.repository.query(*id_, memory=memory, **filters)
+                )
+
+            return await circuit(
+                self.repository.query(id_, memory=memory, **filters)
             )
+        except EntityNotFoundError:
+            self.set_cached_entity(
+                id_, cache_key_suffix, CACHE_ALREADY_NOT_FOUND,
+            )
+            return None
 
     def entity_id(
         self, entity: Entity, is_composed_key: bool

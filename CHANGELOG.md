@@ -2,6 +2,8 @@
 
 ### UNRELEASED
 
+ - Fix service get_many ordering
+
  - Fix service cache when has composed ids
 
 ### 0.21.2 - 2020-08-27

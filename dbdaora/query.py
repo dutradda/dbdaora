@@ -32,21 +32,25 @@ class BaseQuery(Generic[Entity, EntityData, FallbackKey]):
         self.memory = memory
 
     def make_key_parts(self, *args: Any, **kwargs: Any) -> List[Any]:
-        missed_key_attrs = []
-        key_parts = [
-            args[i] if i < len(args) else missed_key_attrs.append((i, key_attr))  # type: ignore
-            for i, key_attr in enumerate(self.repository.key_attrs)
-        ]
+        key_parts = []
+        args_counter = 0
 
-        try:
-            for i, attr_name in missed_key_attrs:
-                key_parts[i] = kwargs[attr_name]
-        except KeyError:
-            raise RequiredKeyAttributeError(
-                type(self.repository).__name__,
-                attr_name,
-                self.repository.key_attrs,
-            )
+        for key_attr_name in self.repository.key_attrs:
+            key_value = kwargs.get(key_attr_name)
+
+            if key_value is None:
+                try:
+                    key_value = args[args_counter]
+                except IndexError:
+                    raise RequiredKeyAttributeError(
+                        type(self.repository).__name__,
+                        key_attr_name,
+                        self.repository.key_attrs,
+                    )
+
+                args_counter += 1
+
+            key_parts.append(key_value)
 
         return key_parts
 

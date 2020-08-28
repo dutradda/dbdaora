@@ -46,9 +46,11 @@ async def test_should_set_cache_entities_not_found_when_getting_many(
     service, async_iterator
 ):
     fake_entity = {'id': 'fake'}
-    service.repository.query.return_value.entities = async_iterator(
-        [fake_entity]
-    )
+    service.entity_circuit.side_effect = [
+        fake_entity,
+        EntityNotFoundError,
+        EntityNotFoundError,
+    ]
     service.repository.id_name = 'id'
 
     entities = [e async for e in service.get_many('fake', 'fake2', 'fake3')]

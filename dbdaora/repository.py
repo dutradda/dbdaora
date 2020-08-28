@@ -108,7 +108,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
             )
         except TimeoutError:
             self.logger.warning(
-                'skip memory_data timeout for '
+                'skip memory_data; timeout for '
                 f'key={key}, timeout={self.timeout}'
             )
             return None
@@ -126,7 +126,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
             )
         except TimeoutError:
             self.logger.warning(
-                'skip fallback_data timeout for '  # type: ignore
+                'skip fallback_data; timeout for '  # type: ignore
                 f'key={self.memory_key(query)}, '
                 f'timeout={self.timeout}'
             )
@@ -346,16 +346,18 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     async def already_got_not_found(
         self, query: Union['Query[Entity, EntityData, FallbackKey]', Entity],
     ) -> bool:
+        key = self.fallback_not_found_key(query)
         try:
             return bool(
                 await asyncio.wait_for(
-                    self.memory_data_source.exists(
-                        self.fallback_not_found_key(query)
-                    ),
-                    self.timeout,
+                    self.memory_data_source.exists(key), self.timeout,
                 )
             )
         except TimeoutError:
+            self.logger.warning(
+                'skip already_got_not_found; timeout for '
+                f'key={key}, timeout={self.timeout}'
+            )
             return True
 
     async def delete_fallback_not_found(
