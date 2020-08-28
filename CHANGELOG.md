@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.22.2 - 2020-08-28
 
  - Fix repository timeout error catch
 
