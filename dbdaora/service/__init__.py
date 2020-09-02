@@ -1,9 +1,11 @@
+import asyncio
 from dataclasses import dataclass
 from logging import Logger, getLogger
 from typing import (
     Any,
     AsyncGenerator,
     Generic,
+    List,
     Optional,
     Sequence,
     Tuple,
@@ -159,45 +161,30 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         **filters: Any,
     ) -> AsyncGenerator[Entity, None]:
         cache_key_suffix = self.cache_key_suffix(**filters)
-        is_composed_key = False
+        futures: List[Union[Entity, asyncio.Task[Optional[Entity]]]] = []
 
         for id_ in ids:
             entity = self.get_cached_entity(id_, cache_key_suffix, **filters)
 
             if entity is None:
-                if not is_composed_key and isinstance(id_, tuple):
-                    is_composed_key = True
-
-                try:
-                    entity = await self.repository_entity(
-                        id_, cache_key_suffix, memory, **filters
-                    )
-                    if entity:
-                        yield entity
-                        self.set_cached_entity(id_, cache_key_suffix, entity)
-
-                except DBDaoraCircuitBreakerError as error:
-                    self.logger.warning(error)
-                    if self.should_raise_not_found_error_for_fallback_circuit_breaker(
-                        error
-                    ):
-                        continue
-
-                    try:
-                        entity = await self.repository_entity(
-                            id_, cache_key_suffix, memory=False, **filters
+                futures.append(
+                    asyncio.create_task(
+                        self.repository_entity(
+                            id_, cache_key_suffix, memory, **filters
                         )
-                        if entity:
-                            yield entity
-                            self.set_cached_entity(
-                                id_, cache_key_suffix, entity
-                            )
+                    )
+                )
+            else:
+                futures.append(entity)
 
-                    except DBDaoraCircuitBreakerError as error:
-                        self.logger.warning(error)
+        for future in futures:
+            if isinstance(future, asyncio.Task):
+                entity = await future
+                if entity is not None:
+                    yield entity
 
-            elif entity is not CACHE_ALREADY_NOT_FOUND:
-                yield entity
+            elif future is not CACHE_ALREADY_NOT_FOUND:
+                yield future
 
     async def repository_entity(
         self,
@@ -212,18 +199,34 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
 
         try:
             if isinstance(id_, tuple):
-                return await circuit(
+                entity = await circuit(
                     self.repository.query(*id_, memory=memory, **filters)
                 )
-
-            return await circuit(
-                self.repository.query(id_, memory=memory, **filters)
-            )
+            else:
+                entity = await circuit(
+                    self.repository.query(id_, memory=memory, **filters)
+                )
         except EntityNotFoundError:
             self.set_cached_entity(
                 id_, cache_key_suffix, CACHE_ALREADY_NOT_FOUND,
             )
             return None
+        except DBDaoraCircuitBreakerError as error:
+            self.logger.warning(error)
+            if self.should_raise_not_found_error_for_fallback_circuit_breaker(
+                error
+            ):
+                self.set_cached_entity(
+                    id_, cache_key_suffix, CACHE_ALREADY_NOT_FOUND,
+                )
+                return None
+
+            return await self.repository_entity(
+                id_, cache_key_suffix, memory=False, **filters
+            )
+
+        self.set_cached_entity(id_, cache_key_suffix, entity)
+        return entity
 
     def entity_id(
         self, entity: Entity, is_composed_key: bool
@@ -342,7 +345,7 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
                 )
                 raise
 
-        elif entity == CACHE_ALREADY_NOT_FOUND:
+        elif entity is CACHE_ALREADY_NOT_FOUND:
             raise EntityNotFoundError(id)
 
         return entity
@@ -470,7 +473,7 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
             else:
                 cache[cache_key] = True
 
-        elif entity_exists == CACHE_ALREADY_NOT_FOUND:
+        elif entity_exists is CACHE_ALREADY_NOT_FOUND:
             return False
 
         return True

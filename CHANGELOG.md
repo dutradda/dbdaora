@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Improve Service.get_many performance
+
 ### 0.22.5 - 2020-09-01
 
  - Fix Service.get_many_cached
