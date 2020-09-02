@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.22.6 - 2020-09-01
 
  - Improve Service.get_many performance
 
