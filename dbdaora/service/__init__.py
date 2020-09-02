@@ -174,6 +174,7 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
                     )
                     if entity:
                         yield entity
+                        self.set_cached_entity(id_, cache_key_suffix, entity)
 
                 except DBDaoraCircuitBreakerError as error:
                     self.logger.warning(error)
@@ -188,6 +189,9 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
                         )
                         if entity:
                             yield entity
+                            self.set_cached_entity(
+                                id_, cache_key_suffix, entity
+                            )
 
                     except DBDaoraCircuitBreakerError as error:
                         self.logger.warning(error)

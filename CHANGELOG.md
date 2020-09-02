@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Fix Service.get_many_cached
+
 ### 0.22.4 - 2020-08-28
 
  - Fix Service
