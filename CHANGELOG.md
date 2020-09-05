@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.22.7 - 2020-09-05
 
  - Fix sorted set repository
 
