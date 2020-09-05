@@ -34,13 +34,13 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey]):
         data_task: Awaitable[Any]
 
         if query.withmaxsize:
-            size_task = asyncio.create_task(self.memory_data_source.zcard(key))
+            size_task = make_task(self.memory_data_source.zcard(key))
 
         if query.max_score is not None or query.min_score is not None:
             max_score, min_score = self.parse_score_limits(query)
 
             if query.reverse:
-                data_task = asyncio.create_task(
+                data_task = make_task(
                     self.memory_data_source.zrevrangebyscore(
                         key,
                         max=max_score,
@@ -49,7 +49,7 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey]):
                     )
                 )
             else:
-                data_task = asyncio.create_task(
+                data_task = make_task(
                     self.memory_data_source.zrangebyscore(
                         key,
                         max=max_score,
@@ -62,7 +62,7 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey]):
             start, stop = self.parse_page(query)
 
             if query.reverse:
-                data_task = asyncio.create_task(
+                data_task = make_task(
                     self.memory_data_source.zrevrange(
                         key,
                         start=start,
@@ -71,7 +71,7 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey]):
                     )
                 )
             else:
-                data_task = asyncio.create_task(
+                data_task = make_task(
                     self.memory_data_source.zrange(
                         key,
                         start=start,
@@ -190,11 +190,9 @@ class SortedSetRepository(MemoryRepository[Any, SortedSetData, FallbackKey]):
         return self.make_entity(data, query)
 
     async def add_memory_data(self, key: str, data: SortedSetData) -> None:
-        delete_task = asyncio.create_task(self.memory_data_source.delete(key))
+        delete_task = make_task(self.memory_data_source.delete(key))
         delete_task.add_done_callback(task_done_callback)
-        zadd_task = asyncio.create_task(
-            self.memory_data_source.zadd(key, *data)
-        )
+        zadd_task = make_task(self.memory_data_source.zadd(key, *data))
         zadd_task.add_done_callback(task_done_callback)
         await delete_task
         await zadd_task
@@ -243,3 +241,10 @@ def task_done_callback(f: Any) -> None:
         f.result()
     except Exception:  # pragma: no cover
         ...  # pragma: no cover
+
+
+def make_task(coroutine: Any) -> Any:
+    if asyncio.iscoroutine(coroutine):
+        return asyncio.create_task(coroutine)
+
+    return coroutine
