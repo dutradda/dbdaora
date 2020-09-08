@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.22.8 - 2020-09-08
 
  - Fix aioredis data source builder
 
