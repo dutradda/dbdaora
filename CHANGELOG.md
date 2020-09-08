@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Fix aioredis data source builder
+
 ### 0.22.7 - 2020-09-05
 
  - Fix sorted set repository

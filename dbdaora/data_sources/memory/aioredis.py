@@ -240,7 +240,7 @@ async def make(
     if len(uris) > 1:
         clients: Sequence[AioRedisDataSource] = [
             await create_redis_pool(  # type: ignore
-                uri, commands_factory=AioRedisDataSource
+                uri, commands_factory=commands_factory
             )
             for uri in uris
         ]
@@ -249,5 +249,5 @@ async def make(
 
     else:
         return await create_redis_pool(
-            uris[0], commands_factory=AioRedisDataSource
+            uris[0], commands_factory=commands_factory
         )
