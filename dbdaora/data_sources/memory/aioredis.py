@@ -21,11 +21,13 @@ from . import GeoRadiusOutput, MemoryDataSource, MemoryMultiExec, RangeOutput
 
 
 class AioRedisDataSource(Redis, MemoryDataSource):
-    ...
+    geopoint_cls: ClassVar[Type[GeoPoint]] = GeoPoint  # type: ignore
+    geomember_cls: ClassVar[Type[GeoMember]] = GeoMember  # type: ignore
 
 
 class AioRedisMultiExec(MultiExec):
-    ...
+    geopoint_cls: ClassVar[Type[GeoPoint]] = GeoPoint
+    geomember_cls: ClassVar[Type[GeoMember]] = GeoMember
 
 
 @dataclasses.dataclass
@@ -35,6 +37,8 @@ class ShardsAioRedisMultiExec(MemoryMultiExec):
     clients_to_execute: Set[AioRedisMultiExec] = dataclasses.field(
         default_factory=set
     )
+    geopoint_cls: ClassVar[Type[GeoPoint]] = GeoPoint
+    geomember_cls: ClassVar[Type[GeoMember]] = GeoMember
 
     def get_client(self, key: str) -> AioRedisMultiExec:
         return self.hashring.get_node(key)
