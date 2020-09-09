@@ -4,7 +4,7 @@
 
  - Add optional support for newrelic on aioredis data source
 
- - Fix aoredis data sources
+ - Fix aioredis data sources
 
 ### 0.22.9 - 2020-09-08
 
