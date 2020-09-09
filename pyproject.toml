@@ -41,15 +41,10 @@ doc = [
     'mkdocs-material',
     'markdown-include'
 ]
-datastore = [
-    'google-cloud-datastore'
-]
-aioredis = [
-    'aioredis'
-]
-mongodb = [
-    'motor'
-]
+datastore = ['google-cloud-datastore']
+aioredis = ['aioredis']
+mongodb = ['motor']
+newrelic = ['newrelic']
 
 [tool.flit.sdist]
 exclude = [

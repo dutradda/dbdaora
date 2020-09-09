@@ -20,6 +20,12 @@ from dbdaora.hashring import HashRing
 from . import GeoRadiusOutput, MemoryDataSource, MemoryMultiExec, RangeOutput
 
 
+try:
+    import newrelic.agent
+except ImportError:
+    newrelic = None  # type: ignore
+
+
 class AioRedisDataSource(Redis, MemoryDataSource):
     geopoint_cls: ClassVar[Type[GeoPoint]] = GeoPoint  # type: ignore
     geomember_cls: ClassVar[Type[GeoMember]] = GeoMember  # type: ignore
@@ -256,3 +262,118 @@ async def make(
         return await create_redis_pool(
             uris[0], commands_factory=single_commands_factory
         )
+
+
+if newrelic is not None:
+    # KEY COMMANDS
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'set',
+        product='redis',
+        target=None,
+        operation='set',
+    )
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'get',
+        product='redis',
+        target=None,
+        operation='get',
+    )
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'expire',
+        product='redis',
+        target=None,
+        operation='expire',
+    )
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'delete',
+        product='redis',
+        target=None,
+        operation='delete',
+    )
+
+    # HASH COMMANDS
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'hmset',
+        product='redis',
+        target=None,
+        operation='hmset',
+    )
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'hgetall',
+        product='redis',
+        target=None,
+        operation='hgetall',
+    )
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'hmget',
+        product='redis',
+        target=None,
+        operation='hmget',
+    )
+
+    # SORTED SET COMMANDS
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'zadd',
+        product='redis',
+        target=None,
+        operation='zadd',
+    )
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'zrange',
+        product='redis',
+        target=None,
+        operation='zrange',
+    )
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'zrangebyscore',
+        product='redis',
+        target=None,
+        operation='zrangebyscore',
+    )
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'zrevrange',
+        product='redis',
+        target=None,
+        operation='zrevrange',
+    )
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'zrevrangebyscore',
+        product='redis',
+        target=None,
+        operation='zrevrangebyscore',
+    )
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'zcard',
+        product='redis',
+        target=None,
+        operation='zcard',
+    )
+
+    # GEOSPATIAL COMMANDS
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'geoadd',
+        product='redis',
+        target=None,
+        operation='geoadd',
+    )
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'georadius',
+        product='redis',
+        target=None,
+        operation='georadius',
+    )
