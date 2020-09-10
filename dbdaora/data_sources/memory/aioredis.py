@@ -269,51 +269,58 @@ if newrelic is not None:
     newrelic.agent.wrap_datastore_trace(
         AioRedisDataSource,
         'set',
-        product='redis',
+        product='Redis',
         target=None,
         operation='set',
     )
     newrelic.agent.wrap_datastore_trace(
         AioRedisDataSource,
         'get',
-        product='redis',
+        product='Redis',
         target=None,
         operation='get',
     )
     newrelic.agent.wrap_datastore_trace(
         AioRedisDataSource,
         'expire',
-        product='redis',
+        product='Redis',
         target=None,
         operation='expire',
     )
     newrelic.agent.wrap_datastore_trace(
         AioRedisDataSource,
         'delete',
-        product='redis',
+        product='Redis',
         target=None,
         operation='delete',
+    )
+    newrelic.agent.wrap_datastore_trace(
+        AioRedisDataSource,
+        'exists',
+        product='Redis',
+        target=None,
+        operation='exists',
     )
 
     # HASH COMMANDS
     newrelic.agent.wrap_datastore_trace(
         AioRedisDataSource,
         'hmset',
-        product='redis',
+        product='Redis',
         target=None,
         operation='hmset',
     )
     newrelic.agent.wrap_datastore_trace(
         AioRedisDataSource,
         'hgetall',
-        product='redis',
+        product='Redis',
         target=None,
         operation='hgetall',
     )
     newrelic.agent.wrap_datastore_trace(
         AioRedisDataSource,
         'hmget',
-        product='redis',
+        product='Redis',
         target=None,
         operation='hmget',
     )
@@ -322,42 +329,42 @@ if newrelic is not None:
     newrelic.agent.wrap_datastore_trace(
         AioRedisDataSource,
         'zadd',
-        product='redis',
+        product='Redis',
         target=None,
         operation='zadd',
     )
     newrelic.agent.wrap_datastore_trace(
         AioRedisDataSource,
         'zrange',
-        product='redis',
+        product='Redis',
         target=None,
         operation='zrange',
     )
     newrelic.agent.wrap_datastore_trace(
         AioRedisDataSource,
         'zrangebyscore',
-        product='redis',
+        product='Redis',
         target=None,
         operation='zrangebyscore',
     )
     newrelic.agent.wrap_datastore_trace(
         AioRedisDataSource,
         'zrevrange',
-        product='redis',
+        product='Redis',
         target=None,
         operation='zrevrange',
     )
     newrelic.agent.wrap_datastore_trace(
         AioRedisDataSource,
         'zrevrangebyscore',
-        product='redis',
+        product='Redis',
         target=None,
         operation='zrevrangebyscore',
     )
     newrelic.agent.wrap_datastore_trace(
         AioRedisDataSource,
         'zcard',
-        product='redis',
+        product='Redis',
         target=None,
         operation='zcard',
     )
@@ -366,14 +373,14 @@ if newrelic is not None:
     newrelic.agent.wrap_datastore_trace(
         AioRedisDataSource,
         'geoadd',
-        product='redis',
+        product='Redis',
         target=None,
         operation='geoadd',
     )
     newrelic.agent.wrap_datastore_trace(
         AioRedisDataSource,
         'georadius',
-        product='redis',
+        product='Redis',
         target=None,
         operation='georadius',
     )

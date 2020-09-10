@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Fix aioredis newrelic instrumentation
+
 ### 0.22.10 - 2020-09-09
 
  - Add optional support for newrelic on aioredis data source
