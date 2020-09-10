@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.22.11 - 2020-09-09
 
  - Fix aioredis newrelic instrumentation
 
