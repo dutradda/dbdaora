@@ -13,7 +13,9 @@ def fallback_data_source(event_loop):
     client = AsyncIOMotorClient(
         f'mongodb://{auth}@localhost:27017', io_loop=event_loop
     )
-    return MongoDataSource(database_name='dbdaora', client=client)
+    return MongoDataSource(
+        database_name='dbdaora', client=client, key_is_object_id=True
+    )
 
 
 @pytest.fixture

@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Add support for mongodb ObjectId
+
 ### 0.22.11 - 2020-09-09
 
  - Fix aioredis newrelic instrumentation

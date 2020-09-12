@@ -1,8 +1,10 @@
 import dataclasses
 import datetime
-from typing import Any, ClassVar, Dict, Iterable, Optional, Set
+from hashlib import sha256
+from typing import Any, ClassVar, Dict, Iterable, Optional, Set, Union
 
 import motor.motor_asyncio as motor
+from bson.objectid import ObjectId
 from pymongo.errors import OperationFailure
 
 from . import FallbackDataSource
@@ -11,7 +13,7 @@ from . import FallbackDataSource
 @dataclasses.dataclass
 class Key:
     collection_name: str
-    document_id: str
+    document_id: Union[str, ObjectId]
 
 
 @dataclasses.dataclass
@@ -21,12 +23,17 @@ class MongoDataSource(FallbackDataSource[Key]):
         default_factory=motor.AsyncIOMotorClient
     )
     collections_has_ttl_index: ClassVar[Set[str]] = set()
+    key_is_object_id: bool = False
 
     def make_key(self, *key_parts: Any) -> Key:
-        return Key(
-            key_parts[0],
-            self.key_separator.join([str(k) for k in key_parts[1:]]),
-        )
+        str_key = self.key_separator.join([str(k) for k in key_parts[1:]])
+        return Key(key_parts[0], self.make_document_id(str_key))
+
+    def make_document_id(self, key: str) -> Union[str, ObjectId]:
+        if self.key_is_object_id:
+            return ObjectId(sha256(key.encode()).hexdigest()[:12].encode())
+
+        return key
 
     async def get(self, key: Key) -> Optional[Dict[str, Any]]:
         collection = self.collection(key)
@@ -88,5 +95,5 @@ class CollectionKeyMongoDataSource(MongoDataSource):
     def make_key(self, *key_parts: Any) -> Key:
         return Key(
             self.key_separator.join([str(k) for k in key_parts[:-1]]),
-            key_parts[-1],
+            self.make_document_id(key_parts[-1]),
         )
