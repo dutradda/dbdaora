@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.23.0 - 2020-09-11
 
  - Add support for mongodb ObjectId
 
