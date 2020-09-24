@@ -13,6 +13,7 @@ from typing import (  # type: ignore
     Type,
     Union,
     _TypedDictMeta,
+    get_args,
 )
 
 from dbdaora import FallbackDataSource, MemoryDataSource
@@ -33,7 +34,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     memory_data_source: MemoryDataSource
     fallback_data_source: FallbackDataSource[FallbackKey]
     expire_time: int
-    entity_cls: ClassVar[Type[Entity]]
+    entity_cls: ClassVar[Optional[Type[Entity]]]
     name: ClassVar[str]
     id_name: ClassVar[str]
     key_attrs: ClassVar[Sequence[str]]
@@ -53,7 +54,19 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         super().__init_subclass__()
 
         if cls.__name__ not in cls.__skip_cls_validation__:
-            entity_cls = entity_cls or getattr(cls, 'entity_cls', None)
+            if not entity_cls:
+                for base_orig in getattr(cls, '__orig_bases__', tuple()):
+                    base_orig_args = get_args(base_orig)
+
+                    if len(base_orig_args) == 2 and isinstance(
+                        base_orig_args[0], type
+                    ):
+                        entity_cls = base_orig_args[0]
+                        break
+
+                if not entity_cls:
+                    entity_cls = getattr(cls, 'entity_cls', None)
+
             name = name or getattr(cls, 'name', None)
             id_name = id_name or getattr(cls, 'id_name', 'id')
             key_attrs = key_attrs or getattr(cls, 'key_attrs', None)
@@ -461,7 +474,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         self,
         query: 'Union[BaseQuery[Entity, EntityData, FallbackKey], Entity]',
     ) -> Type[Entity]:
-        return self.entity_cls
+        return self.entity_cls  # type: ignore
 
 
 def task_done_callback(f: Any) -> None:

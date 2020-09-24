@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Improve typing annotations
+
 ### 0.23.0 - 2020-09-11
 
  - Add support for mongodb ObjectId

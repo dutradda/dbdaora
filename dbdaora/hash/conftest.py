@@ -68,9 +68,8 @@ class FakeEntity:
     boolean: Optional[bool] = None
 
 
-class FakeHashRepository(HashRepository[str]):
+class FakeHashRepository(HashRepository[FakeEntity, str]):
     name = 'fake'
-    entity_cls = FakeEntity
 
 
 @pytest.fixture

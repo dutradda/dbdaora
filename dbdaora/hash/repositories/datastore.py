@@ -3,13 +3,13 @@ from typing import Any, ClassVar, Optional, Sequence, Type, get_type_hints
 from google.cloud.datastore import Entity, Key
 from jsondaora.serializers import OrjsonDefaultTypes
 
-from . import HashRepository
+from . import HashEntity, HashRepository
 
 
 OrjsonDefaultTypes.types_default_map[Entity] = lambda e: dict(**e)
 
 
-class DatastoreHashRepository(HashRepository[Key]):
+class DatastoreHashRepository(HashRepository[HashEntity, Key]):
     __skip_cls_validation__ = ('DatastoreHashRepository',)
     exclude_from_indexes: ClassVar[Sequence[str]] = ()
     exclude_all_from_indexes: ClassVar[bool] = False
@@ -26,7 +26,7 @@ class DatastoreHashRepository(HashRepository[Key]):
             entity_cls, name, id_name, key_attrs, many_key_attrs,
         )
 
-        if cls.exclude_all_from_indexes:
+        if cls.exclude_all_from_indexes and cls.entity_cls:
             cls.exclude_from_indexes = tuple(
                 get_type_hints(cls.entity_cls).keys()
             )

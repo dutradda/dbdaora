@@ -1,6 +1,6 @@
 import dataclasses
 import itertools
-from typing import Any, Dict, Optional, Sequence, Union
+from typing import Any, Dict, Optional, Sequence, TypeVar, Union
 
 from jsondaora import dataclasses as jdataclasses
 
@@ -13,13 +13,14 @@ from dbdaora.repository import MemoryRepository
 HashData = Union[
     Dict[str, Any], Dict[bytes, Any],
 ]
+HashEntity = TypeVar('HashEntity')
 
 
-class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
+class HashRepository(MemoryRepository[HashEntity, HashData, FallbackKey]):
     __skip_cls_validation__ = ('HashRepository',)
 
     async def get_memory_data(  # type: ignore
-        self, key: str, query: 'HashQuery[FallbackKey]',
+        self, key: str, query: 'HashQuery[HashEntity, FallbackKey]',
     ) -> Optional[Union[HashData, Dict[bytes, Any]]]:
         data: Optional[Union[HashData, Dict[bytes, Any]]]
 
@@ -47,7 +48,10 @@ class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
         return {f.encode(): v for f, v in zip(fields, data) if v is not None}
 
     async def get_fallback_data(  # type: ignore
-        self, query: 'HashQuery[FallbackKey]', *, for_memory: bool = False,
+        self,
+        query: 'HashQuery[HashEntity, FallbackKey]',
+        *,
+        for_memory: bool = False,
     ) -> Optional[Union[HashData]]:
         data = await self.fallback_data_source.get(self.fallback_key(query))
 
@@ -66,19 +70,21 @@ class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
         return data
 
     def make_fallback_data_fields(
-        self, query: 'HashQuery[FallbackKey]', data: HashData,
+        self, query: 'HashQuery[HashEntity, FallbackKey]', data: HashData,
     ) -> HashData:
         return {f: v for f, v in data.items() if f in query.fields}  # type: ignore
 
     def make_fallback_data_fields_with_bytes_keys(
-        self, query: 'HashQuery[FallbackKey]', data: HashData,
+        self, query: 'HashQuery[HashEntity, FallbackKey]', data: HashData,
     ) -> HashData:
         return {
             f: v for f, v in data.items() if f.decode() in query.fields  # type: ignore
         }
 
     def make_entity(
-        self, data: HashData, query: 'BaseQuery[Any, HashData, FallbackKey]',
+        self,
+        data: HashData,
+        query: BaseQuery[HashEntity, HashData, FallbackKey],
     ) -> Any:
         if dataclasses.is_dataclass(self.get_entity_type(query)):
             return jdataclasses.asdataclass(
@@ -88,7 +94,9 @@ class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
         raise InvalidEntityTypeError(self.get_entity_type(query))
 
     def make_entity_from_fallback(
-        self, data: HashData, query: 'BaseQuery[Any, HashData, FallbackKey]',
+        self,
+        data: HashData,
+        query: BaseQuery[HashEntity, HashData, FallbackKey],
     ) -> Any:
         return jdataclasses.asdataclass(data, self.get_entity_type(query))
 
@@ -105,7 +113,7 @@ class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
     async def add_memory_data_from_fallback(
         self,
         key: str,
-        query: Union[BaseQuery[Any, HashData, FallbackKey], Any],
+        query: Union[BaseQuery[HashEntity, HashData, FallbackKey], Any],
         data: HashData,
     ) -> HashData:
         data = self.make_memory_data_from_fallback(query, data)  # type: ignore
@@ -120,7 +128,7 @@ class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
 
     def make_memory_data_from_fallback(
         self,
-        query: Union[BaseQuery[Any, HashData, FallbackKey], Any],
+        query: Union[BaseQuery[HashEntity, HashData, FallbackKey], Any],
         data: Dict[str, Any],
     ) -> Dict[bytes, Any]:
         return {
@@ -146,7 +154,7 @@ class HashRepository(MemoryRepository[Any, HashData, FallbackKey]):
 
     def make_query(
         self, *args: Any, **kwargs: Any
-    ) -> 'BaseQuery[Any, HashData, FallbackKey]':
+    ) -> BaseQuery[HashEntity, HashData, FallbackKey]:
         return query_factory(self, *args, **kwargs)
 
 

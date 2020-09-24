@@ -17,9 +17,10 @@ from dbdaora.geospatial.repositories import GeoSpatialRepository
 from dbdaora.geospatial.service import GeoSpatialService
 from dbdaora.hash.factory import make_service as make_hash_service
 from dbdaora.hash.query import HashQuery, HashQueryMany
-from dbdaora.hash.repositories import HashData, HashRepository
+from dbdaora.hash.repositories import HashData, HashEntity, HashRepository
 from dbdaora.hash.service import HashService
 from dbdaora.hashring import HashRing
+from dbdaora.keys import FallbackKey
 from dbdaora.query import Query, QueryMany
 from dbdaora.repository import MemoryRepository
 from dbdaora.service import CACHE_ALREADY_NOT_FOUND, Service
@@ -143,6 +144,8 @@ __all__ = [
     'GeoSpatialData',
     'make_sorted_set_service',
     'CACHE_ALREADY_NOT_FOUND',
+    'FallbackKey',
+    'HashEntity',
 ]
 
 if AioRedisDataSource:
