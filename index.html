@@ -489,8 +489,7 @@ service patterns and python dataclasses
     <span class="k">return</span> <span class="n">Person</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">name</span><span class="p">,</span> <span class="n">age</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">PersonRepository</span><span class="p">(</span><span class="n">HashRepository</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
-    <span class="n">entity_cls</span> <span class="o">=</span> <span class="n">Person</span>
+<span class="k">class</span> <span class="nc">PersonRepository</span><span class="p">(</span><span class="n">HashRepository</span><span class="p">[</span><span class="n">Person</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
     <span class="n">key_attrs</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,)</span>
 
 
@@ -569,7 +568,7 @@ service patterns and python dataclasses
     <span class="k">return</span> <span class="n">Person</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">name</span><span class="p">,</span> <span class="n">age</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">PersonRepository</span><span class="p">(</span><span class="n">HashRepository</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">entity_cls</span><span class="o">=</span><span class="n">Person</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">PersonRepository</span><span class="p">(</span><span class="n">HashRepository</span><span class="p">[</span><span class="n">Person</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
     <span class="o">...</span>
 
 

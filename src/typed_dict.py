@@ -38,7 +38,7 @@ def make_person(name: str, age: int) -> Person:
     return Person(id=name.replace(' ', '_').lower(), name=name, age=age)
 
 
-class PersonRepository(HashRepository[str], entity_cls=Person):
+class PersonRepository(HashRepository[Person, str]):
     ...
 
 
