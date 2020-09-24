@@ -2,6 +2,8 @@
 
 ### UNRELEASED
 
+ - Improve Service circuit breaker
+
  - Improve typing annotations
 
 ### 0.23.0 - 2020-09-11

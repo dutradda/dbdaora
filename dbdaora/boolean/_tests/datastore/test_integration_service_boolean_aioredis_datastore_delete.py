@@ -5,6 +5,11 @@ from aioredis import RedisError
 from dbdaora.exceptions import EntityNotFoundError
 
 
+@pytest.fixture
+def has_delete_cb():
+    return True
+
+
 @pytest.mark.asyncio
 async def test_should_delete(
     fake_service, serialized_fake_entity, fake_entity

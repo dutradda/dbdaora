@@ -8,7 +8,7 @@ from dbdaora.service.builder import build as build_base_service
 from ..cache import CacheType
 from ..repository import MemoryRepository
 from ..service import Service
-from .service import HashService
+from .service import BooleanService
 
 
 async def make_service(
@@ -28,7 +28,7 @@ async def make_service(
     has_delete_circuit_breaker: bool = False,
 ) -> Service[Entity, EntityData, FallbackKey]:
     return await build_base_service(
-        HashService,  # type: ignore
+        BooleanService,  # type: ignore
         repository_cls,
         memory_data_source_factory,
         fallback_data_source_factory,

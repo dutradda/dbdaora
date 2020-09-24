@@ -36,11 +36,11 @@ from dbdaora.sorted_set.query import SortedSetQuery
 from dbdaora.sorted_set.repositories import SortedSetRepository
 
 
+from dbdaora.boolean.factory import (  # noqa isort:skip
+    make_service as make_boolean_service,
+)
 from dbdaora.boolean.repositories import BooleanRepository  # noqa isort:skip
 from dbdaora.boolean.service import BooleanService  # noqa isort:skip
-from dbdaora.boolean.repositories.datastore import (  # noqa isort:skip
-    DatastoreBooleanRepository,
-)
 
 try:
     from dbdaora.data_sources.fallback.datastore import (
@@ -57,6 +57,9 @@ try:
         DatastoreGeoSpatialRepository,
     )
     from dbdaora.sorted_set.service.datastore import DatastoreSortedSetService
+    from dbdaora.boolean.repositories.datastore import (
+        DatastoreBooleanRepository,
+    )
 except ImportError:
     DatastoreDataSource = None  # type: ignore
     KindKeyDatastoreDataSource = None  # type: ignore
@@ -66,6 +69,7 @@ except ImportError:
     DatastoreGeoSpatialService = None  # type: ignore
     DatastoreGeoSpatialRepository = None  # type: ignore
     DatastoreSortedSetService = None  # type: ignore
+    DatastoreBooleanRepository = None  # type: ignore
 
 try:
     from dbdaora.data_sources.memory.aioredis import (
@@ -146,6 +150,7 @@ __all__ = [
     'CACHE_ALREADY_NOT_FOUND',
     'FallbackKey',
     'HashEntity',
+    'make_boolean_service',
 ]
 
 if AioRedisDataSource:
@@ -207,3 +212,6 @@ if MongodbSortedSetRepository:
 
 if MongoSortedSetService:
     __all__.append('MongoSortedSetService')
+
+if DatastoreBooleanRepository:
+    __all__.append('DatastoreBooleanRepository')

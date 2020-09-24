@@ -54,6 +54,16 @@ def cache_config():
     return {}
 
 
+@pytest.fixture
+def has_add_cb():
+    return False
+
+
+@pytest.fixture
+def has_delete_cb():
+    return False
+
+
 @pytest.mark.asyncio
 @pytest.fixture
 async def fake_service(
@@ -62,6 +72,8 @@ async def fake_service(
     fake_repository_cls,
     fallback_cb_error,
     cache_config,
+    has_add_cb,
+    has_delete_cb,
 ):
     memory_data_source_factory = partial(
         make_aioredis_data_source,
@@ -83,6 +95,8 @@ async def fake_service(
         cb_expected_exception=RedisError,
         cb_expected_fallback_exception=fallback_cb_error,
         logger=mocker.MagicMock(),
+        has_add_circuit_breaker=has_add_cb,
+        has_delete_circuit_breaker=has_delete_cb,
         **cache_config,
     )
 

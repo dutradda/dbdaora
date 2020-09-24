@@ -5,7 +5,6 @@ from cachetools import Cache
 
 from ...circuitbreaker import AsyncCircuitBreaker
 from ...entity import Entity
-from ...exceptions import CacheNotAvailableError
 from ...keys import FallbackKey
 from ...repository import MemoryRepository
 from ...service import CacheAlreadyNotFound, Service
@@ -18,25 +17,18 @@ class GeoSpatialService(Service[Entity, GeoSpatialData, FallbackKey]):
         repository: MemoryRepository[Entity, GeoSpatialData, FallbackKey],
         circuit_breaker: AsyncCircuitBreaker,
         fallback_circuit_breaker: AsyncCircuitBreaker,
-        cache: Optional[Cache] = None,
-        exists_cache: Optional[Cache] = None,
         logger: Logger = getLogger(__name__),
+        has_add_circuit_breaker: bool = False,
+        has_delete_circuit_breaker: bool = False,
     ):
-        if cache is not None:
-            raise CacheNotAvailableError(
-                'GeoSpatialService class do not support cache'
-            )
-
         super().__init__(
             repository=repository,
             circuit_breaker=circuit_breaker,
             fallback_circuit_breaker=fallback_circuit_breaker,
-            cache=None,
-            exists_cache=None,
             logger=logger,
+            has_add_circuit_breaker=has_add_circuit_breaker,
+            has_delete_circuit_breaker=has_delete_circuit_breaker,
         )
-        self.entity_circuit = self.repository.entity
-        self.entities_circuit = self.repository.entities
 
     def get_many(
         self, *ids: str, **filters: Any,

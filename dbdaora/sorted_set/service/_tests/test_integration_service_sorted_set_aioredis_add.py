@@ -4,6 +4,11 @@ from aioredis import RedisError
 from circuitbreaker import CircuitBreakerError
 
 
+@pytest.fixture
+def has_add_cb():
+    return True
+
+
 @pytest.mark.asyncio
 async def test_should_add(fake_service, fake_entity, fake_entity_withscores):
     await fake_service.add(fake_entity_withscores)

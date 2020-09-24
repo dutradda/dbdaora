@@ -38,30 +38,41 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         cache: Optional[Cache] = None,
         exists_cache: Optional[Cache] = None,
         logger: Logger = getLogger(__name__),
+        has_add_circuit_breaker: bool = False,
+        has_delete_circuit_breaker: bool = False,
     ):
         self.repository = repository
         self.circuit_breaker = circuit_breaker
         self.fallback_circuit_breaker = fallback_circuit_breaker
         self.cache = cache
         self.exists_cache = exists_cache
-        self.entity_circuit = self.circuit_breaker(self.repository.entity)
-        self.add_circuit = self.circuit_breaker(self.repository.add)
-        self.delete_circuit = self.circuit_breaker(self.repository.delete)
-        self.exists_circuit = self.circuit_breaker(self.repository.exists)
         self.logger = logger
-
+        self.entity_circuit = self.circuit_breaker(self.repository.entity)
+        self.exists_circuit = self.circuit_breaker(self.repository.exists)
         self.entity_fallback_circuit = self.fallback_circuit_breaker(
             self.repository.entity
-        )
-        self.add_fallback_circuit = self.fallback_circuit_breaker(
-            self.repository.add
-        )
-        self.delete_fallback_circuit = self.fallback_circuit_breaker(
-            self.repository.delete
         )
         self.exists_fallback_circuit = self.fallback_circuit_breaker(
             self.repository.exists
         )
+
+        if has_add_circuit_breaker:
+            self.add_circuit = self.circuit_breaker(self.repository.add)
+            self.add_fallback_circuit = self.fallback_circuit_breaker(
+                self.repository.add
+            )
+        else:
+            self.add_fallback_circuit = self.add_circuit = self.repository.add
+
+        if has_delete_circuit_breaker:
+            self.delete_circuit = self.circuit_breaker(self.repository.delete)
+            self.delete_fallback_circuit = self.fallback_circuit_breaker(
+                self.repository.delete
+            )
+        else:
+            self.delete_circuit = (
+                self.delete_fallback_circuit
+            ) = self.repository.delete
 
     def get_many(
         self, *ids: str, memory: bool = True, **filters: Any

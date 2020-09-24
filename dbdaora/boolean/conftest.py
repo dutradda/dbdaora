@@ -6,11 +6,10 @@ from aioredis import RedisError
 
 from dbdaora import (
     BooleanRepository,
-    BooleanService,
     CacheType,
     DictFallbackDataSource,
-    build_service,
     make_aioredis_data_source,
+    make_boolean_service,
 )
 
 
@@ -24,6 +23,16 @@ def memory_data_source_factory():
     )
 
 
+@pytest.fixture
+def has_add_cb():
+    return False
+
+
+@pytest.fixture
+def has_delete_cb():
+    return False
+
+
 @pytest.mark.asyncio
 @pytest.fixture
 async def fake_service(
@@ -31,12 +40,13 @@ async def fake_service(
     mocker,
     fallback_data_source,
     fake_boolean_repository_cls,
+    has_add_cb,
+    has_delete_cb,
 ):
     async def fallback_data_source_factory():
         return fallback_data_source
 
-    service = await build_service(
-        BooleanService,
+    service = await make_boolean_service(
         fake_boolean_repository_cls,
         memory_data_source_factory,
         fallback_data_source_factory,
@@ -49,6 +59,8 @@ async def fake_service(
         cb_expected_exception=RedisError,
         cb_expected_fallback_exception=KeyError,
         logger=mocker.MagicMock(),
+        has_add_circuit_breaker=has_add_cb,
+        has_delete_circuit_breaker=has_delete_cb,
     )
 
     yield service

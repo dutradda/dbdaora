@@ -4,19 +4,35 @@ from typing import List
 
 import pytest
 from aioredis import GeoMember, GeoPoint, RedisError
+from pymongo.errors import PyMongoError
 
 from dbdaora import (
     DictFallbackDataSource,
     GeoSpatialRepository,
-    GeoSpatialService,
-    build_service,
     make_aioredis_data_source,
+    make_geospatial_service,
 )
+
+
+@pytest.fixture
+def has_add_cb():
+    return False
+
+
+@pytest.fixture
+def has_delete_cb():
+    return False
 
 
 @pytest.mark.asyncio
 @pytest.fixture
-async def fake_service(mocker, fallback_data_source, fake_repository_cls):
+async def fake_service(
+    mocker,
+    fallback_data_source,
+    fake_repository_cls,
+    has_add_cb,
+    has_delete_cb,
+):
     memory_data_source_factory = partial(
         make_aioredis_data_source,
         'redis://',
@@ -27,8 +43,7 @@ async def fake_service(mocker, fallback_data_source, fake_repository_cls):
     async def fallback_data_source_factory():
         return fallback_data_source
 
-    service = await build_service(
-        GeoSpatialService,
+    service = await make_geospatial_service(
         fake_repository_cls,
         memory_data_source_factory,
         fallback_data_source_factory,
@@ -36,13 +51,15 @@ async def fake_service(mocker, fallback_data_source, fake_repository_cls):
         cb_failure_threshold=0,
         cb_recovery_timeout=10,
         cb_expected_exception=RedisError,
+        cb_expected_fallback_exception=PyMongoError,
         logger=mocker.MagicMock(),
+        has_add_circuit_breaker=has_add_cb,
+        has_delete_circuit_breaker=has_delete_cb,
     )
 
     yield service
 
-    service.repository.memory_data_source.close()
-    await service.repository.memory_data_source.wait_closed()
+    await service.shutdown()
 
 
 @pytest.fixture

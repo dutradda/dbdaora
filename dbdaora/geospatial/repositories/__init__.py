@@ -62,6 +62,9 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
         *,
         for_memory: bool = False,
     ) -> Optional[GeoSpatialData]:
+        if not for_memory:
+            return None
+
         key = self.fallback_key(query)
         data = tuple(await self.fallback_data_source.query(key))
 

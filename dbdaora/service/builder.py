@@ -31,6 +31,8 @@ async def build(
     logger: Logger = getLogger(__name__),
     cache_ttl_failure_threshold: int = 0,
     repository_timeout: Optional[int] = None,
+    has_add_circuit_breaker: bool = False,
+    has_delete_circuit_breaker: bool = False,
 ) -> Service[Entity, EntityData, FallbackKey]:
     repository = await build_repository(
         repository_cls,
@@ -62,19 +64,28 @@ async def build(
         cb_recovery_timeout,
         cb_expected_fallback_exception,
     )
+    cache_args = {}
     cache = build_cache(
         cache_type, cache_ttl, cache_max_size, cache_ttl_failure_threshold
     )
     exists_cache = build_cache(
         cache_type, cache_ttl, cache_max_size, cache_ttl_failure_threshold
     )
+
+    if cache is not None:
+        cache_args['cache'] = cache
+
+    if exists_cache is not None:
+        cache_args['exists_cache'] = exists_cache
+
     return service_cls(
         repository,
         circuit_breaker,
         fallback_circuit_breaker,
-        cache,
-        exists_cache,
-        logger,
+        logger=logger,
+        has_add_circuit_breaker=has_add_circuit_breaker,
+        has_delete_circuit_breaker=has_delete_circuit_breaker,
+        **cache_args,
     )
 
 

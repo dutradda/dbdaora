@@ -3,6 +3,11 @@ import pytest
 from aioredis import RedisError
 
 
+@pytest.fixture
+def has_add_cb():
+    return True
+
+
 @pytest.mark.asyncio
 async def test_should_add(fake_service, fake_entity):
     await fake_service.repository.add(fake_entity)

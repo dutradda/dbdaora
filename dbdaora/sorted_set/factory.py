@@ -24,6 +24,8 @@ async def make_service(
     cb_expected_exception: Optional[Type[Exception]] = None,
     cb_expected_fallback_exception: Optional[Type[Exception]] = None,
     logger: Logger = getLogger(__name__),
+    has_add_circuit_breaker: bool = False,
+    has_delete_circuit_breaker: bool = False,
 ) -> Service[Entity, EntityData, FallbackKey]:
     return await build_base_service(
         SortedSetService,  # type: ignore
@@ -39,4 +41,6 @@ async def make_service(
         cb_expected_exception=cb_expected_exception,
         cb_expected_fallback_exception=cb_expected_fallback_exception,
         logger=logger,
+        has_add_circuit_breaker=has_add_circuit_breaker,
+        has_delete_circuit_breaker=has_delete_circuit_breaker,
     )
