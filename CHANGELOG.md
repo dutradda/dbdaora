@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.24.0 - 2020-09-24
 
  - Improve Service circuit breaker
 
