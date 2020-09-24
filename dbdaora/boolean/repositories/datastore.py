@@ -9,7 +9,7 @@ from . import BooleanRepository
 OrjsonDefaultTypes.types_default_map[Entity] = lambda e: dict(**e)
 
 
-class DatastoreBooleanRepository(BooleanRepository[Key]):
+class DatastoreBooleanRepository(BooleanRepository[Entity, Key]):
     __skip_cls_validation__ = ('DatastoreBooleanRepository',)
     fallback_data_source_key_cls = Key
 

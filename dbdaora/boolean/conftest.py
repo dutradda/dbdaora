@@ -79,10 +79,9 @@ class FakeEntity:
     id: str
 
 
-class FakeBooleanRepository(BooleanRepository[str]):
+class FakeBooleanRepository(BooleanRepository[FakeEntity, str]):
     name = 'fake'
     id_name = 'id'
-    entity_cls = FakeEntity
 
 
 @pytest.fixture

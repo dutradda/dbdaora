@@ -1,24 +1,24 @@
 from typing import Any, AsyncGenerator, Optional, Union
 
-from dbdaora import EntityNotFoundError
-from dbdaora.keys import FallbackKey
+from dbdaora import EntityNotFoundError, FallbackKey
+from dbdaora.entity import Entity
 from dbdaora.query import BaseQuery, Query, QueryMany
 from dbdaora.query import make as query_factory
 from dbdaora.repository import MemoryRepository
 
 
-class BooleanRepository(MemoryRepository[Any, bool, FallbackKey]):
+class BooleanRepository(MemoryRepository[Entity, bool, FallbackKey]):
     __skip_cls_validation__ = ('BooleanRepository',)
 
     async def get_memory_data(
-        self, key: str, query: BaseQuery[Any, bool, FallbackKey],
+        self, key: str, query: BaseQuery[Entity, bool, FallbackKey],
     ) -> Optional[bool]:
         value = await self.memory_data_source.get(key)
         return None if value is None else bool(int(value))
 
-    async def get_fallback_data(
+    async def get_fallback_data(  # type: ignore
         self,
-        query: BaseQuery[Any, bool, FallbackKey],
+        query: Union[Query[Entity, bool, FallbackKey], Entity],
         *,
         for_memory: bool = False,
     ) -> Optional[bool]:
@@ -30,12 +30,12 @@ class BooleanRepository(MemoryRepository[Any, bool, FallbackKey]):
         return None
 
     def make_entity(  # type: ignore
-        self, data: bool, query: Query[Any, bool, FallbackKey],
+        self, data: bool, query: Query[Entity, bool, FallbackKey],
     ) -> Any:
         return query.key_parts[-1]
 
     def make_entity_from_fallback(  # type: ignore
-        self, data: bool, query: Query[Any, bool, FallbackKey],
+        self, data: bool, query: Query[Entity, bool, FallbackKey],
     ) -> Any:
         return self.make_entity(data, query)
 
@@ -47,7 +47,7 @@ class BooleanRepository(MemoryRepository[Any, bool, FallbackKey]):
     async def add_memory_data_from_fallback(
         self,
         key: str,
-        query: Union[BaseQuery[Any, bool, FallbackKey], Any],
+        query: Union[BaseQuery[Entity, bool, FallbackKey], Any],
         data: bool,
     ) -> bool:
         await self.add_memory_data(key, data)
@@ -79,14 +79,14 @@ class BooleanRepository(MemoryRepository[Any, bool, FallbackKey]):
         await self.add_fallback(entity, fallback_ttl=fallback_ttl)
 
     async def set_fallback_not_found(
-        self, query: Union[BaseQuery[Any, bool, FallbackKey], Any],
+        self, query: Union[Query[Entity, bool, FallbackKey], Entity],
     ) -> None:
         memory_key = self.memory_key(query)
         await self.memory_data_source.set(memory_key, '0')
         await self.set_expire_time(memory_key)
 
     async def get_memory_many(
-        self, query: QueryMany[Any, bool, FallbackKey],
+        self, query: QueryMany[Entity, bool, FallbackKey],
     ) -> AsyncGenerator[Any, None]:
         for query_i in query.queries:
             memory_key = self.memory_key(query_i)
@@ -109,7 +109,7 @@ class BooleanRepository(MemoryRepository[Any, bool, FallbackKey]):
                     await self.set_expire_time(memory_key)
                     yield self.make_entity(memory_data, query_i)
 
-    async def get_memory(self, query: Query[Any, bool, FallbackKey]) -> Any:
+    async def get_memory(self, query: Query[Entity, bool, FallbackKey]) -> Any:
         memory_key = self.memory_key(query)
         memory_data = await self.get_memory_data(memory_key, query)
 
@@ -131,18 +131,18 @@ class BooleanRepository(MemoryRepository[Any, bool, FallbackKey]):
 
         return self.make_entity(memory_data, query)
 
-    async def delete(self, query: Query[Any, bool, FallbackKey],) -> None:
+    async def delete(self, query: Query[Entity, bool, FallbackKey],) -> None:
         if query.memory:
             await self.set_fallback_not_found(query)
 
         await self.fallback_data_source.delete(self.fallback_key(query))
 
     def fallback_not_found_key(
-        self, query: Union[BaseQuery[Any, bool, FallbackKey], Any],
+        self, query: Union[Query[Entity, bool, FallbackKey], Entity],
     ) -> str:
         return self.memory_key(query)
 
     async def delete_fallback_not_found(
-        self, query: Union[BaseQuery[Any, bool, FallbackKey], Any],
+        self, query: Union[BaseQuery[Entity, bool, FallbackKey], Entity],
     ) -> None:
         ...
