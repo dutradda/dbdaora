@@ -11,6 +11,7 @@ OrjsonDefaultTypes.types_default_map[Entity] = lambda e: dict(**e)
 
 class DatastoreBooleanRepository(BooleanRepository[Key]):
     __skip_cls_validation__ = ('DatastoreBooleanRepository',)
+    fallback_data_source_key_cls = Key
 
     async def add_fallback(
         self, entity: Any, *entities: Any, **kwargs: Any

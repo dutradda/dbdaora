@@ -13,6 +13,7 @@ class DatastoreHashRepository(HashRepository[HashEntity, Key]):
     __skip_cls_validation__ = ('DatastoreHashRepository',)
     exclude_from_indexes: ClassVar[Sequence[str]] = ()
     exclude_all_from_indexes: ClassVar[bool] = False
+    fallback_data_source_key_cls = Key
 
     def __init_subclass__(
         cls,

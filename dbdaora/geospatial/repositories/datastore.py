@@ -16,6 +16,7 @@ class DatastoreGeoSpatialRepository(GeoSpatialRepository[Key]):
         'longitude',
         'member',
     )
+    fallback_data_source_key_cls = Key
 
     async def add_fallback(
         self, entity: Any, *entities: Any, **kwargs: Any

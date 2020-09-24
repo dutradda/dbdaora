@@ -33,6 +33,7 @@ from .entity import Entity
 class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     memory_data_source: MemoryDataSource
     fallback_data_source: FallbackDataSource[FallbackKey]
+    fallback_data_source_key_cls: ClassVar[Type[FallbackKey]]
     expire_time: int
     entity_cls: ClassVar[Optional[Type[Entity]]]
     name: ClassVar[str]
@@ -54,18 +55,33 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         super().__init_subclass__()
 
         if cls.__name__ not in cls.__skip_cls_validation__:
-            if not entity_cls:
-                for base_orig in getattr(cls, '__orig_bases__', tuple()):
-                    base_orig_args = get_args(base_orig)
+            has_entity_type = any(
+                [
+                    cls.get_entity_type != base.get_entity_type  # type: ignore
+                    for base in cls.__bases__
+                ]
+            )
 
-                    if len(base_orig_args) == 2 and isinstance(
-                        base_orig_args[0], type
-                    ):
-                        entity_cls = base_orig_args[0]
-                        break
+            if not has_entity_type:
+                entity_cls = entity_cls or getattr(cls, 'entity_cls', None)
 
                 if not entity_cls:
-                    entity_cls = getattr(cls, 'entity_cls', None)
+                    for base_orig in getattr(cls, '__orig_bases__', tuple()):
+                        base_orig_args = get_args(base_orig)
+
+                        if len(base_orig_args) > 0 and isinstance(
+                            base_orig_args[0], type
+                        ):
+                            has_fallback_data_source_key_cls = hasattr(
+                                cls, 'fallback_data_source_key_cls'
+                            )
+                            if (
+                                has_fallback_data_source_key_cls
+                                and not base_orig_args[0]
+                                is cls.fallback_data_source_key_cls
+                            ) or not has_fallback_data_source_key_cls:
+                                entity_cls = base_orig_args[0]
+                                break
 
             name = name or getattr(cls, 'name', None)
             id_name = id_name or getattr(cls, 'id_name', 'id')
@@ -80,13 +96,6 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
 
             if key_attrs is None:
                 key_attrs = (id_name,)
-
-            has_entity_type = any(
-                [
-                    cls.get_entity_type != base.get_entity_type  # type: ignore
-                    for base in cls.__bases__
-                ]
-            )
 
             if not has_entity_type and not entity_cls:
                 raise RequiredClassAttributeError(
