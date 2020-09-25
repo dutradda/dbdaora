@@ -26,7 +26,7 @@ from dbdaora.exceptions import (
 )
 from dbdaora.keys import FallbackKey
 
-from .entity import Entity
+from ..entity import Entity
 
 
 @dataclasses.dataclass
@@ -40,7 +40,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
     id_name: ClassVar[str]
     key_attrs: ClassVar[Sequence[str]]
     many_key_attrs: ClassVar[Sequence[str]]
-    __skip_cls_validation__: Sequence[str] = ()
+    __skip_cls_validation__: ClassVar[Sequence[str]] = ()
     timeout: int = 1
     logger: Logger = getLogger(__name__)
 
@@ -55,17 +55,16 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         super().__init_subclass__()
 
         if cls.__name__ not in cls.__skip_cls_validation__:
+            entity_cls = entity_cls or getattr(cls, 'entity_cls', None)
             has_entity_type = any(
                 [
-                    cls.get_entity_type != base.get_entity_type  # type: ignore
+                    cls.get_entity_type != MemoryRepository.get_entity_type
                     for base in cls.__bases__
                 ]
             )
 
-            if not has_entity_type:
-                entity_cls = entity_cls or getattr(cls, 'entity_cls', None)
-
-                if not entity_cls:
+            if entity_cls is None:
+                if not has_entity_type:
                     for base_orig in getattr(cls, '__orig_bases__', tuple()):
                         base_orig_args = get_args(base_orig)
 
@@ -187,6 +186,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         entity: Entity,
         *entities: Entity,
         fallback_ttl: Optional[int] = None,
+        **kwargs: Any,
     ) -> None:
         raise NotImplementedError()  # pragma: no cover
 
@@ -481,7 +481,7 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
 
     def get_entity_type(
         self,
-        query: 'Union[BaseQuery[Entity, EntityData, FallbackKey], Entity]',
+        query: 'Union[BaseQuery[Entity, EntityData, FallbackKey], Entity, EntityData]',
     ) -> Type[Entity]:
         return self.entity_cls  # type: ignore
 
@@ -493,5 +493,5 @@ def task_done_callback(f: Any) -> None:
         ...
 
 
-from .query import BaseQuery, Query, QueryMany  # noqa isort:skip
-from .query import make as query_factory  # noqa isort:skip
+from ..query import BaseQuery, Query, QueryMany  # noqa isort:skip
+from ..query import make as query_factory  # noqa isort:skip

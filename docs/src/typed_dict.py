@@ -7,7 +7,7 @@ from dbdaora import (
     DictFallbackDataSource,
     DictMemoryDataSource,
     HashRepository,
-    SortedSetData,
+    SortedSetDictEntity,
     SortedSetRepository,
     make_hash_service,
 )
@@ -53,13 +53,11 @@ person_service = asyncio.run(
 
 
 @jsondaora
-class Playlist(TypedDict):
+class Playlist(SortedSetDictEntity):
     person_id: str
-    values: SortedSetData
 
 
-class PlaylistRepository(SortedSetRepository[str]):
-    entity_cls = Playlist
+class PlaylistRepository(SortedSetRepository[Playlist, str]):
     id_name = 'person_id'
 
 
@@ -73,7 +71,8 @@ playlist_repository = PlaylistRepository(
 def make_playlist(person_id: str, *musics_ids: str) -> Playlist:
     return Playlist(
         person_id=person_id,
-        values=[(id_, i) for i, id_ in enumerate(musics_ids)],
+        data=[(id_, i) for i, id_ in enumerate(musics_ids)],
+        max_size=None,
     )
 
 

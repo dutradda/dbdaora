@@ -4,10 +4,10 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-async def set_values(fake_service, fake_entity_withscores):
-    values = list(itertools.chain(*fake_entity_withscores.values))
-    values.reverse()
-    await fake_service.repository.memory_data_source.zadd('fake:fake', *values)
+async def set_data(fake_service, fake_entity_withscores):
+    data = list(itertools.chain(*fake_entity_withscores.data))
+    data.reverse()
+    await fake_service.repository.memory_data_source.zadd('fake:fake', *data)
 
 
 @pytest.mark.asyncio
@@ -27,7 +27,7 @@ async def test_should_get_one_reverse(
         fake_id=fake_entity_withscores.fake_id, reverse=True,
     )
 
-    fake_entity.values.reverse()
+    fake_entity.data.reverse()
     assert entity == fake_entity
 
 

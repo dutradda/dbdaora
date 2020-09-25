@@ -1,2 +1,2 @@
 Person(id='john_doe', name='John Doe', age=33)
-Playlist(person_id='john_doe', values=[b'm1', b'm2', b'm3'], max_size=None)
+Playlist(person_id='john_doe', data=[b'm1', b'm2', b'm3'], max_size=None)

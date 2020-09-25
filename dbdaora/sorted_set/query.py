@@ -4,12 +4,12 @@ from typing import Any, List, Optional
 from dbdaora.keys import FallbackKey
 from dbdaora.query import Query
 
-from .entity import Entity, SortedSetData
+from .entity import SortedSetData, SortedSetEntityHint
 
 
 @dataclasses.dataclass
-class SortedSetQuery(Query[Entity, SortedSetData, FallbackKey]):
-    repository: 'SortedSetRepository[FallbackKey]'
+class SortedSetQuery(Query[SortedSetEntityHint, SortedSetData, FallbackKey]):
+    repository: 'SortedSetRepository[SortedSetEntityHint, FallbackKey]'
     reverse: bool = False
     withscores: bool = False
     page: Optional[int] = None
@@ -20,7 +20,7 @@ class SortedSetQuery(Query[Entity, SortedSetData, FallbackKey]):
 
     def __init__(
         self,
-        repository: 'SortedSetRepository[FallbackKey]',
+        repository: 'SortedSetRepository[SortedSetEntityHint, FallbackKey]',
         *args: Any,
         memory: bool = True,
         key_parts: Optional[List[Any]] = None,

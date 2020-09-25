@@ -54,12 +54,12 @@ person_service = asyncio.run(
 @dataclass
 class Playlist:
     person_id: str
-    values: SortedSetData
+    data: SortedSetData
     max_size: Optional[int] = None
 
 
 class PlaylistRepository(
-    SortedSetRepository[str], entity_cls=Playlist, id_name='person_id'
+    SortedSetRepository[Playlist, str], id_name='person_id'
 ):
     ...
 
@@ -74,7 +74,7 @@ playlist_repository = PlaylistRepository(
 def make_playlist(person_id: str, *musics_ids: str) -> Playlist:
     return Playlist(
         person_id=person_id,
-        values=[(id_, i) for i, id_ in enumerate(musics_ids)],
+        data=[(id_, i) for i, id_ in enumerate(musics_ids)],
     )
 
 

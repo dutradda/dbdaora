@@ -65,7 +65,7 @@ async def test_should_create_collection_ttl_index(repository, fake_entity_cls):
     ]
 
     await repository.add(
-        fake_entity_cls(id='fake', values=[('v1', 1), ('v2', 2)]),
+        fake_entity_cls(id='fake', data=[('v1', 1), ('v2', 2)]),
         fallback_ttl=60,
     )
 
@@ -89,7 +89,7 @@ async def test_should_drop_and_create_collection_ttl_index(
     ]
 
     await repository.add(
-        fake_entity_cls(id='fake', values=[('v1', 1), ('v2', 2)]),
+        fake_entity_cls(id='fake', data=[('v1', 1), ('v2', 2)]),
         fallback_ttl=61,
     )
 
@@ -113,7 +113,7 @@ async def test_should_not_drop_collection_ttl_index(
     ]
 
     await repository.add(
-        fake_entity_cls(id='fake', values=[('v1', 1), ('v2', 2)]),
+        fake_entity_cls(id='fake', data=[('v1', 1), ('v2', 2)]),
         fallback_ttl=60,
     )
 
@@ -129,11 +129,11 @@ async def test_should_get_entity_with_ttl_index(
     create_ttl_index, repository, fake_entity_cls
 ):
     await repository.add(
-        fake_entity_cls(id='fake', values=[('v1', 1), ('v2', 2)]),
+        fake_entity_cls(id='fake', data=[('v1', 1), ('v2', 2)]),
         fallback_ttl=60,
     )
 
     fake_entity = await repository.query(id='fake').entity
 
     assert fake_entity.id == 'fake'
-    assert fake_entity.values == [b'v1', b'v2']
+    assert fake_entity.data == [b'v1', b'v2']

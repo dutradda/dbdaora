@@ -74,7 +74,7 @@ class FakeEntity:
     data: List[GeoMember]
 
 
-class FakeGeoSpatialRepository(GeoSpatialRepository[str]):
+class FakeGeoSpatialRepository(GeoSpatialRepository[FakeEntity, str]):
     name = 'fake'
     key_attrs = ('fake2_id', 'fake_id')
     entity_cls = FakeEntity

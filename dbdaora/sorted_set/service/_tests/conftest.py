@@ -16,7 +16,7 @@ from dbdaora import (
 @dataclass
 class FakeEntity:
     fake_id: str
-    values: SortedSetData
+    data: SortedSetData
     max_size: Optional[int] = None
 
 
@@ -32,7 +32,7 @@ def fake_entity_cls():
 
 @pytest.fixture
 def fake_repository_cls(fake_entity_cls):
-    class FakeRepository(SortedSetRepository[str]):
+    class FakeRepository(SortedSetRepository):
         id_name = 'fake_id'
         entity_cls = fake_entity_cls
 
@@ -41,12 +41,12 @@ def fake_repository_cls(fake_entity_cls):
 
 @pytest.fixture
 def fake_entity(fake_entity_cls):
-    return fake_entity_cls(fake_id='fake', values=[b'1', b'2'])
+    return fake_entity_cls(fake_id='fake', data=[b'1', b'2'])
 
 
 @pytest.fixture
 def fake_entity_withscores(fake_entity_cls):
-    return fake_entity_cls(fake_id='fake', values=[(b'1', 0), (b'2', 1)])
+    return fake_entity_cls(fake_id='fake', data=[(b'1', 0), (b'2', 1)])
 
 
 @pytest.fixture

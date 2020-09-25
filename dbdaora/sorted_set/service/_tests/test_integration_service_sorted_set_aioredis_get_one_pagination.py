@@ -6,10 +6,10 @@ from dbdaora import EntityNotFoundError
 
 
 @pytest.fixture(autouse=True)
-async def set_values(fake_service, fake_entity_withscores):
-    values = list(itertools.chain(*fake_entity_withscores.values))
-    values.reverse()
-    await fake_service.repository.memory_data_source.zadd('fake:fake', *values)
+async def set_data(fake_service, fake_entity_withscores):
+    data = list(itertools.chain(*fake_entity_withscores.data))
+    data.reverse()
+    await fake_service.repository.memory_data_source.zadd('fake:fake', *data)
 
 
 @pytest.mark.asyncio
@@ -20,7 +20,7 @@ async def test_should_get_one_page_size(
         fake_id=fake_entity_withscores.fake_id, page_size=1,
     )
 
-    fake_entity.values = [b'1']
+    fake_entity.data = [b'1']
     assert entity == fake_entity
 
 
@@ -32,7 +32,7 @@ async def test_should_get_one_page_size_and_page(
         fake_id=fake_entity_withscores.fake_id, page_size=1, page=2,
     )
 
-    fake_entity.values = [b'2']
+    fake_entity.data = [b'2']
     assert entity == fake_entity
 
 
@@ -94,7 +94,7 @@ async def test_should_get_one_reverse_and_page_size(
         fake_id=fake_entity_withscores.fake_id, reverse=True, page_size=1,
     )
 
-    fake_entity.values = [b'2']
+    fake_entity.data = [b'2']
     assert entity == fake_entity
 
 
@@ -109,7 +109,7 @@ async def test_should_get_one_reverse_page_size_and_page(
         page=2,
     )
 
-    fake_entity.values = [b'1']
+    fake_entity.data = [b'1']
     assert entity == fake_entity
 
 
@@ -125,7 +125,7 @@ async def test_should_get_one_reverse_page_size_page_and_withscores(
         withscores=True,
     )
 
-    fake_entity_withscores.values = [(b'1', 0)]
+    fake_entity_withscores.data = [(b'1', 0)]
     assert entity == fake_entity_withscores
 
 
@@ -140,7 +140,7 @@ async def test_should_get_one_reverse_page_size_and_withmaxsize(
         withmaxsize=True,
     )
 
-    fake_entity.values = [b'2']
+    fake_entity.data = [b'2']
     fake_entity.max_size = 2
     assert entity == fake_entity
 
@@ -157,7 +157,7 @@ async def test_should_get_one_reverse_page_size_withmaxsize_and_withscores(
         withmaxsize=True,
     )
 
-    fake_entity_withscores.values = [(b'2', 1)]
+    fake_entity_withscores.data = [(b'2', 1)]
     fake_entity_withscores.max_size = 2
     assert entity == fake_entity_withscores
 

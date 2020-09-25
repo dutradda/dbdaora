@@ -9,7 +9,13 @@ from dbdaora import (
 )
 
 
-class FakeGeoSpatialRepository(DatastoreGeoSpatialRepository):
+class FakeGeoSpatialEntity(GeoSpatialEntity):
+    id: str
+
+
+class FakeGeoSpatialRepository(
+    DatastoreGeoSpatialRepository, entity_cls=FakeGeoSpatialEntity
+):
     name = 'fakegeo'
 
 
@@ -33,16 +39,15 @@ async def test_should_exclude_all_attributes_from_indexes(repository):
     client.put(entity)
 
     assert not client.get(key).exclude_from_indexes
-
-    await repository.add(
-        GeoSpatialEntity(
-            id='fake',
-            data=GeoMember(
-                member='fake', dist=None, hash=None, coord=GeoPoint(1, 1)
-            ),
-        )
+    entity = FakeGeoSpatialEntity(
+        id='fake',
+        data=GeoMember(
+            member='fake', dist=None, hash=None, coord=GeoPoint(1, 1)
+        ),
     )
 
+    await repository.add(entity)
+
     assert client.get(key).exclude_from_indexes == set(
-        ['latitude', 'longitude', 'member']
+        FakeGeoSpatialRepository.exclude_from_indexes
     )

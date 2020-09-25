@@ -11,8 +11,10 @@ class GeoSpatialQueryType(Enum):
 
 
 @dataclasses.dataclass(init=False)
-class GeoSpatialQuery(Query[Any, 'GeoSpatialData', FallbackKey]):
-    repository: 'GeoSpatialRepository[FallbackKey]'
+class GeoSpatialQuery(
+    Query['GeoSpatialEntityHint', 'GeoSpatialData', FallbackKey]
+):
+    repository: 'GeoSpatialRepository[GeoSpatialEntityHint, FallbackKey]'
     type: GeoSpatialQueryType = GeoSpatialQueryType.RADIUS
     latitude: Optional[float] = None
     longitude: Optional[float] = None
@@ -24,7 +26,7 @@ class GeoSpatialQuery(Query[Any, 'GeoSpatialData', FallbackKey]):
 
     def __init__(
         self,
-        repository: 'GeoSpatialRepository[FallbackKey]',
+        repository: 'GeoSpatialRepository[GeoSpatialEntityHint, FallbackKey]',
         *args: Any,
         memory: bool = True,
         key_parts: Optional[List[Any]] = None,
@@ -53,9 +55,9 @@ class GeoSpatialQuery(Query[Any, 'GeoSpatialData', FallbackKey]):
 
 def make(
     *args: Any, **kwargs: Any
-) -> BaseQuery[Any, 'GeoSpatialData', FallbackKey]:
+) -> BaseQuery['GeoSpatialEntityHint', 'GeoSpatialData', FallbackKey]:
     return GeoSpatialQuery(*args, **kwargs)
 
 
 from .repositories import GeoSpatialRepository  # noqa isort:skip
-from .entity import GeoSpatialData  # noqa isort:skip
+from .entity import GeoSpatialData, GeoSpatialEntityHint  # noqa isort:skip

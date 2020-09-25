@@ -1,10 +1,8 @@
 from typing import (  # type: ignore
     Any,
-    ClassVar,
     Dict,
     Optional,
     Sequence,
-    Type,
     Union,
     _TypedDictMeta,
 )
@@ -19,15 +17,18 @@ from dbdaora.keys import FallbackKey
 from dbdaora.query import BaseQuery, Query
 from dbdaora.repository import MemoryRepository
 
-from ..entity import GeoSpatialData, GeoSpatialEntity
+from ..entity import GeoSpatialData, GeoSpatialEntityHint
 
 
-class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
+class GeoSpatialRepository(
+    MemoryRepository[GeoSpatialEntityHint, GeoSpatialData, FallbackKey]
+):
     __skip_cls_validation__ = ('GeoSpatialRepository',)
-    entity_cls: ClassVar[Type[Any]] = GeoSpatialEntity
 
     async def get_memory_data(  # type: ignore
-        self, key: str, query: 'GeoSpatialQuery[FallbackKey]',
+        self,
+        key: str,
+        query: 'GeoSpatialQuery[GeoSpatialEntityHint, FallbackKey]',
     ) -> Optional[GeoSpatialData]:
         if query.type == GeoSpatialQueryType.RADIUS:
             if (
@@ -58,7 +59,7 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
 
     async def get_fallback_data(  # type: ignore
         self,
-        query: 'GeoSpatialQuery[FallbackKey]',
+        query: 'GeoSpatialQuery[GeoSpatialEntityHint, FallbackKey]',
         *,
         for_memory: bool = False,
     ) -> Optional[GeoSpatialData]:
@@ -76,7 +77,7 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
     def make_fallback_data_for_memory(
         self,
         key: FallbackKey,
-        query: 'GeoSpatialQuery[FallbackKey]',
+        query: 'GeoSpatialQuery[GeoSpatialEntityHint, FallbackKey]',
         data: Sequence[Dict[str, Any]],
     ) -> GeoSpatialData:
         return [
@@ -94,9 +95,9 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
     def make_entity(  # type: ignore
         self,
         data: GeoSpatialData,
-        query: 'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
+        query: 'Query[GeoSpatialEntityHint, GeoSpatialData, FallbackKey]',
     ) -> Any:
-        return self.entity_cls(
+        return self.get_entity_type(query)(
             data=data,
             **{
                 id_name: id_value
@@ -107,7 +108,7 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
     def make_entity_from_fallback(  # type: ignore
         self,
         data: GeoSpatialData,
-        query: 'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
+        query: 'Query[GeoSpatialEntityHint, GeoSpatialData, FallbackKey]',
     ) -> Any:
         return self.make_entity(data, query)
 
@@ -131,8 +132,8 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
         self,
         key: str,
         query: Union[
-            BaseQuery[GeoSpatialEntity, GeoSpatialData, FallbackKey],
-            GeoSpatialEntity,
+            BaseQuery[GeoSpatialEntityHint, GeoSpatialData, FallbackKey],
+            GeoSpatialEntityHint,
         ],
         data: GeoSpatialData,
     ) -> GeoSpatialData:
@@ -165,22 +166,22 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
     def make_memory_data_from_fallback(
         self,
         query: Union[
-            BaseQuery[GeoSpatialEntity, GeoSpatialData, FallbackKey],
-            GeoSpatialEntity,
+            BaseQuery[GeoSpatialEntityHint, GeoSpatialData, FallbackKey],
+            GeoSpatialEntityHint,
         ],
         data: GeoSpatialData,
     ) -> Sequence[GeoMember]:
         return data  # type: ignore
 
     def make_memory_data_from_entity(
-        self, entity: GeoSpatialEntity
+        self, entity: GeoSpatialEntityHint
     ) -> GeoSpatialData:
         return entity.data
 
     async def add_fallback(
         self,
-        entity: GeoSpatialEntity,
-        *entities: GeoSpatialEntity,
+        entity: GeoSpatialEntityHint,
+        *entities: GeoSpatialEntityHint,
         **kwargs: Any,
     ) -> None:
         if (
@@ -202,9 +203,9 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
     def fallback_key(
         self,
         query: Union[
-            'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
-            GeoSpatialEntity,
-            Dict[str, Any],
+            'Query[GeoSpatialEntityHint, GeoSpatialData, FallbackKey]',
+            GeoSpatialEntityHint,
+            GeoSpatialData,
         ],
     ) -> FallbackKey:
         if isinstance(query, Query):
@@ -215,7 +216,7 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
         elif isinstance(self.get_entity_type(query), _TypedDictMeta):
             return self.fallback_data_source.make_key(
                 self.name,
-                *self.key_parts(query),
+                *self.key_parts(query),  # type: ignore
                 *(
                     query['data'].member.decode()  # type: ignore
                     if isinstance(query['data'].member, bytes)  # type: ignore
@@ -228,9 +229,9 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
                 self.name,
                 *self.key_parts(query),
                 *(
-                    query.data.member.decode()
-                    if isinstance(query.data.member, bytes)
-                    else query.data.member,
+                    query.data.member.decode()  # type: ignore
+                    if isinstance(query.data.member, bytes)  # type: ignore
+                    else query.data.member,  # type: ignore
                 ),
             )
 
@@ -238,14 +239,14 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
 
     def make_query(
         self, *args: Any, **kwargs: Any
-    ) -> 'BaseQuery[GeoSpatialEntity, GeoSpatialData, FallbackKey]':
+    ) -> 'BaseQuery[GeoSpatialEntityHint, GeoSpatialData, FallbackKey]':
         return query_factory(self, *args, **kwargs)
 
     async def already_got_not_found(
         self,
         query: Union[
-            'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
-            GeoSpatialEntity,
+            'Query[GeoSpatialEntityHint, GeoSpatialData, FallbackKey]',
+            GeoSpatialEntityHint,
         ],
     ) -> bool:
         return bool(
@@ -255,8 +256,8 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
     async def delete_fallback_not_found(
         self,
         query: Union[
-            'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
-            GeoSpatialEntity,
+            'Query[GeoSpatialEntityHint, GeoSpatialData, FallbackKey]',
+            GeoSpatialEntityHint,
         ],
     ) -> None:
         ...
@@ -264,19 +265,21 @@ class GeoSpatialRepository(MemoryRepository[Any, GeoSpatialData, FallbackKey]):
     async def set_fallback_not_found(
         self,
         query: Union[
-            'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
-            GeoSpatialEntity,
+            'Query[GeoSpatialEntityHint, GeoSpatialData, FallbackKey]',
+            GeoSpatialEntityHint,
         ],
     ) -> None:
         ...
 
     async def delete(
-        self, query: 'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
+        self,
+        query: 'Query[GeoSpatialEntityHint, GeoSpatialData, FallbackKey]',
     ) -> None:
         raise NotImplementedError()  # pragma: no cover
 
     async def exists(
-        self, query: 'Query[GeoSpatialEntity, GeoSpatialData, FallbackKey]',
+        self,
+        query: 'Query[GeoSpatialEntityHint, GeoSpatialData, FallbackKey]',
     ) -> bool:
         raise NotImplementedError()  # pragma: no cover
 
