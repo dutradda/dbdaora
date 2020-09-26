@@ -1,1 +1,1 @@
-SortedSetEntity(id='my_plalist', values=[b'm1', b'm2', b'm3'], max_size=None)
+Playlist(id='my_plalist', data=[b'm1', b'm2', b'm3'], max_size=None)
