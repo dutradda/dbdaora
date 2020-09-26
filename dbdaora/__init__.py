@@ -1,7 +1,7 @@
 """Communicates with databases using repository pattern and service patterns"""
 
 
-__version__ = '0.25.0'
+__version__ = '0.26.0'
 
 from dbdaora.cache import CacheType, TTLDaoraCache
 from dbdaora.circuitbreaker import AsyncCircuitBreaker
