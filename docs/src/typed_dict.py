@@ -52,7 +52,6 @@ person_service = asyncio.run(
 )
 
 
-@jsondaora
 class Playlist(SortedSetDictEntity):
     person_id: str
 

@@ -1,4 +1,3 @@
-import dataclasses
 from typing import (  # type: ignore
     Any,
     Dict,
@@ -14,6 +13,7 @@ from typing import (  # type: ignore
 )
 
 from dbdaora.data_sources.memory import RangeOutput
+from dbdaora.entity import init_subclass
 
 
 SortedSetInput = Sequence[Union[str, float]]
@@ -21,29 +21,9 @@ SortedSetInput = Sequence[Union[str, float]]
 SortedSetData = Union[RangeOutput, SortedSetInput]
 
 
-def init_subclass(cls: Type[Any], bases: Tuple[Type[Any], ...]) -> None:
-    if cls not in getattr(cls, '__skip_dataclass__', ()):
-        if not hasattr(cls, '__annotations__'):
-            cls.__annotations__ = {'id': str}
-
-        for base_cls in bases:
-            cls.__annotations__.update(
-                {
-                    k: v
-                    for k, v in base_cls.__annotations__.items()
-                    if k not in cls.__annotations__
-                }
-            )
-
-        dataclasses.dataclass(cls)
-
-
-class SortedSetEntity(Protocol):
+class SortedSetEntityProtocol(Protocol):
     data: SortedSetData
     max_size: Optional[int] = None
-
-    def __init_subclass__(cls) -> None:
-        init_subclass(cls, (SortedSetEntity,))
 
     def __init__(
         self,
@@ -53,6 +33,14 @@ class SortedSetEntity(Protocol):
         **kwargs: Any,
     ):
         ...
+
+
+class SortedSetEntity(SortedSetEntityProtocol):
+    data: SortedSetData
+    max_size: Optional[int] = None
+
+    def __init_subclass__(cls) -> None:
+        init_subclass(cls, (SortedSetEntity,))
 
 
 class SortedSetDictEntityMeta(_TypedDictMeta):  # type: ignore
@@ -69,5 +57,6 @@ class SortedSetDictEntity(TypedDict, metaclass=SortedSetDictEntityMeta):
 
 
 SortedSetEntityHint = TypeVar(
-    'SortedSetEntityHint', bound=Union[SortedSetEntity, SortedSetDictEntity],
+    'SortedSetEntityHint',
+    bound=Union[SortedSetEntityProtocol, SortedSetDictEntity],
 )

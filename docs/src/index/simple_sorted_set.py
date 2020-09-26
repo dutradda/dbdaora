@@ -1,20 +1,15 @@
 import asyncio
-import dataclasses
-import typing
 
 from dbdaora import (
     DictFallbackDataSource,
     DictMemoryDataSource,
-    SortedSetData,
+    SortedSetEntity,
     SortedSetRepository,
 )
 
 
-@dataclasses.dataclass
-class Playlist:
+class Playlist(SortedSetEntity):
     id: str
-    data: SortedSetData
-    max_size: typing.Optional[int] = None
 
 
 class PlaylistRepository(SortedSetRepository[Playlist, str]):

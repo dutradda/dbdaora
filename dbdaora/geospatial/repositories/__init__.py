@@ -97,7 +97,7 @@ class GeoSpatialRepository(
         data: GeoSpatialData,
         query: 'Query[GeoSpatialEntityHint, GeoSpatialData, FallbackKey]',
     ) -> Any:
-        return self.get_entity_type(query)(
+        return self.get_entity_type(query)(  # type: ignore
             data=data,
             **{
                 id_name: id_value
