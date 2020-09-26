@@ -5,8 +5,6 @@ import pytest
 from aioredis import RedisError
 from jsondaora import dataclasses
 
-from dbdaora.data_sources.fallback.mongodb import Key
-
 
 @pytest.mark.asyncio
 async def test_should_get_one(
@@ -68,7 +66,10 @@ async def test_should_get_one_from_fallback_when_not_found_on_memory(
         'fake:not-found:other_fake:fake'
     )
     await fake_service.repository.fallback_data_source.put(
-        Key('fake', 'other_fake:fake'), dataclasses.asdict(fake_entity)
+        fake_service.repository.fallback_data_source.make_key(
+            'fake', 'other_fake:fake'
+        ),
+        dataclasses.asdict(fake_entity),
     )
 
     entity = await fake_service.get_one('fake', other_id='other_fake')
@@ -87,7 +88,10 @@ async def test_should_get_one_from_fallback_when_not_found_on_memory_with_fields
         'fake:other_fake:fake'
     )
     await fake_service.repository.fallback_data_source.put(
-        Key('fake', 'other_fake:fake'), dataclasses.asdict(fake_entity)
+        fake_service.repository.fallback_data_source.make_key(
+            'fake', 'other_fake:fake'
+        ),
+        dataclasses.asdict(fake_entity),
     )
     fake_entity.number = None
     fake_entity.boolean = None

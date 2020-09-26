@@ -23,7 +23,7 @@ class MongoDataSource(FallbackDataSource[Key]):
         default_factory=motor.AsyncIOMotorClient
     )
     collections_has_ttl_index: ClassVar[Set[str]] = set()
-    key_is_object_id: bool = False
+    key_is_object_id: bool = True
 
     def make_key(self, *key_parts: Any) -> Key:
         str_key = self.key_separator.join([str(k) for k in key_parts[1:]])
@@ -37,7 +37,12 @@ class MongoDataSource(FallbackDataSource[Key]):
 
     async def get(self, key: Key) -> Optional[Dict[str, Any]]:
         collection = self.collection(key)
-        return await collection.find_one({'_id': key.document_id})
+        document = await collection.find_one({'_id': key.document_id})
+
+        if document:
+            document.pop('_id')
+
+        return document
 
     async def put(
         self,

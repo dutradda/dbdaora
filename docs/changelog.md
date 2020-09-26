@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Change mongodb data source to use object id as default
+
 ### 0.25.0 - 2020-09-25
 
  - Refactor for better typing annotations support

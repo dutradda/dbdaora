@@ -52,7 +52,6 @@ async def test_should_get_one_from_cache(
 async def test_should_get_one_from_fallback_when_not_found_on_memory(
     fake_service, serialized_fake_entity, fake_entity
 ):
-    client = fake_service.repository.fallback_data_source.client
     await fake_service.repository.memory_data_source.delete(
         'fake:other_fake:fake'
     )
@@ -60,7 +59,10 @@ async def test_should_get_one_from_fallback_when_not_found_on_memory(
         'fake:not-found:other_fake:fake'
     )
     await fake_service.repository.fallback_data_source.put(
-        client.key('fake', 'other_fake:fake'), {'value': True}
+        fake_service.repository.fallback_data_source.make_key(
+            'fake', 'other_fake:fake'
+        ),
+        {'value': True},
     )
 
     entity = await fake_service.get_one('fake', other_id='other_fake')
@@ -78,12 +80,14 @@ async def test_should_get_one_from_fallback_when_not_found_on_memory(
 async def test_should_get_one_from_fallback_when_not_found_on_memory_with_fields(
     fake_service, serialized_fake_entity, fake_entity
 ):
-    client = fake_service.repository.fallback_data_source.client
     await fake_service.repository.memory_data_source.delete(
         'fake:other_fake:fake'
     )
     await fake_service.repository.fallback_data_source.put(
-        client.key('fake', 'other_fake:fake'), {'value': True}
+        fake_service.repository.fallback_data_source.make_key(
+            'fake', 'other_fake:fake'
+        ),
+        {'value': True},
     )
     fake_entity.number = None
     fake_entity.boolean = False
