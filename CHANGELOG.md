@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### UNRELEASED
+### 0.27.0 - 2020-12-05
 
  - Add feature on repository for always add in memory data source
 
