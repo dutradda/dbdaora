@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### UNRELEASED
+
+ - Improve datastore data source to not block the event loop
+
 ### 0.26.0 - 2020-09-26
 
  - Change mongodb data source to use object id as default

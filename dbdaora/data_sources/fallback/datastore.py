@@ -1,4 +1,7 @@
+import asyncio
 import dataclasses
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 from typing import Any, Dict, Iterable, Optional
 
 from google.cloud.datastore import Client, Entity, Key
@@ -9,6 +12,7 @@ from . import FallbackDataSource
 @dataclasses.dataclass
 class DatastoreDataSource(FallbackDataSource[Key]):
     client: Client = dataclasses.field(default_factory=Client)
+    executor: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=100)
 
     def make_key(self, *key_parts: Any) -> Key:
         return self.client.key(
@@ -17,7 +21,10 @@ class DatastoreDataSource(FallbackDataSource[Key]):
         )
 
     async def get(self, key: Key) -> Optional[Dict[str, Any]]:
-        entity = self.client.get(key)
+        loop = asyncio.get_running_loop()
+        entity = await loop.run_in_executor(
+            self.executor, partial(self.client.get, key)
+        )
         return None if entity is None else entity_asdict(entity)
 
     async def put(
@@ -29,10 +36,16 @@ class DatastoreDataSource(FallbackDataSource[Key]):
     ) -> None:
         entity = Entity(key, exclude_from_indexes=exclude_from_indexes)
         entity.update(data)
-        self.client.put(entity)
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(
+            self.executor, partial(self.client.put, entity)
+        )
 
     async def delete(self, key: Key) -> None:
-        self.client.delete(key)
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(
+            self.executor, partial(self.client.delete, key)
+        )
 
     async def query(self, key: Key, **kwargs: Any) -> Iterable[Dict[str, Any]]:
         return self.client.query(kind=key.kind, **kwargs).fetch()
