@@ -2,6 +2,8 @@
 
 ### UNRELEASED
 
+ - Add feature on repository for always add in memory data source
+
  - Improve datastore data source to not block the event loop
 
 ### 0.26.0 - 2020-09-26

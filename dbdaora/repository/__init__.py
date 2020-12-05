@@ -291,9 +291,14 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         memory: bool = True,
         query: Optional['BaseQuery[Entity, EntityData, FallbackKey]'] = None,
         fallback_ttl: Optional[int] = None,
+        memory_always: bool = False,
     ) -> None:
-        if memory:
-            return await self.add_memory(*entities, fallback_ttl=fallback_ttl)
+        if memory or memory_always:
+            return await self.add_memory(
+                *entities,
+                fallback_ttl=fallback_ttl,
+                memory_always=memory_always,
+            )
         else:
             return await self.add_fallback(
                 *entities, fallback_ttl=fallback_ttl
@@ -304,10 +309,11 @@ class MemoryRepository(Generic[Entity, EntityData, FallbackKey]):
         entity: Entity,
         *entities: Entity,
         fallback_ttl: Optional[int] = None,
+        memory_always: bool = False,
     ) -> None:
         memory_key = self.memory_key(entity)
 
-        if await self.memory_data_source.exists(memory_key):
+        if memory_always or await self.memory_data_source.exists(memory_key):
             memory_data = self.make_memory_data_from_entity(entity)
             await self.add_memory_data(memory_key, memory_data)
             await self.set_expire_time(memory_key)

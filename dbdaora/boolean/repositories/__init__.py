@@ -69,7 +69,11 @@ class BooleanRepository(MemoryRepository[Entity, bool, FallbackKey]):
         return query_factory(self, *args, **kwargs)
 
     async def add_memory(
-        self, entity: Any, *entities: Any, fallback_ttl: Optional[int] = None
+        self,
+        entity: Entity,
+        *entities: Entity,
+        fallback_ttl: Optional[int] = None,
+        memory_always: bool = False,
     ) -> None:
         memory_key = self.memory_key(entity)
         memory_data = self.make_memory_data_from_entity(entity)

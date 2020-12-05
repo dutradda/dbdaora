@@ -367,6 +367,7 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
         *entities: Any,
         memory: bool = True,
         fallback_ttl: Optional[int] = None,
+        memory_always: bool = False,
     ) -> None:
         if not memory:
             try:
@@ -381,7 +382,9 @@ class Service(Generic[Entity, EntityData, FallbackKey]):
             return
 
         try:
-            await self.add_circuit(entity, *entities)
+            await self.add_circuit(
+                entity, *entities, memory_always=memory_always
+            )
 
         except DBDaoraCircuitBreakerError as error:
             self.logger.warning(error)
